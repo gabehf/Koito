@@ -5,6 +5,12 @@ description: The available configuration options when setting up Koito.
 
 Koito is configured using **environment variables**. This is the full list of configuration options supported by Koito.
 
+The suffix `_FILE` is also supported for every environment variable. This allows the use of Docker secrets, for example: `KOITO_DATABASE_URL_FILE=/run/secrets/database-url` will load the content of the file at `/run/secrets/database-url` for the environment variable `KOITO_DATABASE_URL`.
+
+:::caution
+If the environment variable is defined without **and** with the suffix at the same time, the content of the environment variable without the `_FILE` suffix will have the higher priority.
+:::
+
 ##### KOITO_DATABASE_URL
 - Required: `true`
 - Description: A Postgres connection URI. See https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS for more information.
@@ -14,7 +20,7 @@ Koito is configured using **environment variables**. This is the full list of co
 ##### KOITO_DEFAULT_USERNAME
 - Default: `admin`
 - Description: The username for the user that is created on first startup. Only applies when running Koito for the first time.
-##### KOITO_DEFAULT_PASSWORD 
+##### KOITO_DEFAULT_PASSWORD
 - Default: `changeme`
 - Description: The password for the user that is created on first startup. Only applies when running Koito for the first time.
 ##### KOITO_BIND_ADDR
@@ -42,17 +48,17 @@ Koito is configured using **environment variables**. This is the full list of co
 - Description: Set to `true` if you want to relay requests from the ListenBrainz endpoints on your Koito server to another ListenBrainz compatible server.
 ##### KOITO_LBZ_RELAY_URL
 - Required: `true` if relays are enabled.
-- Description: The URL to which relayed requests will be sent to.    
+- Description: The URL to which relayed requests will be sent to.
 ##### KOITO_LBZ_RELAY_TOKEN
-- Required: `true` if relays are enabled. 
+- Required: `true` if relays are enabled.
 - Description: The user token to send with the relayed ListenBrainz requests.
 ##### KOITO_CONFIG_DIR
 - Default: `/etc/koito`
 - Description: The location where import folders and image caches are stored.
-##### KOITO_DISABLE_DEEZER 
+##### KOITO_DISABLE_DEEZER
 - Default: `false`
 - Description: Disables Deezer as a source for finding artist and album images.
-##### KOITO_DISABLE_COVER_ART_ARCHIVE 
+##### KOITO_DISABLE_COVER_ART_ARCHIVE
 - Default: `false`
 - Description: Disables Cover Art Archive as a source for finding album images.
 ##### KOITO_DISABLE_MUSICBRAINZ
