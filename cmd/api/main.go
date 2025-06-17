@@ -30,9 +30,11 @@ func readEnvOrFile(envName string) string {
 		if filename != "" {
 			b, err := os.ReadFile(filename)
 
-			if err == nil {
-				envContent = strings.TrimSpace(string(b))
+			if err != nil {
+				panic(fmt.Errorf("Failed to load file for %s_FILE (%s): %s", envName, filename, err))
 			}
+
+			envContent = strings.TrimSpace(string(b))
 		}
 	}
 
