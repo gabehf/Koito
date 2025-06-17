@@ -32,7 +32,7 @@ export const themes: Theme[] = [
         fg: "#f8f3ec",
         fgSecondary: "#d6ccc2",
         fgTertiary: "#b4a89c",
-        primary: "#f5a97f",
+        primary: "#fc9174",
         primaryDim: "#d88b65",
         accent: "#f9db6d",
         accentDim: "#d9bc55",
