@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"log"
 
 	"github.com/gabehf/koito/engine"
 )
@@ -31,7 +32,8 @@ func readEnvOrFile(envName string) string {
 			b, err := os.ReadFile(filename)
 
 			if err != nil {
-				panic(fmt.Errorf("Failed to load file for %s_FILE (%s): %s", envName, filename, err))
+				log.Fatalf("Failed to load file for %s_FILE (%s): %s", envName, filename, err)
+				os.Exit(1)
 			}
 
 			envContent = strings.TrimSpace(string(b))
