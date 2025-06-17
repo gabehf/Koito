@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gabehf/koito/engine"
 )
@@ -11,11 +12,29 @@ var Version = "dev"
 
 func main() {
 	if err := engine.Run(
-		os.Getenv,
+		readEnvOrFile,
 		os.Stdout,
 		Version,
 	); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
+}
+
+func readEnvOrFile(envName string) string {
+	envContent := os.Getenv(envName)
+
+	if envContent == "" {
+		filename := os.Getenv(envName + "_FILE")
+
+		if filename != "" {
+			b, err := os.ReadFile(filename)
+
+			if err == nil {
+				envContent = strings.TrimSpace(string(b))
+			}
+		}
+	}
+
+	return envContent
 }
