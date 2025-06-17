@@ -33,7 +33,6 @@ func readEnvOrFile(envName string) string {
 
 			if err != nil {
 				log.Fatalf("Failed to load file for %s_FILE (%s): %s", envName, filename, err)
-				os.Exit(1)
 			}
 
 			envContent = strings.TrimSpace(string(b))
