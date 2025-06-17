@@ -1,25 +1,15 @@
 // ThemeSwitcher.tsx
 import { useEffect } from 'react';
 import { useTheme } from '../../hooks/useTheme';
-import { themes } from '~/providers/ThemeProvider';
+import themes from '~/styles/themes.css';
 import ThemeOption from './ThemeOption';
 
 export function ThemeSwitcher() {
     const { theme, setTheme } = useTheme();
 
-
-    useEffect(() => {
-        const saved = localStorage.getItem('theme');
-        if (saved && saved !== theme) {
-            setTheme(saved);
-        } else if (!saved) {
-            localStorage.setItem('theme', theme)
-        }
-    }, []);
-
     useEffect(() => {
         if (theme) {
-            localStorage.setItem('theme', theme)
+            setTheme(theme)
         }
     }, [theme]);
 

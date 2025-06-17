@@ -16,7 +16,6 @@ interface Props {
 
 export default function LastPlays(props: Props) {
     const { user } = useAppContext()
-    console.log(user)
     const { isPending, isError, data, error } = useQuery({
         queryKey: ['last-listens', {
             limit: props.limit,

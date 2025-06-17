@@ -1,0 +1,16 @@
+export const themeVars = {
+    bg: '--color-bg',
+    bgSecondary: '--color-bg-secondary',
+    bgTertiary: '--color-bg-tertiary',
+    fg: '--color-fg',
+    fgSecondary: '--color-fg-secondary',
+    fgTertiary: '--color-fg-tertiary',
+    primary: '--color-primary',
+    primaryDim: '--color-primary-dim',
+    accent: '--color-accent',
+    accentDim: '--color-accent-dim',
+    error: '--color-error',
+    warning: '--color-warning',
+    info: '--color-info',
+    success: '--color-success',
+}
