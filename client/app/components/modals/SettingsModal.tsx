@@ -5,6 +5,8 @@ import { ThemeSwitcher } from "../themeSwitcher/ThemeSwitcher";
 import ThemeHelper from "../../routes/ThemeHelper";
 import { useAppContext } from "~/providers/AppProvider";
 import ApiKeysModal from "./ApiKeysModal";
+import { AsyncButton } from "../AsyncButton";
+import ExportModal from "./ExportModal";
 
 interface Props {
     open: boolean 
@@ -29,9 +31,12 @@ export default function SettingsModal({ open, setOpen } : Props) {
                     <TabsTrigger className={triggerClasses} value="Appearance">Appearance</TabsTrigger>
                     <TabsTrigger className={triggerClasses} value="Account">Account</TabsTrigger>
                     {user && (
-                        <TabsTrigger className={triggerClasses} value="API Keys">
-                            API Keys
-                        </TabsTrigger>
+                        <>
+                            <TabsTrigger className={triggerClasses} value="API Keys">
+                                API Keys
+                            </TabsTrigger>
+                            <TabsTrigger className={triggerClasses} value="Export">Export</TabsTrigger>
+                        </>
                     )}
                 </TabsList>
 
@@ -43,6 +48,9 @@ export default function SettingsModal({ open, setOpen } : Props) {
                 </TabsContent>
                 <TabsContent value="API Keys" className={contentClasses}>
                     <ApiKeysModal />
+                </TabsContent>
+                <TabsContent value="Export" className={contentClasses}>
+                    <ExportModal />
                 </TabsContent>
             </Tabs>
         </Modal>

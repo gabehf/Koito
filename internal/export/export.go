@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path"
+	"io"
 	"time"
 
-	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
@@ -45,7 +43,7 @@ type KoitoArtist struct {
 	Aliases   []models.Alias `json:"aliases"`
 }
 
-func ExportData(ctx context.Context, username string, store db.DB) error {
+func ExportData(ctx context.Context, user *models.User, store db.DB, out io.Writer) error {
 	lastTime := time.Unix(0, 0)
 	lastTrackId := int32(0)
 	pageSize := int32(1000)
@@ -54,15 +52,15 @@ func ExportData(ctx context.Context, username string, store db.DB) error {
 	l.Info().Msg("ExportData: Generating Koito export file...")
 
 	exportedAt := time.Now()
-	exportFile := path.Join(cfg.ConfigDir(), fmt.Sprintf("koito_export_%d.json", exportedAt.Unix()))
-	f, err := os.Create(exportFile)
-	if err != nil {
-		return fmt.Errorf("ExportData: %w", err)
-	}
-	defer f.Close()
+	// exportFile := path.Join(cfg.ConfigDir(), fmt.Sprintf("koito_export_%d.json", exportedAt.Unix()))
+	// f, err := os.Create(exportFile)
+	// if err != nil {
+	// 	return fmt.Errorf("ExportData: %w", err)
+	// }
+	// defer f.Close()
 
 	// Write the opening of the JSON manually
-	_, err = fmt.Fprintf(f, "{\n  \"version\": \"1\",\n  \"exported_at\": \"%s\",\n  \"user\": \"%s\",\n  \"listens\": [\n", exportedAt.UTC().Format(time.RFC3339), username)
+	_, err := fmt.Fprintf(out, "{\n  \"version\": \"1\",\n  \"exported_at\": \"%s\",\n  \"user\": \"%s\",\n  \"listens\": [\n", exportedAt.UTC().Format(time.RFC3339), user.Username)
 	if err != nil {
 		return fmt.Errorf("ExportData: %w", err)
 	}
@@ -70,7 +68,7 @@ func ExportData(ctx context.Context, username string, store db.DB) error {
 	first := true
 	for {
 		rows, err := store.GetExportPage(ctx, db.GetExportPageOpts{
-			UserID:     1,
+			UserID:     user.ID,
 			ListenedAt: lastTime,
 			TrackID:    lastTrackId,
 			Limit:      pageSize,
@@ -85,7 +83,7 @@ func ExportData(ctx context.Context, username string, store db.DB) error {
 		for _, r := range rows {
 			// Adds a comma after each listen item
 			if !first {
-				_, _ = f.Write([]byte(",\n"))
+				_, _ = out.Write([]byte(",\n"))
 			}
 			first = false
 
@@ -94,12 +92,12 @@ func ExportData(ctx context.Context, username string, store db.DB) error {
 			raw, err := json.MarshalIndent(exported, "    ", "  ")
 
 			// needed to make the listen item start at the right indent level
-			f.Write([]byte("    "))
+			out.Write([]byte("    "))
 
 			if err != nil {
 				return fmt.Errorf("ExportData: marshal: %w", err)
 			}
-			_, _ = f.Write(raw)
+			_, _ = out.Write(raw)
 
 			if r.TrackID > lastTrackId {
 				lastTrackId = r.TrackID
@@ -111,12 +109,12 @@ func ExportData(ctx context.Context, username string, store db.DB) error {
 	}
 
 	// Write closing of the JSON array and object
-	_, err = f.Write([]byte("\n  ]\n}\n"))
+	_, err = out.Write([]byte("\n  ]\n}\n"))
 	if err != nil {
 		return fmt.Errorf("ExportData: f.Write: %w", err)
 	}
 
-	l.Info().Msgf("Export successful! File can be found at %s", exportFile)
+	l.Info().Msgf("Export successfully created")
 	return nil
 }
 

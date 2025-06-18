@@ -196,6 +196,8 @@ function deleteListen(listen: Listen): Promise<Response> {
         method: "DELETE"
     })
 }
+function getExport() {
+}
 
 export {
     getLastListens,
@@ -224,6 +226,7 @@ export {
     updateApiKeyLabel,
     deleteListen,
     getAlbum,
+    getExport,
 }
 type Track = {
     id: number
