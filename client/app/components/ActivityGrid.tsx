@@ -45,12 +45,16 @@ export default function ActivityGrid({
         albumId = 0,
         trackId = 0,
         configurable = false,
-        autoAdjust = false,
     }: Props) {
 
     const [color, setColor] = useState(getPrimaryColor())
     const [stepState, setStep] = useState(step)
     const [rangeState, setRange] = useState(range)
+
+    // sometimes, a little bit of a lie for the sake of better design is necessary
+    if (rangeState === 365) {
+        setRange(rangeState - 1)
+    }
         
     const { isPending, isError, data, error } = useQuery({ 
         queryKey: [
@@ -111,24 +115,26 @@ export default function ActivityGrid({
 
     const getDarkenAmount = (v: number, t: number): number => {
 
-        if (autoAdjust) {
-            // automatically adjust the target value based on step
-            // the smartest way to do this would be to have the api return the
-            // highest value in the range. too bad im not smart
-            switch (stepState) {
-                case 'day':
-                    t = 10
-                    break;
-                case 'week':
-                    t = 20
-                    break;
-                case 'month':
-                    t = 50
-                    break;
-                case 'year':
-                    t = 100
-                    break;
-            }
+        // really ugly way to just check if this is for all items and not a specific item.
+        // is it jsut better to just pass the target in as a var? probably.
+        const adjustment = artistId == albumId && albumId == trackId && trackId == 0 ? 10 : 1
+
+        // automatically adjust the target value based on step
+        // the smartest way to do this would be to have the api return the
+        // highest value in the range. too bad im not smart
+        switch (stepState) {
+            case 'day':
+                t = 10 * adjustment
+                break;
+            case 'week':
+                t = 20 * adjustment
+                break;
+            case 'month':
+                t = 50 * adjustment
+                break;
+            case 'year':
+                t = 100 * adjustment
+                break;
         }
 
         v = Math.min(v, t)
@@ -142,45 +148,58 @@ export default function ActivityGrid({
         }
     }
 
-    return (<div className="flex flex-col items-start">
-        <h2>Activity</h2>
-        {configurable ? (
-            <ActivityOptsSelector
-                rangeSetter={setRange}
-                currentRange={rangeState}
-                stepSetter={setStep}
-                currentStep={stepState}
-            />
-        ) : (
-            ''
-        )}
-        <div className="w-auto grid grid-flow-col grid-rows-7 gap-[3px] md:gap-[5px]">
-            {data.map((item) => (
+    const CHUNK_SIZE = 26 * 7;
+    const chunks = [];
+    
+    for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+        chunks.push(data.slice(i, i + CHUNK_SIZE));
+    }
+    
+    return (
+        <div className="flex flex-col items-start">
+            <h2>Activity</h2>
+            {configurable ? (
+                <ActivityOptsSelector
+                    rangeSetter={setRange}
+                    currentRange={rangeState}
+                    stepSetter={setStep}
+                    currentStep={stepState}
+                />
+            ) : null}
+    
+            {chunks.map((chunk, index) => (
                 <div
-                    key={new Date(item.start_time).toString()}
-                    className="w-[10px] sm:w-[12px] h-[10px] sm:h-[12px]"
+                    key={index}
+                    className="w-auto grid grid-flow-col grid-rows-7 gap-[3px] md:gap-[5px] mb-4"
                 >
-                    <Popup
-                        position="top"
-                        space={12}
-                        extraClasses="left-2"
-                        inner={`${new Date(item.start_time).toLocaleDateString()} ${item.listens} plays`}
-                    >
+                    {chunk.map((item) => (
                         <div
-                            style={{
-                                display: 'inline-block',
-                                background:
-                                    item.listens > 0
-                                        ? LightenDarkenColor(color, getDarkenAmount(item.listens, 100))
-                                        : 'var(--color-bg-secondary)',
-                            }}
-                            className={`w-[10px] sm:w-[12px] h-[10px] sm:h-[12px] rounded-[2px] md:rounded-[3px] ${item.listens > 0 ? '' : 'border-[0.5px] border-(--color-bg-tertiary)'}`}
-                        ></div>
-                    </Popup>
+                            key={new Date(item.start_time).toString()}
+                            className="w-[10px] sm:w-[12px] h-[10px] sm:h-[12px]"
+                        >
+                            <Popup
+                                position="top"
+                                space={12}
+                                extraClasses="left-2"
+                                inner={`${new Date(item.start_time).toLocaleDateString()} ${item.listens} plays`}
+                            >
+                                <div
+                                    style={{
+                                        display: 'inline-block',
+                                        background:
+                                            item.listens > 0
+                                                ? LightenDarkenColor(color, getDarkenAmount(item.listens, 100))
+                                                : 'var(--color-bg-secondary)',
+                                    }}
+                                    className={`w-[10px] sm:w-[12px] h-[10px] sm:h-[12px] rounded-[2px] md:rounded-[3px] ${
+                                        item.listens > 0 ? '' : 'border-[0.5px] border-(--color-bg-tertiary)'
+                                    }`}
+                                ></div>
+                            </Popup>
+                        </div>
+                    ))}
                 </div>
             ))}
         </div>
-    </div>
-    
     );
-}
+}    

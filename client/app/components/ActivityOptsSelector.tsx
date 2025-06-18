@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Props {
     stepSetter: (value: string) => void;
@@ -18,16 +19,15 @@ export default function ActivityOptsSelector({
     const stepPeriods = ['day', 'week', 'month', 'year'];
     const rangePeriods = [105, 182, 365];
 
-    const stepDisplay = (str: string): string => {
-        return str.split('_').map(w =>
+    const [collapsed, setCollapsed] = useState(true);
+
+    const stepDisplay = (str: string): string =>
+        str.split('_').map(w =>
             w.split('').map((char, index) =>
                 index === 0 ? char.toUpperCase() : char).join('')
         ).join(' ');
-    };
 
-    const rangeDisplay = (r: number): string => {
-        return `${r}`
-    }
+    const rangeDisplay = (r: number): string => `${r}`;
 
     const setStep = (val: string) => {
         stepSetter(val);
@@ -42,57 +42,64 @@ export default function ActivityOptsSelector({
             localStorage.setItem('activity_range_' + window.location.pathname.split('/')[1], String(val));
         }
     };
-    
+
     useEffect(() => {
         if (!disableCache) {
             const cachedRange = parseInt(localStorage.getItem('activity_range_' + window.location.pathname.split('/')[1]) ?? '35');
-            if (cachedRange) {
-              rangeSetter(cachedRange);
-            }
+            if (cachedRange) rangeSetter(cachedRange);
             const cachedStep = localStorage.getItem('activity_step_' + window.location.pathname.split('/')[1]);
-            if (cachedStep) {
-              stepSetter(cachedStep);
-            }
+            if (cachedStep) stepSetter(cachedStep);
         }
-      }, []);
+    }, []);
 
     return (
-        <div className="flex flex-col">
-            <div className="flex gap-2 items-center">
-                <p>Step:</p>
-                {stepPeriods.map((p, i) => (
-                    <div key={`step_selector_${p}`}>
-                        <button 
-                            className={`period-selector ${p === currentStep ? 'color-fg' : 'color-fg-secondary'} ${i !== stepPeriods.length - 1 ? 'pr-2' : ''}`}
-                            onClick={() => setStep(p)}
-                            disabled={p === currentStep}
-                        >
-                            {stepDisplay(p)}
-                        </button>
-                        <span className="color-fg-secondary">
-                            {i !== stepPeriods.length - 1 ? '|' : ''}
-                        </span>
-                    </div>
-                ))}
-            </div>
+        <div className="flex flex-col gap-2 relative">
+            <button
+                onClick={() => setCollapsed(!collapsed)}
+                className="text-sm underline self-start color-fg-secondary hover:color-fg transition absolute -top-9 left-20"
+            >
+                {collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+            </button>
 
-            <div className="flex gap-2 items-center">
-                <p>Range:</p>
-                {rangePeriods.map((r, i) => (
-                    <div key={`range_selector_${r}`}>
-                        <button 
-                            className={`period-selector ${r === currentRange ? 'color-fg' : 'color-fg-secondary'} ${i !== rangePeriods.length - 1 ? 'pr-2' : ''}`}
-                            onClick={() => setRange(r)}
-                            disabled={r === currentRange}
-                        >
-                            {rangeDisplay(r)}
-                        </button>
-                        <span className="color-fg-secondary">
-                            {i !== rangePeriods.length - 1 ? '|' : ''}
-                        </span>
+            {!collapsed && (
+                <>
+                    <div className="flex gap-2 items-center">
+                        <p>Step:</p>
+                        {stepPeriods.map((p, i) => (
+                            <div key={`step_selector_${p}`}>
+                                <button
+                                    className={`period-selector ${p === currentStep ? 'color-fg' : 'color-fg-secondary'} ${i !== stepPeriods.length - 1 ? 'pr-2' : ''}`}
+                                    onClick={() => setStep(p)}
+                                    disabled={p === currentStep}
+                                >
+                                    {stepDisplay(p)}
+                                </button>
+                                <span className="color-fg-secondary">
+                                    {i !== stepPeriods.length - 1 ? '|' : ''}
+                                </span>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
+
+                    <div className="flex gap-2 items-center">
+                        <p>Range:</p>
+                        {rangePeriods.map((r, i) => (
+                            <div key={`range_selector_${r}`}>
+                                <button
+                                    className={`period-selector ${r === currentRange ? 'color-fg' : 'color-fg-secondary'} ${i !== rangePeriods.length - 1 ? 'pr-2' : ''}`}
+                                    onClick={() => setRange(r)}
+                                    disabled={r === currentRange}
+                                >
+                                    {rangeDisplay(r)}
+                                </button>
+                                <span className="color-fg-secondary">
+                                    {i !== rangePeriods.length - 1 ? '|' : ''}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

@@ -59,7 +59,7 @@ export default function Artist() {
             <div className="flex gap-15 mt-10 flex-wrap">
                 <LastPlays limit={20} artistId={artist.id} />
                 <TopTracks limit={8} period={period} artistId={artist.id} />
-                <ActivityGrid configurable autoAdjust artistId={artist.id} />
+                <ActivityGrid configurable artistId={artist.id} />
             </div>
             <ArtistAlbums period={period} artistId={artist.id} name={artist.name} />
         </div>

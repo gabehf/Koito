@@ -52,7 +52,7 @@ export default function Album() {
         <div className="flex flex-wrap gap-20 mt-10">
             <LastPlays limit={30} albumId={album.id} />
             <TopTracks limit={12} period={period} albumId={album.id} />
-            <ActivityGrid autoAdjust configurable albumId={album.id} />
+            <ActivityGrid configurable albumId={album.id} />
         </div>
     </MediaLayout>
   );

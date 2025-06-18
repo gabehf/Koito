@@ -54,7 +54,7 @@ export default function Track() {
             </div>
             <div className="flex flex-wrap gap-20 mt-10">
                 <LastPlays limit={20} trackId={track.id}/>
-                <ActivityGrid trackId={track.id} configurable autoAdjust />
+                <ActivityGrid trackId={track.id} configurable />
             </div>
         </MediaLayout>
     )
