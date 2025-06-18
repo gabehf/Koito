@@ -22,7 +22,7 @@ If you are not running Koito on an `https://` connection or `localhost`,  the cl
 
 Then, direct any application you want to scrobble data from to `{your_koito_address}/apis/listenbrainz/1` and provide the api key from the UI as the token.
 :::note
-For Multi-Scrobbler, set the endpoint to `{your_koito_address}/apis/listenbrainz/1`
+For Multi-Scrobbler, set the endpoint to `{your_koito_address}/apis/listenbrainz`
 :::
 
 ## Set up a relay
