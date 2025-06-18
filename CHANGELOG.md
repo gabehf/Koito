@@ -13,3 +13,4 @@
 - Adjusted colors for the "Yuu" theme
 - Themes now have a single source of truth in themes.css.ts
 - Basline support for custom themes added
+- Configurable activity grids now have a re-styled, collapsible menu

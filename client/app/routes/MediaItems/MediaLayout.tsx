@@ -57,7 +57,7 @@ export default function MediaLayout(props: Props) {
         <main
         className="w-full flex flex-col flex-grow"
         style={{
-            background: `linear-gradient(to bottom, ${bgColor}, var(--color-bg) 50%)`,
+            background: `linear-gradient(to bottom, ${bgColor}, var(--color-bg) 700px)`,
             transition: '1000',
         }}
         >
