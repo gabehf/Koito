@@ -139,6 +139,13 @@ input[type="text"]:focus {
   outline: none;
   border: 1px solid var(--color-fg-tertiary);
 }
+textarea {
+  border: 1px solid var(--color-bg);
+}
+textarea:focus {
+  outline: none;
+  border: 1px solid var(--color-fg-tertiary);
+}
 input[type="password"] {
   border: 1px solid var(--color-bg);
 }

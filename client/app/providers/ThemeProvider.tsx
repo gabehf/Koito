@@ -1,11 +1,12 @@
 import { createContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import { themes, type Theme } from '~/styles/themes.css';
+import { type Theme } from '~/styles/themes.css';
 import { themeVars } from '~/styles/vars.css';
 
 interface ThemeContextValue {
     theme: string;
     setTheme: (theme: string) => void;
     setCustomTheme: (theme: Theme) => void;
+    getCustomTheme: () => Theme | undefined;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -47,6 +48,19 @@ export function ThemeProvider({
         setTheme('custom');
     }, []);
 
+    const getCustomTheme = (): Theme | undefined => { 
+        const themeStr = localStorage.getItem('custom-theme');
+        if (!themeStr) {
+            return undefined
+        }
+        try {
+            let theme = JSON.parse(themeStr) as Theme
+            return theme
+        } catch (err) {
+            return undefined 
+        }
+    }
+
     useEffect(() => {
         const root = document.documentElement;
 
@@ -63,15 +77,16 @@ export function ThemeProvider({
                 } catch (err) {
                     console.error('Invalid custom theme in localStorage', err);
                 }
+            } else {
+                setTheme('yuu')
             }
         } else {
             clearCustomThemeVars()
         }
     }, [theme]);
-    
 
     return (
-        <ThemeContext.Provider value={{ theme, setTheme, setCustomTheme }}>
+        <ThemeContext.Provider value={{ theme, setTheme, setCustomTheme, getCustomTheme }}>
             {children}
         </ThemeContext.Provider>
     );

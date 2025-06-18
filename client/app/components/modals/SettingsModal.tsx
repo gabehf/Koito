@@ -19,7 +19,7 @@ export default function SettingsModal({ open, setOpen } : Props) {
     const contentClasses = "w-full px-2 mt-8 sm:mt-0 sm:px-10 overflow-y-auto"
 
     return (
-        <Modal h={600} isOpen={open} onClose={() => setOpen(false)} maxW={900}>
+        <Modal h={700} isOpen={open} onClose={() => setOpen(false)} maxW={900}>
             <Tabs
                 defaultValue="Appearance"
                 orientation="vertical" // still vertical, but layout is responsive via Tailwind
