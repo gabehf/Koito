@@ -2,6 +2,7 @@
 
 ## Features
 - Allow loading environment variables from files using the _FILE suffix (#20)
+- All activity grids (calendar heatmaps) are now configurable
 
 ## Enhancements
 

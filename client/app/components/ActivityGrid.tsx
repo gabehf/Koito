@@ -50,11 +50,6 @@ export default function ActivityGrid({
     const [color, setColor] = useState(getPrimaryColor())
     const [stepState, setStep] = useState(step)
     const [rangeState, setRange] = useState(range)
-
-    // sometimes, a little bit of a lie for the sake of better design is necessary
-    if (rangeState === 365) {
-        setRange(rangeState - 1)
-    }
         
     const { isPending, isError, data, error } = useQuery({ 
         queryKey: [

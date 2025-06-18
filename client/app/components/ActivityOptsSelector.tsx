@@ -17,17 +17,15 @@ export default function ActivityOptsSelector({
     disableCache = false,
 }: Props) {
     const stepPeriods = ['day', 'week', 'month', 'year'];
-    const rangePeriods = [105, 182, 365];
-
+    const rangePeriods = [105, 182, 364];
     const [collapsed, setCollapsed] = useState(true);
 
-    const stepDisplay = (str: string): string =>
-        str.split('_').map(w =>
-            w.split('').map((char, index) =>
-                index === 0 ? char.toUpperCase() : char).join('')
-        ).join(' ');
-
-    const rangeDisplay = (r: number): string => `${r}`;
+    const setMenuOpen = (val: boolean) => {
+        setCollapsed(val)
+        if (!disableCache) {
+            localStorage.setItem('activity_configuring_' + window.location.pathname.split('/')[1], String(!val));
+        }
+    }
 
     const setStep = (val: string) => {
         stepSetter(val);
@@ -49,57 +47,60 @@ export default function ActivityOptsSelector({
             if (cachedRange) rangeSetter(cachedRange);
             const cachedStep = localStorage.getItem('activity_step_' + window.location.pathname.split('/')[1]);
             if (cachedStep) stepSetter(cachedStep);
+            const cachedConfiguring = localStorage.getItem('activity_configuring_' + window.location.pathname.split('/')[1]);
+            if (cachedStep) setMenuOpen(cachedConfiguring !== "true");
         }
     }, []);
 
     return (
-        <div className="flex flex-col gap-2 relative">
+        <div className="relative w-full">
             <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="text-sm underline self-start color-fg-secondary hover:color-fg transition absolute -top-9 left-20"
+                onClick={() => setMenuOpen(!collapsed)}
+                className="absolute left-[75px] -top-9 text-muted hover:color-fg transition"
+                title="Toggle options"
             >
                 {collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
             </button>
 
-            {!collapsed && (
-                <>
-                    <div className="flex gap-2 items-center">
-                        <p>Step:</p>
-                        {stepPeriods.map((p, i) => (
-                            <div key={`step_selector_${p}`}>
-                                <button
-                                    className={`period-selector ${p === currentStep ? 'color-fg' : 'color-fg-secondary'} ${i !== stepPeriods.length - 1 ? 'pr-2' : ''}`}
-                                    onClick={() => setStep(p)}
-                                    disabled={p === currentStep}
-                                >
-                                    {stepDisplay(p)}
-                                </button>
-                                <span className="color-fg-secondary">
-                                    {i !== stepPeriods.length - 1 ? '|' : ''}
-                                </span>
-                            </div>
+            <div
+                className={`overflow-hidden transition-[max-height,opacity] duration-250 ease ${
+                    collapsed ? 'max-h-0 opacity-0' : 'max-h-[100px] opacity-100'
+                }`}
+            >
+                <div className="flex flex-wrap gap-4 mt-1 text-sm">
+                    <div className="flex items-center gap-1">
+                        <span className="text-muted">Step:</span>
+                        {stepPeriods.map((p) => (
+                            <button
+                                key={p}
+                                className={`px-1 rounded transition ${
+                                    p === currentStep ? 'color-fg font-medium' : 'color-fg-secondary hover:color-fg'
+                                }`}
+                                onClick={() => setStep(p)}
+                                disabled={p === currentStep}
+                            >
+                                {p}
+                            </button>
                         ))}
                     </div>
 
-                    <div className="flex gap-2 items-center">
-                        <p>Range:</p>
-                        {rangePeriods.map((r, i) => (
-                            <div key={`range_selector_${r}`}>
-                                <button
-                                    className={`period-selector ${r === currentRange ? 'color-fg' : 'color-fg-secondary'} ${i !== rangePeriods.length - 1 ? 'pr-2' : ''}`}
-                                    onClick={() => setRange(r)}
-                                    disabled={r === currentRange}
-                                >
-                                    {rangeDisplay(r)}
-                                </button>
-                                <span className="color-fg-secondary">
-                                    {i !== rangePeriods.length - 1 ? '|' : ''}
-                                </span>
-                            </div>
+                    <div className="flex items-center gap-1">
+                        <span className="text-muted">Range:</span>
+                        {rangePeriods.map((r) => (
+                            <button
+                                key={r}
+                                className={`px-1 rounded transition ${
+                                    r === currentRange ? 'color-fg font-medium' : 'color-fg-secondary hover:color-fg'
+                                }`}
+                                onClick={() => setRange(r)}
+                                disabled={r === currentRange}
+                            >
+                                {r}
+                            </button>
                         ))}
                     </div>
-                </>
-            )}
+                </div>
+            </div>
         </div>
     );
 }
