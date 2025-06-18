@@ -200,3 +200,70 @@ WHERE track_id = $1;
 
 -- name: DeleteListen :exec
 DELETE FROM listens WHERE track_id = $1 AND listened_at = $2;
+
+-- name: GetListensExportPage :many
+SELECT
+    l.listened_at,
+    l.user_id,
+    l.client,
+
+    -- Track info
+    t.id AS track_id,
+    t.musicbrainz_id AS track_mbid,
+    t.duration AS track_duration,
+    (
+        SELECT json_agg(json_build_object(
+            'alias', ta.alias,
+            'source', ta.source,
+            'is_primary', ta.is_primary
+        ))
+        FROM track_aliases ta
+        WHERE ta.track_id = t.id
+    ) AS track_aliases,
+
+    -- Release info
+    r.id AS release_id,
+    r.musicbrainz_id AS release_mbid,
+    r.image AS release_image,
+    r.image_source AS release_image_source,
+    r.various_artists,
+    (
+        SELECT json_agg(json_build_object(
+            'alias', ra.alias,
+            'source', ra.source,
+            'is_primary', ra.is_primary
+        ))
+        FROM release_aliases ra
+        WHERE ra.release_id = r.id
+    ) AS release_aliases,
+
+    -- Artists
+    (
+        SELECT json_agg(json_build_object(
+            'id', a.id,
+            'musicbrainz_id', a.musicbrainz_id,
+            'image', a.image,
+            'image_source', a.image_source,
+            'aliases', (
+                SELECT json_agg(json_build_object(
+                    'alias', aa.alias,
+                    'source', aa.source,
+                    'is_primary', aa.is_primary
+                ))
+                FROM artist_aliases aa
+                WHERE aa.artist_id = a.id
+            )
+        ))
+        FROM artist_tracks at
+        JOIN artists a ON a.id = at.artist_id
+        WHERE at.track_id = t.id
+    ) AS artists
+
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+JOIN releases r ON t.release_id = r.id
+
+WHERE l.user_id = @user_id::int
+  AND (l.listened_at, l.track_id) > (@listened_at::timestamptz, @track_id::int)
+ORDER BY l.listened_at, l.track_id
+LIMIT $1;

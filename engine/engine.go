@@ -190,6 +190,14 @@ func Run(
 		}()
 	}
 
+	// l.Info().Msg("Creating test export file")
+	// go func() {
+	// 	err := export.ExportData(ctx, "koito", store)
+	// 	if err != nil {
+	// 		l.Err(err).Msg("Failed to generate export file")
+	// 	}
+	// }()
+
 	l.Info().Msg("Engine: Pruning orphaned images")
 	go catalog.PruneOrphanedImages(logger.NewContext(l), store)
 
@@ -252,6 +260,12 @@ func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
 		} else if strings.Contains(file.Name(), "listenbrainz") {
 			l.Info().Msgf("Import file %s detecting as being ListenBrainz export", file.Name())
 			err := importer.ImportListenBrainzExport(logger.NewContext(l), store, mbzc, file.Name())
+			if err != nil {
+				l.Err(err).Msgf("Failed to import file: %s", file.Name())
+			}
+		} else if strings.Contains(file.Name(), "koito") {
+			l.Info().Msgf("Import file %s detecting as being Koito export", file.Name())
+			err := importer.ImportKoitoFile(logger.NewContext(l), store, file.Name())
 			if err != nil {
 				l.Err(err).Msgf("Failed to import file: %s", file.Name())
 			}

@@ -82,6 +82,7 @@ type DB interface {
 	ImageHasAssociation(ctx context.Context, image uuid.UUID) (bool, error)
 	GetImageSource(ctx context.Context, image uuid.UUID) (string, error)
 	AlbumsWithoutImages(ctx context.Context, from int32) ([]*models.Album, error)
+	GetExportPage(ctx context.Context, opts GetExportPageOpts) ([]*ExportItem, error)
 	Ping(ctx context.Context) error
 	Close(ctx context.Context)
 }

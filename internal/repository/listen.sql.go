@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -439,6 +440,138 @@ func (q *Queries) GetLastListensPaginated(ctx context.Context, arg GetLastListen
 			&i.UserID,
 			&i.TrackTitle,
 			&i.ReleaseID,
+			&i.Artists,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getListensExportPage = `-- name: GetListensExportPage :many
+SELECT
+    l.listened_at,
+    l.user_id,
+    l.client,
+
+    -- Track info
+    t.id AS track_id,
+    t.musicbrainz_id AS track_mbid,
+    t.duration AS track_duration,
+    (
+        SELECT json_agg(json_build_object(
+            'alias', ta.alias,
+            'source', ta.source,
+            'is_primary', ta.is_primary
+        ))
+        FROM track_aliases ta
+        WHERE ta.track_id = t.id
+    ) AS track_aliases,
+
+    -- Release info
+    r.id AS release_id,
+    r.musicbrainz_id AS release_mbid,
+    r.image AS release_image,
+    r.image_source AS release_image_source,
+    r.various_artists,
+    (
+        SELECT json_agg(json_build_object(
+            'alias', ra.alias,
+            'source', ra.source,
+            'is_primary', ra.is_primary
+        ))
+        FROM release_aliases ra
+        WHERE ra.release_id = r.id
+    ) AS release_aliases,
+
+    -- Artists
+    (
+        SELECT json_agg(json_build_object(
+            'id', a.id,
+            'musicbrainz_id', a.musicbrainz_id,
+            'image', a.image,
+            'image_source', a.image_source,
+            'aliases', (
+                SELECT json_agg(json_build_object(
+                    'alias', aa.alias,
+                    'source', aa.source,
+                    'is_primary', aa.is_primary
+                ))
+                FROM artist_aliases aa
+                WHERE aa.artist_id = a.id
+            )
+        ))
+        FROM artist_tracks at
+        JOIN artists a ON a.id = at.artist_id
+        WHERE at.track_id = t.id
+    ) AS artists
+
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+JOIN releases r ON t.release_id = r.id
+
+WHERE l.user_id = $2::int
+  AND (l.listened_at, l.track_id) > ($3::timestamptz, $4::int)
+ORDER BY l.listened_at, l.track_id
+LIMIT $1
+`
+
+type GetListensExportPageParams struct {
+	Limit      int32
+	UserID     int32
+	ListenedAt time.Time
+	TrackID    int32
+}
+
+type GetListensExportPageRow struct {
+	ListenedAt         time.Time
+	UserID             int32
+	Client             *string
+	TrackID            int32
+	TrackMbid          *uuid.UUID
+	TrackDuration      int32
+	TrackAliases       []byte
+	ReleaseID          int32
+	ReleaseMbid        *uuid.UUID
+	ReleaseImage       *uuid.UUID
+	ReleaseImageSource pgtype.Text
+	VariousArtists     bool
+	ReleaseAliases     []byte
+	Artists            []byte
+}
+
+func (q *Queries) GetListensExportPage(ctx context.Context, arg GetListensExportPageParams) ([]GetListensExportPageRow, error) {
+	rows, err := q.db.Query(ctx, getListensExportPage,
+		arg.Limit,
+		arg.UserID,
+		arg.ListenedAt,
+		arg.TrackID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetListensExportPageRow
+	for rows.Next() {
+		var i GetListensExportPageRow
+		if err := rows.Scan(
+			&i.ListenedAt,
+			&i.UserID,
+			&i.Client,
+			&i.TrackID,
+			&i.TrackMbid,
+			&i.TrackDuration,
+			&i.TrackAliases,
+			&i.ReleaseID,
+			&i.ReleaseMbid,
+			&i.ReleaseImage,
+			&i.ReleaseImageSource,
+			&i.VariousArtists,
+			&i.ReleaseAliases,
 			&i.Artists,
 		); err != nil {
 			return nil, err

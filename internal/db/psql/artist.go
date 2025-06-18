@@ -128,6 +128,7 @@ func (d *Psql) SaveArtistAliases(ctx context.Context, id int32, aliases []string
 	}
 	defer tx.Rollback(ctx)
 	qtx := d.q.WithTx(tx)
+	l.Debug().Msgf("Fetching existing artist aliases for artist %d...", id)
 	existing, err := qtx.GetAllArtistAliases(ctx, id)
 	if err != nil {
 		return fmt.Errorf("SaveArtistAliases: GetAllArtistAliases: %w", err)
@@ -135,8 +136,10 @@ func (d *Psql) SaveArtistAliases(ctx context.Context, id int32, aliases []string
 	for _, v := range existing {
 		aliases = append(aliases, v.Alias)
 	}
+	l.Debug().Msgf("Ensuring aliases are unique...")
 	utils.Unique(&aliases)
 	for _, alias := range aliases {
+		l.Debug().Msgf("Inserting alias %s for artist with id %d", alias, id)
 		alias = strings.TrimSpace(alias)
 		if alias == "" {
 			return errors.New("SaveArtistAliases: aliases cannot be blank")

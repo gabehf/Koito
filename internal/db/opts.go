@@ -147,3 +147,10 @@ type TimeListenedOpts struct {
 	ArtistID int32
 	TrackID  int32
 }
+
+type GetExportPageOpts struct {
+	UserID     int32
+	ListenedAt time.Time
+	TrackID    int32
+	Limit      int32
+}

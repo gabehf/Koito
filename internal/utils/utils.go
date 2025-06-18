@@ -327,3 +327,11 @@ func ParseBool(s string) (value, ok bool) {
 		return
 	}
 }
+
+func FlattenAliases(aliases []models.Alias) []string {
+	ret := make([]string, len(aliases))
+	for i := range aliases {
+		ret[i] = aliases[i].Alias
+	}
+	return ret
+}
