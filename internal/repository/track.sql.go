@@ -146,7 +146,7 @@ JOIN artist_tracks at ON at.track_id = t.id
 WHERE l.listened_at BETWEEN $1 AND $2
   AND at.artist_id = $5
 GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
-ORDER BY listen_count DESC
+ORDER BY listen_count DESC, t.id
 LIMIT $3 OFFSET $4
 `
 
@@ -217,7 +217,7 @@ JOIN releases r ON t.release_id = r.id
 WHERE l.listened_at BETWEEN $1 AND $2
   AND t.release_id = $5
 GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
-ORDER BY listen_count DESC
+ORDER BY listen_count DESC, t.id
 LIMIT $3 OFFSET $4
 `
 
@@ -287,7 +287,7 @@ JOIN tracks_with_title t ON l.track_id = t.id
 JOIN releases r ON t.release_id = r.id
 WHERE l.listened_at BETWEEN $1 AND $2
 GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
-ORDER BY listen_count DESC
+ORDER BY listen_count DESC, t.id
 LIMIT $3 OFFSET $4
 `
 

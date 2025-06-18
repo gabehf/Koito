@@ -69,7 +69,7 @@ JOIN artist_tracks at ON at.track_id = t.id
 JOIN artists_with_name a ON a.id = at.artist_id
 WHERE l.listened_at BETWEEN $1 AND $2
 GROUP BY a.id, a.name, a.musicbrainz_id, a.image, a.image_source, a.name
-ORDER BY listen_count DESC
+ORDER BY listen_count DESC, a.id
 LIMIT $3 OFFSET $4;
 
 -- name: CountTopArtists :one
