@@ -20,7 +20,7 @@ After logging in, open the settings menu again and find the `API Keys` tab. On t
 If you are not running Koito on an `https://` connection or `localhost`,  the click-to-copy button will not work. Instead, just click on the key itself to highlight and copy it.
 :::
 
-Then, direct any application you want to scrobble data from to `{your_koito_address}/apis/listenbrainz/1` and provide the api key from the UI as the token.
+Then, direct any application you want to scrobble data from to `{your_koito_address}/apis/listenbrainz/1` (or `{your_koito_address}/apis/listenbrainz` for some applications) and provide the api key from the UI as the token.
 
 ## Set up a relay
 
