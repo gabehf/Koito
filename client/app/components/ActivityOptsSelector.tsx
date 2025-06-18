@@ -16,7 +16,7 @@ export default function ActivityOptsSelector({
     currentRange,
     disableCache = false,
 }: Props) {
-    const stepPeriods = ['day', 'week', 'month', 'year'];
+    const stepPeriods = ['day', 'week', 'month'];
     const rangePeriods = [105, 182, 364];
     const [collapsed, setCollapsed] = useState(true);
 
