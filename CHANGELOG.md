@@ -4,6 +4,7 @@
 - Support for custom themes added! You can find the custom theme input in the Appearance menu.
 - Allow loading environment variables from files using the _FILE suffix (#20)
 - All activity grids (calendar heatmaps) are now configurable
+- Native import and export
 
 ## Enhancements
 - The activity grid on the home page is now configurable
@@ -11,6 +12,8 @@
 ## Fixes
 - Sub-second precision is stripped from incoming listens to ensure they can be deleted reliably
 - Top items are now sorted by id for stability
+- Clear input when closing edit modal
+- Use correct request body for create and delete alias requests
 
 ## Updates
 - Adjusted colors for the "Yuu" theme
