@@ -53,6 +53,7 @@ function getStats(period: string): Promise<Stats> {
 }
 
 function search(q: string): Promise<SearchResponse> {
+    q = encodeURIComponent(q)
     return fetch(`/apis/web/v1/search?q=${q}`).then(r => r.json() as Promise<SearchResponse>)
 }
 
@@ -131,8 +132,12 @@ function deleteApiKey(id: number): Promise<Response> {
     })
 }
 function updateApiKeyLabel(id: number, label: string): Promise<Response> {
-    return fetch(`/apis/web/v1/user/apikeys?id=${id}&label=${label}`, {
-        method: "PATCH"
+    const form = new URLSearchParams 
+    form.append('id', String(id))
+    form.append('label', label)
+    return fetch(`/apis/web/v1/user/apikeys`, {
+        method: "PATCH",
+        body: form,
     })
 }
 
@@ -154,18 +159,30 @@ function getAliases(type: string, id: number): Promise<Alias[]> {
     return fetch(`/apis/web/v1/aliases?${type}_id=${id}`).then(r => r.json() as Promise<Alias[]>)
 }
 function createAlias(type: string, id: number, alias: string): Promise<Response> {
-    return fetch(`/apis/web/v1/aliases?${type}_id=${id}&alias=${alias}`, {
-        method: 'POST'
+    const form = new URLSearchParams 
+    form.append(`${type}_id`, String(id))
+    form.append('alias', alias)
+    return fetch(`/apis/web/v1/aliases`, {
+        method: 'POST',
+        body: form,
     })
 }
 function deleteAlias(type: string, id: number, alias: string): Promise<Response> {
-    return fetch(`/apis/web/v1/aliases?${type}_id=${id}&alias=${alias}`, {
-        method: "DELETE"
+    const form = new URLSearchParams 
+    form.append(`${type}_id`, String(id))
+    form.append('alias', alias)
+    return fetch(`/apis/web/v1/aliases/delete`, {
+        method: "POST",
+        body: form,
     })
 }
 function setPrimaryAlias(type: string, id: number, alias: string): Promise<Response> {
-    return fetch(`/apis/web/v1/aliases/primary?${type}_id=${id}&alias=${alias}`, {
-        method: "POST"
+    const form = new URLSearchParams 
+    form.append(`${type}_id`, String(id))
+    form.append('alias', alias)
+    return fetch(`/apis/web/v1/aliases/primary`, {
+        method: "POST",
+        body: form,
     })
 }
 function getAlbum(id: number): Promise<Album> {

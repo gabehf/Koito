@@ -88,11 +88,18 @@ func DeleteAliasHandler(store db.DB) http.HandlerFunc {
 
 		l.Debug().Msg("DeleteAliasHandler: Got request")
 
+		err := r.ParseForm()
+		if err != nil {
+			l.Debug().Msg("DeleteAliasHandler: Failed to parse form")
+			utils.WriteError(w, "form is invalid", http.StatusBadRequest)
+			return
+		}
+
 		// Parse query parameters
-		artistIDStr := r.URL.Query().Get("artist_id")
-		albumIDStr := r.URL.Query().Get("album_id")
-		trackIDStr := r.URL.Query().Get("track_id")
-		alias := r.URL.Query().Get("alias")
+		artistIDStr := r.FormValue("artist_id")
+		albumIDStr := r.FormValue("album_id")
+		trackIDStr := r.FormValue("track_id")
+		alias := r.FormValue("alias")
 
 		if alias == "" || (artistIDStr == "" && albumIDStr == "" && trackIDStr == "") {
 			l.Debug().Msg("DeleteAliasHandler: Request is missing required parameters")
@@ -105,7 +112,6 @@ func DeleteAliasHandler(store db.DB) http.HandlerFunc {
 			return
 		}
 
-		var err error
 		if artistIDStr != "" {
 			var artistID int
 			artistID, err = strconv.Atoi(artistIDStr)
@@ -176,9 +182,9 @@ func CreateAliasHandler(store db.DB) http.HandlerFunc {
 			return
 		}
 
-		artistIDStr := r.URL.Query().Get("artist_id")
-		albumIDStr := r.URL.Query().Get("album_id")
-		trackIDStr := r.URL.Query().Get("track_id")
+		artistIDStr := r.FormValue("artist_id")
+		albumIDStr := r.FormValue("album_id")
+		trackIDStr := r.FormValue("track_id")
 
 		if artistIDStr == "" && albumIDStr == "" && trackIDStr == "" {
 			l.Debug().Msg("CreateAliasHandler: Missing ID parameter")
@@ -245,11 +251,20 @@ func SetPrimaryAliasHandler(store db.DB) http.HandlerFunc {
 
 		l.Debug().Msg("SetPrimaryAliasHandler: Got request")
 
+		err := r.ParseForm()
+		if err != nil {
+			l.Debug().Msg("SetPrimaryAliasHandler: Failed to parse form")
+			utils.WriteError(w, "form is invalid", http.StatusBadRequest)
+			return
+		}
+
 		// Parse query parameters
-		artistIDStr := r.URL.Query().Get("artist_id")
-		albumIDStr := r.URL.Query().Get("album_id")
-		trackIDStr := r.URL.Query().Get("track_id")
-		alias := r.URL.Query().Get("alias")
+		artistIDStr := r.FormValue("artist_id")
+		albumIDStr := r.FormValue("album_id")
+		trackIDStr := r.FormValue("track_id")
+		alias := r.FormValue("alias")
+
+		l.Debug().Msgf("Alias: %s", alias)
 
 		if alias == "" {
 			l.Debug().Msg("SetPrimaryAliasHandler: Missing alias parameter")
@@ -268,7 +283,6 @@ func SetPrimaryAliasHandler(store db.DB) http.HandlerFunc {
 		}
 
 		var id int
-		var err error
 		if artistIDStr != "" {
 			id, err = strconv.Atoi(artistIDStr)
 			if err != nil {

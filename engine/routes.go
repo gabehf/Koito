@@ -81,7 +81,7 @@ func bindRoutes(
 			r.Delete("/track", handlers.DeleteTrackHandler(db))
 			r.Delete("/listen", handlers.DeleteListenHandler(db))
 			r.Post("/aliases", handlers.CreateAliasHandler(db))
-			r.Delete("/aliases", handlers.DeleteAliasHandler(db))
+			r.Post("/aliases/delete", handlers.DeleteAliasHandler(db))
 			r.Post("/aliases/primary", handlers.SetPrimaryAliasHandler(db))
 			r.Get("/user/apikeys", handlers.GetApiKeysHandler(db))
 			r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))

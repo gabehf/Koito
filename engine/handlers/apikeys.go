@@ -139,7 +139,14 @@ func UpdateApiKeyLabelHandler(store db.DB) http.HandlerFunc {
 			return
 		}
 
-		idStr := r.URL.Query().Get("id")
+		err := r.ParseForm()
+		if err != nil {
+			l.Debug().Msg("UpdateApiKeyLabelHandler: Failed to parse form")
+			utils.WriteError(w, "form is invalid", http.StatusBadRequest)
+			return
+		}
+
+		idStr := r.FormValue("id")
 		if idStr == "" {
 			l.Debug().Msg("UpdateApiKeyLabelHandler: Missing id parameter")
 			utils.WriteError(w, "id is required", http.StatusBadRequest)
