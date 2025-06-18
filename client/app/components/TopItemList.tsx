@@ -14,7 +14,7 @@ interface Props<T extends Item> {
 export default function TopItemList<T extends Item>({ data, separators, type, className }: Props<T>) {
 
     return (
-        <div className={`flex flex-col gap-1 ${className} min-w-[300px]`}>
+        <div className={`flex flex-col gap-1 ${className} min-w-[200px]`}>
             {data.items.map((item, index) => {
                 const key = `${type}-${item.id}`;
                 return (
