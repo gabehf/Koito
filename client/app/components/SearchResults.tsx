@@ -23,12 +23,12 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
         }
     }
 
-    if (data === undefined) {
+    if (!data) {
         return <></>
     }
     return (
         <div className="w-full">
-            { data.artists.length > 0 &&
+            { data.artists && data.artists.length > 0 &&
             <>
             <h3 className={hClasses}>Artists</h3>
             <div className={classes}>
@@ -52,7 +52,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
             </div>
             </>
             }
-            { data.albums.length > 0 &&
+            { data.albums && data.albums.length > 0 &&
             <>
             <h3 className={hClasses}>Albums</h3>
             <div className={classes}>
@@ -77,7 +77,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
             </div>
             </>
             }
-            { data.tracks.length > 0 &&
+            { data.tracks && data.tracks.length > 0 &&
             <>
             <h3 className={hClasses}>Tracks</h3>
             <div className={classes}>

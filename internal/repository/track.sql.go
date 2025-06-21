@@ -344,6 +344,7 @@ func (q *Queries) GetTopTracksPaginated(ctx context.Context, arg GetTopTracksPag
 const getTrack = `-- name: GetTrack :one
 SELECT 
   t.id, t.musicbrainz_id, t.duration, t.release_id, t.title,
+  get_artists_for_track(t.id) AS artists,
   r.image
 FROM tracks_with_title t
 JOIN releases r ON t.release_id = r.id
@@ -356,6 +357,7 @@ type GetTrackRow struct {
 	Duration      int32
 	ReleaseID     int32
 	Title         string
+	Artists       []byte
 	Image         *uuid.UUID
 }
 
@@ -368,6 +370,7 @@ func (q *Queries) GetTrack(ctx context.Context, id int32) (GetTrackRow, error) {
 		&i.Duration,
 		&i.ReleaseID,
 		&i.Title,
+		&i.Artists,
 		&i.Image,
 	)
 	return i, err

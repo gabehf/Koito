@@ -4,7 +4,10 @@ VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetRelease :one
-SELECT * FROM releases_with_title
+SELECT 
+  *,
+  get_artists_for_release(id) AS artists
+FROM releases_with_title
 WHERE id = $1 LIMIT 1;
 
 -- name: GetReleaseByMbzID :one

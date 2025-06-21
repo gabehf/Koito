@@ -85,13 +85,26 @@ func (q *Queries) DeleteReleasesFromArtist(ctx context.Context, artistID int32) 
 }
 
 const getRelease = `-- name: GetRelease :one
-SELECT id, musicbrainz_id, image, various_artists, image_source, title FROM releases_with_title
+SELECT 
+  id, musicbrainz_id, image, various_artists, image_source, title,
+  get_artists_for_release(id) AS artists
+FROM releases_with_title
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetRelease(ctx context.Context, id int32) (ReleasesWithTitle, error) {
+type GetReleaseRow struct {
+	ID             int32
+	MusicBrainzID  *uuid.UUID
+	Image          *uuid.UUID
+	VariousArtists bool
+	ImageSource    pgtype.Text
+	Title          string
+	Artists        []byte
+}
+
+func (q *Queries) GetRelease(ctx context.Context, id int32) (GetReleaseRow, error) {
 	row := q.db.QueryRow(ctx, getRelease, id)
-	var i ReleasesWithTitle
+	var i GetReleaseRow
 	err := row.Scan(
 		&i.ID,
 		&i.MusicBrainzID,
@@ -99,6 +112,7 @@ func (q *Queries) GetRelease(ctx context.Context, id int32) (ReleasesWithTitle, 
 		&i.VariousArtists,
 		&i.ImageSource,
 		&i.Title,
+		&i.Artists,
 	)
 	return i, err
 }

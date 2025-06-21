@@ -2,6 +2,7 @@ package psql
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -33,6 +34,10 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 			AlbumID:  t.ReleaseID,
 			Image:    t.Image,
 			Duration: t.Duration,
+		}
+		err = json.Unmarshal(t.Artists, &track.Artists)
+		if err != nil {
+			return nil, fmt.Errorf("GetTrack: json.Unmarshal: %w", err)
 		}
 	} else if opts.MusicBrainzID != uuid.Nil {
 		l.Debug().Msgf("Fetching track from DB with MusicBrainz ID %s", opts.MusicBrainzID)

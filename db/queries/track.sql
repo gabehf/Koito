@@ -11,6 +11,7 @@ ON CONFLICT DO NOTHING;
 -- name: GetTrack :one
 SELECT 
   t.*,
+  get_artists_for_track(t.id) AS artists,
   r.image
 FROM tracks_with_title t
 JOIN releases r ON t.release_id = r.id
