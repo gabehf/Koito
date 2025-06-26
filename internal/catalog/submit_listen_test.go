@@ -554,6 +554,43 @@ func TestSubmitListen_UpdateTrackDuration(t *testing.T) {
 	assert.Equal(t, 1, count, "expected duration to be updated")
 }
 
+func TestSubmitListen_UpdateTrackDurationWithMbz(t *testing.T) {
+	setupTestDataSansMbzIDs(t)
+
+	ctx := context.Background()
+	mbzc := &mbz.MbzMockCaller{
+		Tracks: mbzTrackData,
+	}
+	opts := catalog.SubmitListenOpts{
+		MbzCaller:      mbzc,
+		ArtistNames:    []string{"ATARASHII GAKKO!"},
+		Artist:         "ATARASHII GAKKO!",
+		TrackTitle:     "Tokyo Calling",
+		RecordingMbzID: uuid.MustParse("00000000-0000-0000-0000-000000001001"),
+		ReleaseTitle:   "AG! Calling",
+		Time:           time.Now(),
+		UserID:         1,
+	}
+
+	err := catalog.SubmitListen(ctx, store, opts)
+	require.NoError(t, err)
+
+	// Verify that the listen was saved
+	exists, err := store.RowExists(ctx, `
+    SELECT EXISTS (
+      SELECT 1 FROM listens
+      WHERE track_id = $1
+    )`, 1)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected listen row to exist")
+
+	count, err := store.Count(ctx, `
+	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1 AND duration = 191
+	`, "Tokyo Calling")
+	require.NoError(t, err)
+	assert.Equal(t, 1, count, "expected duration to be updated")
+}
+
 func TestSubmitListen_MatchFromTrackTitleNoMbzIDs(t *testing.T) {
 	setupTestDataSansMbzIDs(t)
 

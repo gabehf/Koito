@@ -134,15 +134,35 @@ func SubmitListen(ctx context.Context, store db.DB, opts SubmitListenOpts) error
 	}
 	l.Debug().Any("track", track).Msg("Matched listen to track")
 
-	if track.Duration == 0 && opts.Duration != 0 {
-		err := store.UpdateTrack(ctx, db.UpdateTrackOpts{
-			ID:       track.ID,
-			Duration: opts.Duration,
-		})
-		if err != nil {
-			l.Err(err).Msgf("Failed to update duration for track %s", track.Title)
+	if track.Duration == 0 {
+		if opts.Duration != 0 {
+			l.Debug().Msg("Updating duration using request information")
+			err := store.UpdateTrack(ctx, db.UpdateTrackOpts{
+				ID:       track.ID,
+				Duration: opts.Duration,
+			})
+			if err != nil {
+				l.Err(err).Msgf("Failed to update duration for track %s", track.Title)
+			} else {
+				l.Info().Msgf("Duration updated to %d for track '%s'", opts.Duration, track.Title)
+			}
+		} else if track.MbzID != nil && *track.MbzID != uuid.Nil {
+			l.Debug().Msg("Attempting to update duration using MusicBrainz ID")
+			mbztrack, err := opts.MbzCaller.GetTrack(ctx, *track.MbzID)
+			if err != nil {
+				l.Err(err).Msg("Failed to make request to MusicBrainz")
+			} else {
+				err = store.UpdateTrack(ctx, db.UpdateTrackOpts{
+					ID:       track.ID,
+					Duration: int32(mbztrack.LengthMs / 1000),
+				})
+				if err != nil {
+					l.Err(err).Msgf("Failed to update duration for track %s", track.Title)
+				} else {
+					l.Info().Msgf("Duration updated to %d for track '%s'", mbztrack.LengthMs/1000, track.Title)
+				}
+			}
 		}
-		l.Info().Msgf("Duration updated to %d for track '%s'", opts.Duration, track.Title)
 	}
 
 	if opts.SkipSaveListen {

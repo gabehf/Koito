@@ -134,7 +134,8 @@ var (
 	}
 	mbzTrackData = map[uuid.UUID]*mbz.MusicBrainzTrack{
 		uuid.MustParse("00000000-0000-0000-0000-000000001001"): {
-			Title: "Tokyo Calling",
+			Title:    "Tokyo Calling",
+			LengthMs: 191000,
 		},
 	}
 )

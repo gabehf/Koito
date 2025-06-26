@@ -8,7 +8,8 @@ import (
 )
 
 type MusicBrainzTrack struct {
-	Title string `json:"title"`
+	Title    string `json:"title"`
+	LengthMs int    `json:"length"`
 }
 
 const recordingFmtStr = "%s/ws/2/recording/%s"
