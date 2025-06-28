@@ -5,10 +5,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"path/filepath"
-	"runtime"
 	"time"
 
+	"github.com/gabehf/koito/db/migrations"
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/repository"
@@ -54,13 +53,9 @@ func New() (*Psql, error) {
 		return nil, fmt.Errorf("psql.New: failed to open db for migrations: %w", err)
 	}
 
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		return nil, fmt.Errorf("psql.New: unable to get caller info")
-	}
-	migrationsPath := filepath.Join(filepath.Dir(filename), "..", "..", "..", "db", "migrations")
+	goose.SetBaseFS(migrations.Files)
 
-	if err := goose.Up(sqlDB, migrationsPath); err != nil {
+	if err := goose.Up(sqlDB, "."); err != nil {
 		return nil, fmt.Errorf("psql.New: goose failed: %w", err)
 	}
 	_ = sqlDB.Close()
