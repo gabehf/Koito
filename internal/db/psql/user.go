@@ -120,7 +120,7 @@ func (d *Psql) UpdateUser(ctx context.Context, opts db.UpdateUserOpts) error {
 		}
 		err = qtx.UpdateUserUsername(ctx, repository.UpdateUserUsernameParams{
 			ID:       opts.ID,
-			Username: opts.Username,
+			Username: strings.ToLower(opts.Username),
 		})
 		if err != nil {
 			return fmt.Errorf("UpdateUser: UpdateUserUsername: %w", err)
