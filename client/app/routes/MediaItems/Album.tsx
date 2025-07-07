@@ -43,7 +43,7 @@ export default function Album() {
         }}
         subContent={<div className="flex flex-col gap-2 items-start">
         {album.listen_count && <p>{album.listen_count} play{ album.listen_count > 1 ? 's' : ''}</p>}
-        {<p>{timeListenedString(album.time_listened)}</p>}
+        {<p title={Math.floor(album.time_listened / 60) + " minutes"}>{timeListenedString(album.time_listened)}</p>}
         </div>}
     >
         <div className="mt-10">

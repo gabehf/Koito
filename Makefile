@@ -12,6 +12,9 @@ postgres.schemadump:
 postgres.run:
 	docker run --name koito-db -p 5432:5432 -e POSTGRES_PASSWORD=secret -d postgres
 
+postgres.run-scratch:
+	docker run --name koito-scratch -p 5433:5432 -e POSTGRES_PASSWORD=secret -d postgres
+
 postgres.start:
 	docker start koito-db
 
@@ -21,8 +24,14 @@ postgres.stop:
 postgres.remove:
 	docker stop koito-db && docker rm koito-db
 
+postgres.remove-scratch:
+	docker stop koito-scratch && docker rm koito-scratch
+
 api.debug:
 	KOITO_ALLOWED_HOSTS=* KOITO_LOG_LEVEL=debug KOITO_CONFIG_DIR=test_config_dir KOITO_DATABASE_URL=postgres://postgres:secret@localhost:5432?sslmode=disable go run cmd/api/main.go
+
+api.scratch:
+	KOITO_ALLOWED_HOSTS=* KOITO_LOG_LEVEL=debug KOITO_CONFIG_DIR=test_config_dir/scratch KOITO_DATABASE_URL=postgres://postgres:secret@localhost:5433?sslmode=disable go run cmd/api/main.go
 
 api.test:
 	go test ./... -timeout 60s

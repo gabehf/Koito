@@ -46,7 +46,7 @@ export default function Track() {
             subContent={<div className="flex flex-col gap-2 items-start">
             <Link to={`/album/${track.album_id}`}>appears on {album.title}</Link>
             {track.listen_count && <p>{track.listen_count} play{ track.listen_count > 1 ? 's' : ''}</p>}
-            {<p>{timeListenedString(track.time_listened)}</p>}
+        {<p title={Math.floor(track.time_listened / 60) + " minutes"}>{timeListenedString(track.time_listened)}</p>}
             </div>}
         >
             <div className="mt-10">

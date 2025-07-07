@@ -10,11 +10,11 @@ import (
 )
 
 type StatsResponse struct {
-	ListenCount   int64 `json:"listen_count"`
-	TrackCount    int64 `json:"track_count"`
-	AlbumCount    int64 `json:"album_count"`
-	ArtistCount   int64 `json:"artist_count"`
-	HoursListened int64 `json:"hours_listened"`
+	ListenCount     int64 `json:"listen_count"`
+	TrackCount      int64 `json:"track_count"`
+	AlbumCount      int64 `json:"album_count"`
+	ArtistCount     int64 `json:"artist_count"`
+	MinutesListened int64 `json:"minutes_listened"`
 }
 
 func StatsHandler(store db.DB) http.HandlerFunc {
@@ -79,11 +79,11 @@ func StatsHandler(store db.DB) http.HandlerFunc {
 
 		l.Debug().Msg("StatsHandler: Successfully fetched statistics")
 		utils.WriteJSON(w, http.StatusOK, StatsResponse{
-			ListenCount:   listens,
-			TrackCount:    tracks,
-			AlbumCount:    albums,
-			ArtistCount:   artists,
-			HoursListened: timeListenedS / 60 / 60,
+			ListenCount:     listens,
+			TrackCount:      tracks,
+			AlbumCount:      albums,
+			ArtistCount:     artists,
+			MinutesListened: timeListenedS / 60,
 		})
 	}
 }

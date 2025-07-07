@@ -26,7 +26,7 @@ export default function AllTimeStats() {
         <div>
             <h2>All Time Stats</h2>
             <div>
-                <span className={numberClasses}>{data.hours_listened}</span> Hours Listened
+                <span className={numberClasses} title={data.minutes_listened + " minutes"}>{Math.floor(data.minutes_listened / 60)}</span> Hours Listened
             </div>
             <div>
                 <span className={numberClasses}>{data.listen_count}</span> Plays

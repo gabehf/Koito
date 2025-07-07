@@ -61,7 +61,7 @@ export default function MediaLayout(props: Props) {
             transition: '1000',
         }}
         >
-        <ImageDropHandler itemType={props.type.toLowerCase() === 'artist' ? 'artist' : 'album'} id={props.imgItemId} onComplete={replaceImageCallback} />
+        <ImageDropHandler itemType={props.type.toLowerCase() === 'artist' ? 'artist' : 'album'} onComplete={replaceImageCallback} />
         <title>{title}</title>
         <meta property="og:title" content={title} />
         <meta

@@ -49,7 +49,7 @@ export default function Artist() {
         }}
         subContent={<div className="flex flex-col gap-2 items-start">
         {artist.listen_count && <p>{artist.listen_count} play{ artist.listen_count > 1 ? 's' : ''}</p>}
-        {<p>{timeListenedString(artist.time_listened)}</p>}
+        {<p title={Math.floor(artist.time_listened / 60) + " minutes"}>{timeListenedString(artist.time_listened)}</p>}
         </div>}
     >
         <div className="mt-10">

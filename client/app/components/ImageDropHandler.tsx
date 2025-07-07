@@ -3,11 +3,10 @@ import { useEffect } from 'react';
 
 interface Props {
     itemType: string,
-    id: number,
     onComplete: Function
 }
 
-export default function ImageDropHandler({ itemType, id, onComplete }: Props) {
+export default function ImageDropHandler({ itemType, onComplete }: Props) {
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
         console.log('dragover!!')
@@ -25,7 +24,11 @@ export default function ImageDropHandler({ itemType, id, onComplete }: Props) {
 
         const formData = new FormData();
         formData.append('image', imageFile);
-        formData.append(itemType.toLowerCase()+'_id', String(id))
+        const pathname = window.location.pathname;
+        const segments = pathname.split('/');
+        const filteredSegments = segments.filter(segment => segment !== '');
+        const lastSegment = filteredSegments[filteredSegments.length - 1];
+        formData.append(itemType.toLowerCase()+'_id', lastSegment)
         replaceImage(formData).then((r) => {
             if (r.status >= 200 && r.status < 300) {
                 onComplete()

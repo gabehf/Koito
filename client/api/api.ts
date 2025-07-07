@@ -288,7 +288,7 @@ type Stats = {
     track_count: number 
     album_count: number 
     artist_count: number 
-    hours_listened: number
+    minutes_listened: number
 }
 type SearchResponse = {
     albums: Album[]

@@ -447,7 +447,7 @@ func TestStats(t *testing.T) {
 	assert.EqualValues(t, 3, actual.TrackCount)
 	assert.EqualValues(t, 3, actual.AlbumCount)
 	assert.EqualValues(t, 3, actual.ArtistCount)
-	assert.EqualValues(t, 0, actual.HoursListened)
+	assert.EqualValues(t, 11, actual.MinutesListened)
 }
 
 func TestListenActivity(t *testing.T) {
