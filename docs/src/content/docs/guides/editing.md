@@ -60,6 +60,8 @@ Once merged, we can see that all of the listen activity for Tsumugu has been asi
 
 ![an activity heatmap showing more listens than were previously there](../../../assets/merged_activity.png)
 
+You can also search for items when merging by their ID using the format `id:1234`.
+
 #### Deleting Items
 
 To delete at item, just click the trash icon, which is the fourth and final icon in the editing options. Doing so will open a confirmation dialogue. Once confirmed, the item you delete, as well as all of its children
