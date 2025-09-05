@@ -32,4 +32,5 @@ Once the relay is configured, Koito will automatically forward any requests it r
 
 :::note
 Be sure to include the full path to the ListenBrainz endpoint of the server you are relaying to in the `KOITO_LBZ_RELAY_URL`.
+Example: `KOITO_ENABLE_LBZ_RELAY`=`https://api.listenbrainz.org/1`
 :::
