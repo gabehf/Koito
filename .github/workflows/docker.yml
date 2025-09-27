@@ -13,6 +13,8 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - dev
 
   workflow_dispatch:
 
@@ -94,3 +96,34 @@ jobs:
           subject-name: index.docker.io/gabehf/koito
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  push_dev:
+    name: Push Docker image (dev branch)
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push dev image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            gabehf/koito:dev
+            gabehf/koito:dev-${{ github.sha }}
+          build-args: |
+            KOITO_VERSION=dev
+          platforms: linux/amd64,linux/arm64
