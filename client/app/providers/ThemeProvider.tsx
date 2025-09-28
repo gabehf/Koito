@@ -49,15 +49,24 @@ export function ThemeProvider({
 }: {
     children: ReactNode;
 }) {
+<<<<<<< HEAD
     let defaultTheme = useAppContext().defaultTheme
     let initialTheme = localStorage.getItem("theme") ?? defaultTheme
+=======
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
     const [themeName, setThemeName] = useState(initialTheme);
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (initialTheme === 'custom') {
             const customTheme = getStoredCustomTheme();
+<<<<<<< HEAD
             return customTheme || themes[defaultTheme];
         }
         return themes[initialTheme] || themes[defaultTheme];
+=======
+            return customTheme || themes.yuu;
+        }
+        return themes[initialTheme] || themes.yuu;
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
     });
 
     const setTheme = (newThemeName: string) => {
@@ -68,12 +77,18 @@ export function ThemeProvider({
                 setCurrentTheme(customTheme);
             } else {
                 // Fallback to default theme if no custom theme found
+<<<<<<< HEAD
                 setThemeName(defaultTheme);
                 setCurrentTheme(themes[defaultTheme]);
+=======
+                setThemeName('yuu');
+                setCurrentTheme(themes.yuu);
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
             }
         } else {
             const foundTheme = themes[newThemeName];
             if (foundTheme) {
+<<<<<<< HEAD
                 localStorage.setItem('theme', newThemeName)
                 setCurrentTheme(foundTheme);
             }
@@ -84,13 +99,21 @@ export function ThemeProvider({
         setThemeName(defaultTheme)
         localStorage.removeItem('theme')
         setCurrentTheme(themes[defaultTheme])
+=======
+                setCurrentTheme(foundTheme);
+            }
+        }
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
     }
 
     const setCustomTheme = useCallback((customTheme: Theme) => {
         localStorage.setItem('custom-theme', JSON.stringify(customTheme));
         applyCustomThemeVars(customTheme);
         setThemeName('custom');
+<<<<<<< HEAD
         localStorage.setItem('theme', 'custom')
+=======
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
         setCurrentTheme(customTheme);
     }, []);
 
@@ -102,6 +125,10 @@ export function ThemeProvider({
         const root = document.documentElement;
 
         root.setAttribute('data-theme', themeName);
+<<<<<<< HEAD
+=======
+        localStorage.setItem('theme', themeName);
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
 
         if (themeName === 'custom') {
             applyCustomThemeVars(currentTheme);
@@ -111,6 +138,7 @@ export function ThemeProvider({
     }, [themeName, currentTheme]);
 
     return (
+<<<<<<< HEAD
         <ThemeContext.Provider value={{ 
             themeName, 
             theme: currentTheme, 
@@ -119,6 +147,9 @@ export function ThemeProvider({
             setCustomTheme, 
             getCustomTheme
         }}>
+=======
+        <ThemeContext.Provider value={{ themeName, theme: currentTheme, setTheme, setCustomTheme, getCustomTheme }}>
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
             {children}
         </ThemeContext.Provider>
     );

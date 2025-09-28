@@ -5,7 +5,11 @@ import ThemeOption from './ThemeOption';
 import { AsyncButton } from '../AsyncButton';
 
 export function ThemeSwitcher() {
+<<<<<<< HEAD
     const { setTheme } = useTheme();
+=======
+    const { theme, themeName, setTheme } = useTheme();
+>>>>>>> fbaa6a6 (Rework theme provider to provide the actual Theme object throughtout the app, in addition to the name)
         const initialTheme = {
             bg: "#1e1816",
             bgSecondary: "#2f2623",
