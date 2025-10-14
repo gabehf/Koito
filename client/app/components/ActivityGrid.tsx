@@ -1,15 +1,14 @@
 import { useQuery } from "@tanstack/react-query"
 import { getActivity, type getActivityArgs, type ListenActivityItem } from "api/api"
 import Popup from "./Popup"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTheme } from "~/hooks/useTheme"
 import ActivityOptsSelector from "./ActivityOptsSelector"
+import type { Theme } from "~/styles/themes.css"
 
-function getPrimaryColor(): string {
-    const value = getComputedStyle(document.documentElement)
-        .getPropertyValue('--color-primary')
-        .trim();
 
+function getPrimaryColor(theme: Theme): string {
+    const value = theme.primary;
     const rgbMatch = value.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/);
     if (rgbMatch) {
         const [, r, g, b] = rgbMatch.map(Number);
@@ -23,14 +22,13 @@ function getPrimaryColor(): string {
 
     return value;
 }
-
 interface Props {
-    step?: string 
-    range?: number 
-    month?: number 
-    year?: number 
-    artistId?: number 
-    albumId?: number 
+    step?: string
+    range?: number
+    month?: number
+    year?: number
+    artistId?: number
+    albumId?: number
     trackId?: number
     configurable?: boolean
     autoAdjust?: boolean
@@ -47,7 +45,6 @@ export default function ActivityGrid({
         configurable = false,
     }: Props) {
 
-    const [color, setColor] = useState(getPrimaryColor())
     const [stepState, setStep] = useState(step)
     const [rangeState, setRange] = useState(range)
         
@@ -68,15 +65,9 @@ export default function ActivityGrid({
     });
 
 
-    const { theme } = useTheme();
-    useEffect(() => {
-        const raf = requestAnimationFrame(() => {
-          const color = getPrimaryColor()
-          setColor(color);
-        });
-      
-        return () => cancelAnimationFrame(raf);
-      }, [theme]);      
+    const { theme, themeName } = useTheme();
+    const color = getPrimaryColor(theme);
+
 
     if (isPending) { 
         return (
@@ -133,7 +124,7 @@ export default function ActivityGrid({
         }
 
         v = Math.min(v, t)
-        if (theme === "pearl") {
+        if (themeName === "pearl") {
             // special case for the only light theme lol
             // could be generalized by pragmatically comparing the
             // lightness of the bg vs the primary but eh

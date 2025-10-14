@@ -12,7 +12,6 @@ import { themes, type Theme } from "~/styles/themes.css"
 
 export default function ThemeHelper() {
     const initialTheme = {
-        name: "custom",
         bg: "#1e1816",
         bgSecondary: "#2f2623",
         bgTertiary: "#453733",
@@ -36,9 +35,6 @@ export default function ThemeHelper() {
         console.log(custom)
         try {
             const theme = JSON.parse(custom) as Theme
-            if (theme.name !== "custom") {
-                throw new Error("theme name must be 'custom'")
-            }
             console.log(theme)
             setCustomTheme(theme)
         } catch(err) {

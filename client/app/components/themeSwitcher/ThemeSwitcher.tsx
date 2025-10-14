@@ -6,7 +6,7 @@ import ThemeOption from './ThemeOption';
 import { AsyncButton } from '../AsyncButton';
 
 export function ThemeSwitcher() {
-    const { theme, setTheme } = useTheme();
+    const { theme, themeName, setTheme } = useTheme();
         const initialTheme = {
             bg: "#1e1816",
             bgSecondary: "#2f2623",
@@ -30,30 +30,22 @@ export function ThemeSwitcher() {
         const handleCustomTheme = () => {
             console.log(custom)
             try {
-                const theme = JSON.parse(custom)
-                theme.name = "custom"
-                setCustomTheme(theme)
-                delete theme.name
-                setCustom(JSON.stringify(theme, null, "  "))
-                console.log(theme)
+                const themeData = JSON.parse(custom)
+                setCustomTheme(themeData)
+                setCustom(JSON.stringify(themeData, null, "  "))
+                console.log(themeData)
             } catch(err) {
                 console.log(err)
             }
         }
-
-    useEffect(() => {
-        if (theme) {
-            setTheme(theme)
-        }
-    }, [theme]);
 
     return (
         <div className='flex flex-col gap-10'>
             <div>
                 <h2>Select Theme</h2>
                 <div className="grid grid-cols-2 items-center gap-2">
-                    {themes.map((t) => (
-                        <ThemeOption setTheme={setTheme} key={t.name} theme={t} />
+                    {Object.entries(themes).map(([name, themeData]) => (
+                        <ThemeOption setTheme={setTheme} key={name} theme={themeData} themeName={name} />
                     ))}
                 </div>
             </div>

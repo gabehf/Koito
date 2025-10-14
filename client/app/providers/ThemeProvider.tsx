@@ -1,9 +1,10 @@
 import { createContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import { type Theme } from '~/styles/themes.css';
+import { type Theme, themes } from '~/styles/themes.css';
 import { themeVars } from '~/styles/vars.css';
 
 interface ThemeContextValue {
-    theme: string;
+    themeName: string;
+    theme: Theme;
     setTheme: (theme: string) => void;
     setCustomTheme: (theme: Theme) => void;
     getCustomTheme: () => Theme | undefined;
@@ -29,6 +30,18 @@ function clearCustomThemeVars() {
     }
 }
 
+function getStoredCustomTheme(): Theme | undefined {
+    const themeStr = localStorage.getItem('custom-theme');
+    if (!themeStr) return undefined;
+    try {
+        const parsed = JSON.parse(themeStr);
+        const { name, ...theme } = parsed;
+        return theme as Theme;
+    } catch {
+        return undefined;
+    }
+}
+
 export function ThemeProvider({
     theme: initialTheme,
     children,
@@ -36,57 +49,60 @@ export function ThemeProvider({
     theme: string;
     children: ReactNode;
 }) {
-    const [theme, setThemeName] = useState(initialTheme);
+    const [themeName, setThemeName] = useState(initialTheme);
+    const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
+        if (initialTheme === 'custom') {
+            const customTheme = getStoredCustomTheme();
+            return customTheme || themes.yuu;
+        }
+        return themes[initialTheme] || themes.yuu;
+    });
 
-    const setTheme = (theme: string) => {
-      setThemeName(theme)
+    const setTheme = (newThemeName: string) => {
+        setThemeName(newThemeName);
+        if (newThemeName === 'custom') {
+            const customTheme = getStoredCustomTheme();
+            if (customTheme) {
+                setCurrentTheme(customTheme);
+            } else {
+                // Fallback to default theme if no custom theme found
+                setThemeName('yuu');
+                setCurrentTheme(themes.yuu);
+            }
+        } else {
+            const foundTheme = themes[newThemeName];
+            if (foundTheme) {
+                setCurrentTheme(foundTheme);
+            }
+        }
     }
 
     const setCustomTheme = useCallback((customTheme: Theme) => {
         localStorage.setItem('custom-theme', JSON.stringify(customTheme));
         applyCustomThemeVars(customTheme);
-        setTheme('custom');
+        setThemeName('custom');
+        setCurrentTheme(customTheme);
     }, []);
 
-    const getCustomTheme = (): Theme | undefined => { 
-        const themeStr = localStorage.getItem('custom-theme');
-        if (!themeStr) {
-            return undefined
-        }
-        try {
-            let theme = JSON.parse(themeStr) as Theme
-            return theme
-        } catch (err) {
-            return undefined 
-        }
+    const getCustomTheme = (): Theme | undefined => {
+        return getStoredCustomTheme();
     }
 
     useEffect(() => {
         const root = document.documentElement;
 
-        root.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme)
-        console.log(theme)
+        root.setAttribute('data-theme', themeName);
+        localStorage.setItem('theme', themeName);
 
-        if (theme === 'custom') {
-            const saved = localStorage.getItem('custom-theme');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved) as Theme;
-                    applyCustomThemeVars(parsed);
-                } catch (err) {
-                    console.error('Invalid custom theme in localStorage', err);
-                }
-            } else {
-                setTheme('yuu')
-            }
+        if (themeName === 'custom') {
+            applyCustomThemeVars(currentTheme);
         } else {
-            clearCustomThemeVars()
+            clearCustomThemeVars();
         }
-    }, [theme]);
+    }, [themeName, currentTheme]);
 
     return (
-        <ThemeContext.Provider value={{ theme, setTheme, setCustomTheme, getCustomTheme }}>
+        <ThemeContext.Provider value={{ themeName, theme: currentTheme, setTheme, setCustomTheme, getCustomTheme }}>
             {children}
         </ThemeContext.Provider>
     );
