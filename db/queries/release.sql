@@ -74,8 +74,8 @@ JOIN artist_releases ar ON r.id = ar.release_id
 WHERE ar.artist_id = $1;
 
 -- name: AssociateArtistToRelease :exec
-INSERT INTO artist_releases (artist_id, release_id)
-VALUES ($1, $2)
+INSERT INTO artist_releases (artist_id, release_id, is_primary)
+VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
 
 -- name: GetReleasesWithoutImages :many
