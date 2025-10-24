@@ -4,8 +4,8 @@ VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: AssociateArtistToTrack :exec
-INSERT INTO artist_tracks (artist_id, track_id)
-VALUES ($1, $2)
+INSERT INTO artist_tracks (artist_id, track_id, is_primary)
+VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
 
 -- name: GetTrack :one

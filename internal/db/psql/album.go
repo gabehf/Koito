@@ -144,6 +144,7 @@ func (d *Psql) SaveAlbum(ctx context.Context, opts db.SaveAlbumOpts) (*models.Al
 		err = qtx.AssociateArtistToRelease(ctx, repository.AssociateArtistToReleaseParams{
 			ArtistID:  artistId,
 			ReleaseID: r.ID,
+			IsPrimary: opts.ArtistIDs[0] == artistId,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("SaveAlbum: AssociateArtistToRelease: %w", err)
