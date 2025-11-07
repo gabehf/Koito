@@ -103,6 +103,19 @@ function logout(): Promise<Response> {
 
 function getCfg(): Promise<Config> {
     return fetch(`/apis/web/v1/config`).then(r => r.json() as Promise<Config>)
+
+}
+
+function submitListen(id: string, ts: Date): Promise<Response> {
+    const form = new URLSearchParams
+    form.append("track_id", id)
+    const ms = new Date(ts).getTime()
+    const unix= Math.floor(ms / 1000); 
+    form.append("unix", unix.toString())
+    return fetch(`/apis/web/v1/listen`, {
+        method: "POST",
+        body: form,
+    })
 }
 
 function getApiKeys(): Promise<ApiKey[]> {
@@ -232,6 +245,7 @@ export {
     deleteListen,
     getAlbum,
     getExport,
+    submitListen,
 }
 type Track = {
     id: number
