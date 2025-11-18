@@ -23,6 +23,9 @@ If the environment variable is defined without **and** with the suffix at the sa
 ##### KOITO_DEFAULT_PASSWORD
 - Default: `changeme`
 - Description: The password for the user that is created on first startup. Only applies when running Koito for the first time.
+##### KOITO_DEFAULT_THEME
+- Default: `yuu`
+- Description: The lowercase name of the default theme to be used by the client. Overridden if a user picks a theme in the theme switcher.
 ##### KOITO_BIND_ADDR
 - Description: The address to bind to. The default blank value is equivalent to `0.0.0.0`.
 ##### KOITO_LISTEN_PORT
