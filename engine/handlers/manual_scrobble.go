@@ -36,7 +36,7 @@ func SubmitListenWithIDHandler(store db.DB) http.HandlerFunc {
 		}
 
 		trackIDStr := r.FormValue("track_id")
-		timestampStr := r.FormValue("unix") // unix
+		timestampStr := r.FormValue("unix")
 		client := r.FormValue("client")
 		if client == "" {
 			client = defaultClientStr
@@ -54,8 +54,8 @@ func SubmitListenWithIDHandler(store db.DB) http.HandlerFunc {
 			return
 		}
 		unix, err := strconv.ParseInt(timestampStr, 10, 64)
-		if err != nil {
-			l.Debug().AnErr("error", err).Msg("SubmitListenWithIDHandler: Invalid track id")
+		if err != nil || time.Now().Unix() < unix {
+			l.Debug().AnErr("error", err).Msg("SubmitListenWithIDHandler: Invalid unix timestamp")
 			utils.WriteError(w, "invalid timestamp", http.StatusBadRequest)
 			return
 		}
