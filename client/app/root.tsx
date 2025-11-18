@@ -58,12 +58,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    let theme = localStorage.getItem('theme') ?? 'yuu'
-
   return (
     <>
         <AppProvider>
-            <ThemeProvider theme={theme}>
+            <ThemeProvider>
             <QueryClientProvider client={queryClient}>
                 <div className="flex-col flex sm:flex-row">
                   <Sidebar />
@@ -99,18 +97,12 @@ export function ErrorBoundary() {
         stack = error.stack;
     }
 
-    let theme = 'yuu'
-    try {
-        theme = localStorage.getItem('theme') ?? theme
-    } catch(err) {
-        console.log(err)
-    }
 
     const title = `${message} - Koito`
 
     return (
         <AppProvider>
-            <ThemeProvider theme={theme}>
+            <ThemeProvider>
             <title>{title}</title>
                 <div className="flex">
                     <Sidebar />

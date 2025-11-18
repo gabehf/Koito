@@ -101,6 +101,10 @@ function logout(): Promise<Response> {
     })
 }
 
+function getCfg(): Promise<Config> {
+    return fetch(`/apis/web/v1/config`).then(r => r.json() as Promise<Config>)
+}
+
 function getApiKeys(): Promise<ApiKey[]> {
     return fetch(`/apis/web/v1/user/apikeys`).then((r) => r.json() as Promise<ApiKey[]>)
 }
@@ -214,6 +218,7 @@ export {
     imageUrl,
     login,
     logout,
+    getCfg,
     deleteItem,
     updateUser,
     getAliases,
@@ -309,6 +314,9 @@ type ApiKey = {
 type ApiError = {
     error: string
 }
+type Config = {
+    default_theme: string
+}
 
 export type {
     getItemsArgs,
@@ -323,5 +331,6 @@ export type {
     User,
     Alias,
     ApiKey,
-    ApiError
+    ApiError,
+    Config
 }

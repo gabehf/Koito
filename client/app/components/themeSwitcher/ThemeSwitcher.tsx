@@ -1,12 +1,11 @@
-// ThemeSwitcher.tsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import themes from '~/styles/themes.css';
 import ThemeOption from './ThemeOption';
 import { AsyncButton } from '../AsyncButton';
 
 export function ThemeSwitcher() {
-    const { theme, themeName, setTheme } = useTheme();
+    const { setTheme } = useTheme();
         const initialTheme = {
             bg: "#1e1816",
             bgSecondary: "#2f2623",
@@ -24,7 +23,7 @@ export function ThemeSwitcher() {
             info: "#87b8dd",
         }
     
-        const { setCustomTheme, getCustomTheme } = useTheme()
+        const { setCustomTheme, getCustomTheme, resetTheme } = useTheme()
         const [custom, setCustom] = useState(JSON.stringify(getCustomTheme() ?? initialTheme, null, "  "))
     
         const handleCustomTheme = () => {
@@ -42,7 +41,12 @@ export function ThemeSwitcher() {
     return (
         <div className='flex flex-col gap-10'>
             <div>
-                <h2>Select Theme</h2>
+                <div className='flex items-center gap-3'>
+                    <h2>Select Theme</h2>
+                    <div className='mb-3'>
+                        <AsyncButton onClick={resetTheme}>Reset</AsyncButton>
+                    </div>
+                </div>
                 <div className="grid grid-cols-2 items-center gap-2">
                     {Object.entries(themes).map(([name, themeData]) => (
                         <ThemeOption setTheme={setTheme} key={name} theme={themeData} themeName={name} />
