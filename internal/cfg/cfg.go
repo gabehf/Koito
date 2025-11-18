@@ -31,6 +31,7 @@ const (
 	CONFIG_DIR_ENV                 = "KOITO_CONFIG_DIR"
 	DEFAULT_USERNAME_ENV           = "KOITO_DEFAULT_USERNAME"
 	DEFAULT_PASSWORD_ENV           = "KOITO_DEFAULT_PASSWORD"
+	DEFAULT_THEME_ENV              = "KOITO_DEFAULT_THEME"
 	DISABLE_DEEZER_ENV             = "KOITO_DISABLE_DEEZER"
 	DISABLE_COVER_ART_ARCHIVE_ENV  = "KOITO_DISABLE_COVER_ART_ARCHIVE"
 	DISABLE_MUSICBRAINZ_ENV        = "KOITO_DISABLE_MUSICBRAINZ"
@@ -60,6 +61,7 @@ type config struct {
 	lbzRelayToken          string
 	defaultPw              string
 	defaultUsername        string
+	defaultTheme           string
 	disableDeezer          bool
 	disableCAA             bool
 	disableMusicBrainz     bool
@@ -161,6 +163,8 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	} else {
 		cfg.defaultPw = getenv(DEFAULT_PASSWORD_ENV)
 	}
+
+	cfg.defaultTheme = getenv(DEFAULT_THEME_ENV)
 
 	cfg.configDir = getenv(CONFIG_DIR_ENV)
 	if cfg.configDir == "" {
@@ -275,6 +279,12 @@ func DefaultUsername() string {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.defaultUsername
+}
+
+func DefaultTheme() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.defaultTheme
 }
 
 func FullImageCacheEnabled() bool {

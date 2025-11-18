@@ -35,6 +35,7 @@ func bindRoutes(
 		Get("/images/{size}/{filename}", handlers.ImageHandler(db))
 
 	r.Route("/apis/web/v1", func(r chi.Router) {
+		r.Get("/config", handlers.GetCfgHandler())
 		r.Get("/artist", handlers.GetArtistHandler(db))
 		r.Get("/artists", handlers.GetArtistsForItemHandler(db))
 		r.Get("/album", handlers.GetAlbumHandler(db))

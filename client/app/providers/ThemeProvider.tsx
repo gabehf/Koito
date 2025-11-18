@@ -1,11 +1,13 @@
 import { createContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { type Theme, themes } from '~/styles/themes.css';
 import { themeVars } from '~/styles/vars.css';
+import { useAppContext } from './AppProvider';
 
 interface ThemeContextValue {
     themeName: string;
     theme: Theme;
     setTheme: (theme: string) => void;
+    resetTheme: () => void;
     setCustomTheme: (theme: Theme) => void;
     getCustomTheme: () => Theme | undefined;
 }
@@ -43,19 +45,19 @@ function getStoredCustomTheme(): Theme | undefined {
 }
 
 export function ThemeProvider({
-    theme: initialTheme,
     children,
 }: {
-    theme: string;
     children: ReactNode;
 }) {
+    let defaultTheme = useAppContext().defaultTheme
+    let initialTheme = localStorage.getItem("theme") ?? defaultTheme
     const [themeName, setThemeName] = useState(initialTheme);
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
         if (initialTheme === 'custom') {
             const customTheme = getStoredCustomTheme();
-            return customTheme || themes.yuu;
+            return customTheme || themes[defaultTheme];
         }
-        return themes[initialTheme] || themes.yuu;
+        return themes[initialTheme] || themes[defaultTheme];
     });
 
     const setTheme = (newThemeName: string) => {
@@ -66,21 +68,29 @@ export function ThemeProvider({
                 setCurrentTheme(customTheme);
             } else {
                 // Fallback to default theme if no custom theme found
-                setThemeName('yuu');
-                setCurrentTheme(themes.yuu);
+                setThemeName(defaultTheme);
+                setCurrentTheme(themes[defaultTheme]);
             }
         } else {
             const foundTheme = themes[newThemeName];
             if (foundTheme) {
+                localStorage.setItem('theme', newThemeName)
                 setCurrentTheme(foundTheme);
             }
         }
+    }
+
+    const resetTheme = () => {
+        setThemeName(defaultTheme)
+        localStorage.removeItem('theme')
+        setCurrentTheme(themes[defaultTheme])
     }
 
     const setCustomTheme = useCallback((customTheme: Theme) => {
         localStorage.setItem('custom-theme', JSON.stringify(customTheme));
         applyCustomThemeVars(customTheme);
         setThemeName('custom');
+        localStorage.setItem('theme', 'custom')
         setCurrentTheme(customTheme);
     }, []);
 
@@ -92,7 +102,6 @@ export function ThemeProvider({
         const root = document.documentElement;
 
         root.setAttribute('data-theme', themeName);
-        localStorage.setItem('theme', themeName);
 
         if (themeName === 'custom') {
             applyCustomThemeVars(currentTheme);
@@ -102,7 +111,14 @@ export function ThemeProvider({
     }, [themeName, currentTheme]);
 
     return (
-        <ThemeContext.Provider value={{ themeName, theme: currentTheme, setTheme, setCustomTheme, getCustomTheme }}>
+        <ThemeContext.Provider value={{ 
+            themeName, 
+            theme: currentTheme, 
+            setTheme,
+            resetTheme, 
+            setCustomTheme, 
+            getCustomTheme
+        }}>
             {children}
         </ThemeContext.Provider>
     );
