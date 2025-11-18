@@ -23,16 +23,19 @@ export const useAppContext = () => {
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null | undefined>(undefined);
-  const [defaultTheme, setDefaultTheme] = useState<string | undefined>(undefined)
-  const [configurableHomeActivity, setConfigurableHomeActivity] = useState<boolean>(false);
+  const [defaultTheme, setDefaultTheme] = useState<string | undefined>(
+    undefined
+  );
+  const [configurableHomeActivity, setConfigurableHomeActivity] =
+    useState<boolean>(false);
   const [homeItems, setHomeItems] = useState<number>(0);
 
   const setUsername = (value: string) => {
     if (!user) {
-      return
+      return;
     }
-    setUser({...user, username: value})
-  }
+    setUser({ ...user, username: value });
+  };
 
   useEffect(() => {
     fetch("/apis/web/v1/user/me")
@@ -45,14 +48,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setConfigurableHomeActivity(true);
     setHomeItems(12);
 
-    getCfg().then(cfg => {
-      console.log(cfg)
-      if (cfg.default_theme !== '') {
-        setDefaultTheme(cfg.default_theme)
+    getCfg().then((cfg) => {
+      console.log(cfg);
+      if (cfg.default_theme !== "") {
+        setDefaultTheme(cfg.default_theme);
       } else {
-        setDefaultTheme('yuu')
+        setDefaultTheme("yuu");
       }
-    })
+    });
   }, []);
 
   // Block rendering the app until config is loaded
@@ -70,5 +73,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setUsername,
   };
 
-  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
+  );
 };
