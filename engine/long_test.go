@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -889,4 +890,30 @@ func TestSetPrimaryArtist(t *testing.T) {
 	count, err = store.Count(ctx, `SELECT COUNT(*) FROM artist_tracks WHERE track_id = $1 AND is_primary = $2`, 4, true)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, count, "expected only one primary artist for track")
+}
+
+func TestManualListen(t *testing.T) {
+
+	t.Run("Submit Listens", doSubmitListens)
+
+	ctx := context.Background()
+
+	// happy
+	formdata := url.Values{}
+	formdata.Set("track_id", "1")
+	formdata.Set("unix", strconv.FormatInt(time.Now().Unix()-60, 10))
+	body := formdata.Encode()
+	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/listen", strings.NewReader(body))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	count, _ := store.Count(ctx, `SELECT COUNT(*) FROM listens WHERE track_id = $1`, 1)
+	assert.Equal(t, 2, count)
+
+	// 400
+	formdata.Set("track_id", "1")
+	formdata.Set("unix", strconv.FormatInt(time.Now().Unix()+60, 10))
+	body = formdata.Encode()
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/listen", strings.NewReader(body))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
