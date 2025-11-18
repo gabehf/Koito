@@ -90,6 +90,7 @@ export function ThemeProvider({
         localStorage.setItem('custom-theme', JSON.stringify(customTheme));
         applyCustomThemeVars(customTheme);
         setThemeName('custom');
+        localStorage.setItem('theme', 'custom')
         setCurrentTheme(customTheme);
     }, []);
 
