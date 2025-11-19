@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { average } from "color.js";
 import { imageUrl, type SearchResponse } from "api/api";
 import ImageDropHandler from "~/components/ImageDropHandler";
-import { Edit, ImageIcon, Merge, Trash } from "lucide-react";
+import { Edit, ImageIcon, Merge, Plus, Trash } from "lucide-react";
 import { useAppContext } from "~/providers/AppProvider";
 import MergeModal from "~/components/modals/MergeModal";
 import ImageReplaceModal from "~/components/modals/ImageReplaceModal";
 import DeleteModal from "~/components/modals/DeleteModal";
 import RenameModal from "~/components/modals/EditModal/EditModal";
 import EditModal from "~/components/modals/EditModal/EditModal";
+import AddListenModal from "~/components/modals/AddListenModal";
 
 export type MergeFunc = (from: number, to: number, replaceImage: boolean) => Promise<Response>
 export type MergeSearchCleanerFunc = (r: SearchResponse, id: number) => SearchResponse
@@ -32,6 +33,7 @@ export default function MediaLayout(props: Props) {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [renameModalOpen, setRenameModalOpen] = useState(false);
+    const [addListenModalOpen, setAddListenModalOpen] = useState(false);
     const { user } = useAppContext();
 
     useEffect(() => {
@@ -80,6 +82,12 @@ export default function MediaLayout(props: Props) {
                     </div>
                     { user &&
                     <div className="absolute left-1 sm:right-1 sm:left-auto -top-9 sm:top-1 flex gap-3 items-center">
+                        { props.type === "Track" &&
+                        <>
+                            <button title="Add Listen" className="hover:cursor-pointer" onClick={() => setAddListenModalOpen(true)}><Plus size={iconSize} /></button>
+                            <AddListenModal open={addListenModalOpen} setOpen={setAddListenModalOpen} trackid={props.id} />
+                        </>
+                        }
                         <button title="Edit Item" className="hover:cursor-pointer" onClick={() => setRenameModalOpen(true)}><Edit size={iconSize} /></button>
                         <button title="Replace Image" className="hover:cursor-pointer" onClick={() => setImageModalOpen(true)}><ImageIcon size={iconSize} /></button>
                         <button title="Merge Items" className="hover:cursor-pointer" onClick={() => setMergeModalOpen(true)}><Merge size={iconSize} /></button>
