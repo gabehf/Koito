@@ -190,6 +190,73 @@ func (q *Queries) DeleteListen(ctx context.Context, arg DeleteListenParams) erro
 	return err
 }
 
+const getFirstListenFromArtist = `-- name: GetFirstListenFromArtist :one
+SELECT 
+  l.track_id, l.listened_at, l.client, l.user_id
+FROM listens l
+JOIN tracks_with_title t ON l.track_id = t.id
+JOIN artist_tracks at ON t.id = at.track_id 
+WHERE at.artist_id = $1
+ORDER BY l.listened_at ASC
+LIMIT 1
+`
+
+func (q *Queries) GetFirstListenFromArtist(ctx context.Context, artistID int32) (Listen, error) {
+	row := q.db.QueryRow(ctx, getFirstListenFromArtist, artistID)
+	var i Listen
+	err := row.Scan(
+		&i.TrackID,
+		&i.ListenedAt,
+		&i.Client,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getFirstListenFromRelease = `-- name: GetFirstListenFromRelease :one
+SELECT 
+  l.track_id, l.listened_at, l.client, l.user_id
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE t.release_id = $1
+ORDER BY l.listened_at ASC
+LIMIT 1
+`
+
+func (q *Queries) GetFirstListenFromRelease(ctx context.Context, releaseID int32) (Listen, error) {
+	row := q.db.QueryRow(ctx, getFirstListenFromRelease, releaseID)
+	var i Listen
+	err := row.Scan(
+		&i.TrackID,
+		&i.ListenedAt,
+		&i.Client,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getFirstListenFromTrack = `-- name: GetFirstListenFromTrack :one
+SELECT 
+  l.track_id, l.listened_at, l.client, l.user_id
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE t.id = $1
+ORDER BY l.listened_at ASC
+LIMIT 1
+`
+
+func (q *Queries) GetFirstListenFromTrack(ctx context.Context, id int32) (Listen, error) {
+	row := q.db.QueryRow(ctx, getFirstListenFromTrack, id)
+	var i Listen
+	err := row.Scan(
+		&i.TrackID,
+		&i.ListenedAt,
+		&i.Client,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const getLastListensFromArtistPaginated = `-- name: GetLastListensFromArtistPaginated :many
 SELECT 
   l.track_id, l.listened_at, l.client, l.user_id,

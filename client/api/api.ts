@@ -256,6 +256,7 @@ type Track = {
     album_id: number
     musicbrainz_id: string
     time_listened: number
+    first_listen: number
 }
 type Artist = {
     id: number
@@ -265,6 +266,7 @@ type Artist = {
     listen_count: number
     musicbrainz_id: string
     time_listened: number
+    first_listen: number
     is_primary: boolean
 }
 type Album = {
@@ -276,6 +278,7 @@ type Album = {
     artists: SimpleArtists[]
     musicbrainz_id: string
     time_listened: number
+    first_listen: number
 }
 type Alias = {
     id: number 

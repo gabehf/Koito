@@ -98,8 +98,14 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 		return nil, fmt.Errorf("GetAlbum: CountTimeListenedToItem: %w", err)
 	}
 
+	firstListen, err := d.q.GetFirstListenFromRelease(ctx, ret.ID)
+	if err != nil {
+		return nil, fmt.Errorf("GetAlbum: GetFirstListenFromRelease: %w", err)
+	}
+
 	ret.ListenCount = count
 	ret.TimeListened = seconds
+	ret.FirstListen = firstListen.ListenedAt.Unix()
 
 	return ret, nil
 }
