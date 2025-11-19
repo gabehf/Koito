@@ -157,10 +157,6 @@ function submitListen(id: string, ts: Date): Promise<Response> {
   });
 }
 
-function getCfg(): Promise<Config> {
-    return fetch(`/apis/web/v1/config`).then(r => r.json() as Promise<Config>)
-}
-
 function getApiKeys(): Promise<ApiKey[]> {
   return fetch(`/apis/web/v1/user/apikeys`).then(
     (r) => r.json() as Promise<ApiKey[]>
@@ -281,7 +277,6 @@ function getNowPlaying(): Promise<NowPlaying> {
 }
 
 export {
-<<<<<<< HEAD
   getLastListens,
   getTopTracks,
   getTopAlbums,
@@ -313,37 +308,6 @@ export {
   submitListen,
   getNowPlaying,
 };
-=======
-    getLastListens,
-    getTopTracks,
-    getTopAlbums,
-    getTopArtists,
-    getActivity,
-    getStats,
-    search,
-    replaceImage,
-    mergeTracks,
-    mergeAlbums,
-    mergeArtists,
-    imageUrl,
-    login,
-    logout,
-    getCfg,
-    deleteItem,
-    updateUser,
-    getAliases,
-    createAlias,
-    deleteAlias,
-    setPrimaryAlias,
-    getApiKeys,
-    createApiKey,
-    deleteApiKey,
-    updateApiKeyLabel,
-    deleteListen,
-    getAlbum,
-    getExport,
-}
->>>>>>> 5d0491a (feat: add server-side configuration with default theme (#90))
 type Track = {
   id: number;
   title: string;
@@ -426,7 +390,6 @@ type ApiKey = {
   created_at: Date;
 };
 type ApiError = {
-<<<<<<< HEAD
   error: string;
 };
 type Config = {
@@ -454,27 +417,3 @@ export type {
   Config,
   NowPlaying,
 };
-=======
-    error: string
-}
-type Config = {
-    default_theme: string
-}
-
-export type {
-    getItemsArgs,
-    getActivityArgs,
-    Track,
-    Artist,
-    Album,
-    Listen,
-    SearchResponse,
-    PaginatedResponse,
-    ListenActivityItem,
-    User,
-    Alias,
-    ApiKey,
-    ApiError,
-    Config
-}
->>>>>>> 5d0491a (feat: add server-side configuration with default theme (#90))
