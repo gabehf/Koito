@@ -66,6 +66,12 @@ If the environment variable is defined without **and** with the suffix at the sa
 - Description: Disables Cover Art Archive as a source for finding album images.
 ##### KOITO_DISABLE_MUSICBRAINZ
 - Default: `false`
+##### KOITO_SUBSONIC_URL
+- Required: `true` if KOITO_SUBSONIC_PARAMS is set
+- Description: The URL of your subsonic compatible music server. For example, `https://navidrome.mydomain.com`.
+##### KOITO_SUBSONIC_PARAMS
+- Required: `true` if KOITO_SUBSONIC_URL is set
+- Description: The `u`, `t`, and `s` authentication parameters to use for authenticated requests to your subsonic server, in the format `u=XXX&t=XXX&s=XXX`. An easy way to find them is to open the network tab in the developer tools of your browser of choice and copy them from a request.
 ##### KOITO_SKIP_IMPORT
 - Default: `false`
 - Description: Skips running the importer on startup.
