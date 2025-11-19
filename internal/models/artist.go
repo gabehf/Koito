@@ -10,6 +10,7 @@ type Artist struct {
 	Image        *uuid.UUID `json:"image"`
 	ListenCount  int64      `json:"listen_count"`
 	TimeListened int64      `json:"time_listened"`
+	FirstListen  int64      `json:"first_listen"`
 	IsPrimary    bool       `json:"is_primary,omitempty"`
 }
 
@@ -27,5 +28,6 @@ type ArtistWithFullAliases struct {
 	ImageSource  string     `json:"image_source,omitempty"`
 	ListenCount  int64      `json:"listen_count"`
 	TimeListened int64      `json:"time_listened"`
+	FirstListen  int64      `json:"first_listen"`
 	IsPrimary    bool       `json:"is_primary,omitempty"`
 }

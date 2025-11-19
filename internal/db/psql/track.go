@@ -89,8 +89,14 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 		return nil, fmt.Errorf("GetTrack: CountTimeListenedToItem: %w", err)
 	}
 
+	firstListen, err := d.q.GetFirstListenFromTrack(ctx, track.ID)
+	if err != nil {
+		return nil, fmt.Errorf("GetAlbum: GetFirstListenFromRelease: %w", err)
+	}
+
 	track.ListenCount = count
 	track.TimeListened = seconds
+	track.FirstListen = firstListen.ListenedAt.Unix()
 
 	return &track, nil
 }
