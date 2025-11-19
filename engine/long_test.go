@@ -917,3 +917,60 @@ func TestManualListen(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
+
+func TestNowPlaying(t *testing.T) {
+
+	t.Run("Submit Listens", doSubmitListens)
+
+	// no playing
+	resp, err := http.DefaultClient.Get(host() + "/apis/web/v1/now-playing")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	var result handlers.NowPlayingResponse
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&result))
+	require.False(t, result.CurrentlyPlaying)
+
+	body := `{
+		"listen_type": "playing_now",
+		"payload": [
+			{
+				"track_metadata": {
+					"additional_info": {
+						"artist_mbids": [
+							"efc787f0-046f-4a60-beff-77b398c8cdf4"
+						],
+						"artist_names": [
+							"さユり"
+						],
+						"duration_ms": 275960,
+						"recording_mbid": "21524d55-b1f8-45d1-b172-976cba447199",
+						"release_group_mbid": "3281e0d9-fa44-4337-a8ce-6f264beeae16",
+						"release_mbid": "eb790e90-0065-4852-b47d-bbeede4aa9fc",
+						"submission_client": "navidrome",
+						"submission_client_version": "0.56.1 (fa2cf362)"
+					},
+					"artist_name": "さユり",
+					"release_name": "酸欠少女",
+					"track_name": "花の塔"
+				}
+			}
+		]
+	}`
+
+	req, err := http.NewRequest("POST", host()+"/apis/listenbrainz/1/submit-listens", strings.NewReader(body))
+	require.NoError(t, err)
+	req.Header.Add("Authorization", fmt.Sprintf("Token %s", apikey))
+	resp, err = http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	respBytes, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Equal(t, `{"status": "ok"}`, string(respBytes))
+
+	// yes playing
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/now-playing")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&result))
+	require.True(t, result.CurrentlyPlaying)
+	require.Equal(t, "花の塔", result.Track.Title)
+}

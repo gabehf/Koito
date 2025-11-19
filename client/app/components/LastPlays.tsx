@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { timeSince } from "~/utils/utils"
 import ArtistLinks from "./ArtistLinks"
-import { deleteListen, getLastListens, type getItemsArgs, type Listen } from "api/api"
+import { deleteListen, getLastListens, type getItemsArgs, type Listen, type Track } from "api/api"
 import { Link } from "react-router"
 import { useAppContext } from "~/providers/AppProvider"
 
@@ -12,6 +12,7 @@ interface Props {
     albumId?: Number
     trackId?: number
     hideArtists?: boolean
+    showNowPlaying?: boolean
 }
 
 export default function LastPlays(props: Props) {
@@ -27,7 +28,20 @@ export default function LastPlays(props: Props) {
         queryFn: ({ queryKey }) => getLastListens(queryKey[1] as getItemsArgs),
     })
 
+
     const [items, setItems] = useState<Listen[] | null>(null)
+    const [nowPlaying, setNowPlaying] = useState<Track | undefined>(undefined)
+
+    useEffect(() => {
+        fetch('/apis/web/v1/now-playing')
+            .then(r => r.json())
+            .then(r => {
+                console.log(r)
+                if (r.currently_playing) {
+                    setNowPlaying(r.track)
+                }
+            })
+    }, [])
 
     const handleDelete = async (listen: Listen) => {
         if (!data) return 
@@ -69,6 +83,30 @@ export default function LastPlays(props: Props) {
             </h2>
             <table className="-ml-4">
                 <tbody>
+                    {props.showNowPlaying && nowPlaying && 
+                        <tr className="group hover:bg-[--color-bg-secondary]">
+                            <td className="w-[18px] pr-2 align-middle" >
+                            </td>
+                            <td
+                                className="color-fg-tertiary pr-2 sm:pr-4 text-sm whitespace-nowrap w-0"
+                            >
+                                Now Playing
+                            </td>
+                            <td className="text-ellipsis overflow-hidden max-w-[400px] sm:max-w-[600px]">
+                                {props.hideArtists ? null : (
+                                    <>
+                                        <ArtistLinks artists={nowPlaying.artists} /> –{' '}
+                                    </>
+                                )}
+                                <Link
+                                    className="hover:text-[--color-fg-secondary]"
+                                    to={`/track/${nowPlaying.id}`}
+                                >
+                                    {nowPlaying.title}
+                                </Link>
+                            </td>
+                        </tr>
+                    }
                     {listens.map((item) => (
                         <tr key={`last_listen_${item.time}`} className="group hover:bg-[--color-bg-secondary]">
                             <td className="w-[18px] pr-2 align-middle" >
