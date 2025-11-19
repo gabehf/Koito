@@ -40,6 +40,9 @@ If the environment variable is defined without **and** with the suffix at the sa
 ##### KOITO_LOG_LEVEL
 - Default: `info`
 - Description: One of `debug | info | warn | error | fatal`
+##### KOITO_ARTIST_SEPARATORS_REGEX
+- Default: `\s+·\s+`
+- Description: The list of regex patterns Koito will use to separate artist strings, separated by two semicolons (`;;`). 
 ##### KOITO_MUSICBRAINZ_URL
 - Default: `https://musicbrainz.org`
 - Description: The URL Koito will use to contact MusicBrainz. Replace this value if you have your own MusicBrainz mirror.
