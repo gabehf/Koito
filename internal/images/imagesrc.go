@@ -12,14 +12,17 @@ import (
 )
 
 type ImageSource struct {
-	deezerEnabled bool
-	deezerC       *DeezerClient
-	caaEnabled    bool
+	deezerEnabled   bool
+	deezerC         *DeezerClient
+	subsonicEnabled bool
+	subsonicC       *SubsonicClient
+	caaEnabled      bool
 }
 type ImageSourceOpts struct {
-	UserAgent    string
-	EnableCAA    bool
-	EnableDeezer bool
+	UserAgent      string
+	EnableCAA      bool
+	EnableDeezer   bool
+	EnableSubsonic bool
 }
 
 var once sync.Once
@@ -48,6 +51,10 @@ func Initialize(opts ImageSourceOpts) {
 			imgsrc.deezerEnabled = true
 			imgsrc.deezerC = NewDeezerClient()
 		}
+		if opts.EnableSubsonic {
+			imgsrc.subsonicEnabled = true
+			imgsrc.subsonicC = NewSubsonicClient()
+		}
 	})
 }
 
@@ -57,6 +64,16 @@ func Shutdown() {
 
 func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
+	if imgsrc.subsonicEnabled {
+		img, err := imgsrc.subsonicC.GetArtistImage(ctx, opts.Aliases[0])
+		if err != nil {
+			return "", err
+		}
+		if img != "" {
+			return img, nil
+		}
+		l.Debug().Msg("Could not find artist image from Subsonic")
+	}
 	if imgsrc.deezerC != nil {
 		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
 		if err != nil {
@@ -69,6 +86,16 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 }
 func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
+	if imgsrc.subsonicEnabled {
+		img, err := imgsrc.subsonicC.GetAlbumImage(ctx, opts.Artists[0], opts.Album)
+		if err != nil {
+			return "", err
+		}
+		if img != "" {
+			return img, nil
+		}
+		l.Debug().Msg("Could not find album cover from Subsonic")
+	}
 	if imgsrc.caaEnabled {
 		l.Debug().Msg("Attempting to find album image from CoverArtArchive")
 		if opts.ReleaseMbzID != nil && *opts.ReleaseMbzID != uuid.Nil {

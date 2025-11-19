@@ -35,6 +35,8 @@ const (
 	DISABLE_DEEZER_ENV             = "KOITO_DISABLE_DEEZER"
 	DISABLE_COVER_ART_ARCHIVE_ENV  = "KOITO_DISABLE_COVER_ART_ARCHIVE"
 	DISABLE_MUSICBRAINZ_ENV        = "KOITO_DISABLE_MUSICBRAINZ"
+	SUBSONIC_URL_ENV               = "KOITO_SUBSONIC_URL"
+	SUBSONIC_PARAMS_ENV            = "KOITO_SUBSONIC_PARAMS"
 	SKIP_IMPORT_ENV                = "KOITO_SKIP_IMPORT"
 	ALLOWED_HOSTS_ENV              = "KOITO_ALLOWED_HOSTS"
 	CORS_ORIGINS_ENV               = "KOITO_CORS_ALLOWED_ORIGINS"
@@ -65,6 +67,9 @@ type config struct {
 	disableDeezer          bool
 	disableCAA             bool
 	disableMusicBrainz     bool
+	subsonicUrl            string
+	subsonicParams         string
+	subsonicEnabled        bool
 	skipImport             bool
 	fetchImageDuringImport bool
 	allowedHosts           []string
@@ -149,6 +154,12 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg.disableDeezer = parseBool(getenv(DISABLE_DEEZER_ENV))
 	cfg.disableCAA = parseBool(getenv(DISABLE_COVER_ART_ARCHIVE_ENV))
 	cfg.disableMusicBrainz = parseBool(getenv(DISABLE_MUSICBRAINZ_ENV))
+	cfg.subsonicUrl = getenv(SUBSONIC_URL_ENV)
+	cfg.subsonicParams = getenv(SUBSONIC_PARAMS_ENV)
+	cfg.subsonicEnabled = cfg.subsonicUrl != "" && cfg.subsonicParams != ""
+	if cfg.subsonicEnabled && (cfg.subsonicUrl == "" || cfg.subsonicParams == "") {
+		return nil, fmt.Errorf("loadConfig: invalid configuration: both %s and %s must be set in order to use subsonic image fetching", SUBSONIC_URL_ENV, SUBSONIC_PARAMS_ENV)
+	}
 	cfg.skipImport = parseBool(getenv(SKIP_IMPORT_ENV))
 
 	cfg.userAgent = fmt.Sprintf("Koito %s (contact@koito.io)", version)
@@ -309,6 +320,24 @@ func MusicBrainzDisabled() bool {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.disableMusicBrainz
+}
+
+func SubsonicEnabled() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.subsonicEnabled
+}
+
+func SubsonicUrl() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.subsonicUrl
+}
+
+func SubsonicParams() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.subsonicParams
 }
 
 func SkipImport() bool {
