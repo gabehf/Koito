@@ -3,6 +3,7 @@ package cfg
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -45,6 +46,7 @@ const (
 	IMPORT_BEFORE_UNIX_ENV         = "KOITO_IMPORT_BEFORE_UNIX"
 	IMPORT_AFTER_UNIX_ENV          = "KOITO_IMPORT_AFTER_UNIX"
 	FETCH_IMAGES_DURING_IMPORT_ENV = "KOITO_FETCH_IMAGES_DURING_IMPORT"
+	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
 )
 
 type config struct {
@@ -80,6 +82,7 @@ type config struct {
 	userAgent              string
 	importBefore           time.Time
 	importAfter            time.Time
+	artistSeparators       []*regexp.Regexp
 }
 
 var (
@@ -188,6 +191,18 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 
 	rawCors := getenv(CORS_ORIGINS_ENV)
 	cfg.allowedOrigins = strings.Split(rawCors, ",")
+
+	if getenv(ARTIST_SEPARATORS_ENV) != "" {
+		for pattern := range strings.SplitSeq(getenv(ARTIST_SEPARATORS_ENV), ";;") {
+			regex, err := regexp.Compile(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("failed to compile regex pattern %s", pattern)
+			}
+			cfg.artistSeparators = append(cfg.artistSeparators, regex)
+		}
+	} else {
+		cfg.artistSeparators = []*regexp.Regexp{regexp.MustCompile(`\s+·\s+`)}
+	}
 
 	switch strings.ToLower(getenv(LOG_LEVEL_ENV)) {
 	case "debug":
@@ -387,4 +402,10 @@ func FetchImagesDuringImport() bool {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.fetchImageDuringImport
+}
+
+func ArtistSeparators() []*regexp.Regexp {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.artistSeparators
 }

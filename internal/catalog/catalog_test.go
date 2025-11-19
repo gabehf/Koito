@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"testing"
 	"time"
 
@@ -167,15 +168,15 @@ func getTestGetenv(resource *dockertest.Resource) func(string) string {
 
 func truncateTestData(t *testing.T) {
 	err := store.Exec(context.Background(),
-		`TRUNCATE 
-		artists, 
+		`TRUNCATE
+		artists,
 		artist_aliases,
-		tracks, 
-		artist_tracks, 
-		releases, 
-		artist_releases, 
+		tracks,
+		artist_tracks,
+		releases,
+		artist_releases,
 		release_aliases,
-		listens 
+		listens
 		RESTART IDENTITY CASCADE`)
 	require.NoError(t, err)
 }
@@ -184,23 +185,23 @@ func setupTestDataWithMbzIDs(t *testing.T) {
 	truncateTestData(t)
 
 	err := store.Exec(context.Background(),
-		`INSERT INTO artists (musicbrainz_id) 
+		`INSERT INTO artists (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000001')`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary) 
+		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (1, 'ATARASHII GAKKO!', 'Testing', true)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO releases (musicbrainz_id) 
+		`INSERT INTO releases (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000101')`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO release_aliases (release_id, alias, source, is_primary) 
+		`INSERT INTO release_aliases (release_id, alias, source, is_primary)
 			VALUES (1, 'AG! Calling', 'Testing', true)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_releases (artist_id, release_id) 
+		`INSERT INTO artist_releases (artist_id, release_id)
 			VALUES (1, 1)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
@@ -221,23 +222,23 @@ func setupTestDataSansMbzIDs(t *testing.T) {
 	truncateTestData(t)
 
 	err := store.Exec(context.Background(),
-		`INSERT INTO artists (musicbrainz_id) 
+		`INSERT INTO artists (musicbrainz_id)
 			VALUES (NULL)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary) 
+		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (1, 'ATARASHII GAKKO!', 'Testing', true)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO releases (musicbrainz_id) 
+		`INSERT INTO releases (musicbrainz_id)
 			VALUES (NULL)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO release_aliases (release_id, alias, source, is_primary) 
+		`INSERT INTO release_aliases (release_id, alias, source, is_primary)
 			VALUES (1, 'AG! Calling', 'Testing', true)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_releases (artist_id, release_id) 
+		`INSERT INTO artist_releases (artist_id, release_id)
 			VALUES (1, 1)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
@@ -358,10 +359,16 @@ func TestArtistStringParse(t *testing.T) {
 		// artists in both
 		{"Daft Punk feat. Julian Casablancas", "Instant Crush (feat. Julian Casablancas)"}:   {"Daft Punk", "Julian Casablancas"},
 		{"Paramore (feat. Joy Williams)", "Hate to See Your Heart Break feat. Joy Williams"}: {"Paramore", "Joy Williams"},
+		{"MINSU", "오해 금지 (Feat. BIG Naughty)"}:                                               {"MINSU", "BIG Naughty"},
+		{"MINSU", "오해 금지 [Feat. BIG Naughty]"}:                                               {"MINSU", "BIG Naughty"},
+		{"MINSU", "오해 금지 Feat. BIG Naughty"}:                                                 {"MINSU", "BIG Naughty"},
+
+		// custom separator
+		{"MIMiNARI//楠木ともり", "眠れない"}: {"MIMiNARI", "楠木ともり"},
 	}
 
 	for in, out := range cases {
-		artists := catalog.ParseArtists(in.Name, in.Title)
+		artists := catalog.ParseArtists(in.Name, in.Title, []*regexp.Regexp{regexp.MustCompile(`\s*//\s*`), regexp.MustCompile(`\s+·\s+`)})
 		assert.ElementsMatch(t, out, artists)
 	}
 }
