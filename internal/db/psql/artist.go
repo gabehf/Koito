@@ -42,7 +42,7 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
 		}
 		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
-		if err != nil {
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
 		}
 		return &models.Artist{
@@ -77,7 +77,7 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
 		}
 		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
-		if err != nil {
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
 		}
 		return &models.Artist{
@@ -112,7 +112,7 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
 		}
 		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
-		if err != nil {
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
 		}
 		return &models.Artist{
