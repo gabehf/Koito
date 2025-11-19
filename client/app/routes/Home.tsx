@@ -33,7 +33,7 @@ export default function Home() {
           <TopArtists period={period} limit={homeItems} />
           <TopAlbums period={period} limit={homeItems} />
           <TopTracks period={period} limit={homeItems} />
-          <LastPlays limit={Math.floor(homeItems * 2.7)} />
+          <LastPlays showNowPlaying={true} limit={Math.floor(homeItems * 2.7)} />
         </div>
       </div>
     </main>
