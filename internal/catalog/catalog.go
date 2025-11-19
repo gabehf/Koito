@@ -8,12 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/mbz"
+	"github.com/gabehf/koito/internal/memkv"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/google/uuid"
 )
@@ -56,8 +58,9 @@ type SubmitListenOpts struct {
 	ReleaseGroupMbzID  uuid.UUID
 	Time               time.Time
 
-	UserID int32
-	Client string
+	UserID       int32
+	Client       string
+	IsNowPlaying bool
 }
 
 const (
@@ -162,6 +165,14 @@ func SubmitListen(ctx context.Context, store db.DB, opts SubmitListenOpts) error
 					l.Info().Msgf("Duration updated to %d for track '%s'", mbztrack.LengthMs/1000, track.Title)
 				}
 			}
+		}
+	}
+
+	if opts.IsNowPlaying {
+		if track.Duration == 0 {
+			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID)
+		} else {
+			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID, time.Duration(track.Duration)*time.Second)
 		}
 	}
 
