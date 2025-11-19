@@ -47,7 +47,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
     getCfg().then(cfg => {
       console.log(cfg)
-      setDefaultTheme(cfg.default_theme)
+      if (cfg.default_theme !== '') {
+        setDefaultTheme(cfg.default_theme)
+      } else {
+        setDefaultTheme('yuu')
+      }
     })
   }, []);
 
