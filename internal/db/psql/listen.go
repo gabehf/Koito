@@ -17,14 +17,23 @@ import (
 func (d *Psql) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) (*db.PaginatedResponse[*models.Listen], error) {
 	l := logger.FromContext(ctx)
 	offset := (opts.Page - 1) * opts.Limit
-	t1, t2, err := utils.DateRange(opts.Week, opts.Month, opts.Year)
-	if err != nil {
-		return nil, fmt.Errorf("GetListensPaginated: %w", err)
-	}
-	if opts.Month == 0 && opts.Year == 0 {
-		// use period, not date range
-		t2 = time.Now()
-		t1 = db.StartTimeFromPeriod(opts.Period)
+	var t1 time.Time
+	var t2 time.Time
+	if opts.From != 0 && opts.To != 0 {
+		t1 = time.Unix(int64(opts.From), 0)
+		t2 = time.Unix(int64(opts.To), 0)
+	} else {
+		t1R, t2R, err := utils.DateRange(opts.Week, opts.Month, opts.Year)
+		if err != nil {
+			return nil, fmt.Errorf("GetListensPaginated: %w", err)
+		}
+		t1 = t1R
+		t2 = t2R
+		if opts.Month == 0 && opts.Year == 0 {
+			// use period, not date range
+			t2 = time.Now()
+			t1 = db.StartTimeFromPeriod(opts.Period)
+		}
 	}
 	if opts.Limit == 0 {
 		opts.Limit = DefaultItemsPerPage

@@ -122,6 +122,8 @@ type GetItemsOpts struct {
 	Week   int // 1-52
 	Month  int // 1-12
 	Year   int
+	From   int // unix timestamp
+	To     int // unix timestamp
 
 	// Used only for getting top tracks
 	ArtistID int
