@@ -42,6 +42,10 @@ func OptsFromRequest(r *http.Request) db.GetItemsOpts {
 	month, _ := strconv.Atoi(monthStr)
 	yearStr := r.URL.Query().Get("year")
 	year, _ := strconv.Atoi(yearStr)
+	fromStr := r.URL.Query().Get("from")
+	from, _ := strconv.Atoi(fromStr)
+	toStr := r.URL.Query().Get("to")
+	to, _ := strconv.Atoi(toStr)
 
 	artistIdStr := r.URL.Query().Get("artist_id")
 	artistId, _ := strconv.Atoi(artistIdStr)
@@ -67,8 +71,8 @@ func OptsFromRequest(r *http.Request) db.GetItemsOpts {
 		period = db.PeriodDay
 	}
 
-	l.Debug().Msgf("OptsFromRequest: Parsed options: limit=%d, page=%d, week=%d, month=%d, year=%d, artist_id=%d, album_id=%d, track_id=%d, period=%s",
-		limit, page, week, month, year, artistId, albumId, trackId, period)
+	l.Debug().Msgf("OptsFromRequest: Parsed options: limit=%d, page=%d, week=%d, month=%d, year=%d, from=%d, to=%d, artist_id=%d, album_id=%d, track_id=%d, period=%s",
+		limit, page, week, month, year, from, to, artistId, albumId, trackId, period)
 
 	return db.GetItemsOpts{
 		Limit:    limit,
@@ -77,6 +81,8 @@ func OptsFromRequest(r *http.Request) db.GetItemsOpts {
 		Week:     week,
 		Month:    month,
 		Year:     year,
+		From:     from,
+		To:       to,
 		ArtistID: artistId,
 		AlbumID:  albumId,
 		TrackID:  trackId,
