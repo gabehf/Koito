@@ -2,11 +2,10 @@ import { globalStyle } from "@vanilla-extract/css"
 import { themeVars } from "./vars.css"
 
 export type Theme = {
-    name: string,
-    bg: string 
-    bgSecondary: string 
+    bg: string
+    bgSecondary: string
     bgTertiary: string
-    fg: string 
+    fg: string
     fgSecondary: string
     fgTertiary: string
     primary: string
@@ -23,9 +22,8 @@ export const THEME_KEYS = [
     '--color'
 ]
 
-export const themes: Theme[] = [
-    {
-        name: "yuu",
+export const themes: Record<string, Theme> = {
+    yuu: {
         bg: "#1e1816",
         bgSecondary: "#2f2623",
         bgTertiary: "#453733",
@@ -41,8 +39,7 @@ export const themes: Theme[] = [
         success: "#8fc48f",
         info: "#87b8dd",
     },
-    {
-        name: "varia",
+    varia: {
         bg: "rgb(25, 25, 29)",
         bgSecondary: "#222222",
         bgTertiary: "#333333",
@@ -58,8 +55,7 @@ export const themes: Theme[] = [
         success: "#4caf50",
         info: "#2196f3",
     },
-    {
-        name: "midnight",
+    midnight: {
         bg: "rgb(8, 15, 24)",
         bgSecondary: "rgb(15, 27, 46)",
         bgTertiary: "rgb(15, 41, 70)",
@@ -75,8 +71,7 @@ export const themes: Theme[] = [
         success: "#4caf50",
         info: "#2196f3",
     },
-    {
-        name: "catppuccin",
+    catppuccin: {
         bg: "#1e1e2e",
         bgSecondary: "#181825",
         bgTertiary: "#11111b",
@@ -92,8 +87,7 @@ export const themes: Theme[] = [
         success: "#a6e3a1",
         info: "#89dceb",
     },
-    {
-        name: "autumn",
+    autumn: {
         bg: "rgb(44, 25, 18)",
         bgSecondary: "rgb(70, 40, 18)",
         bgTertiary: "#4b2f1c",
@@ -109,8 +103,7 @@ export const themes: Theme[] = [
         success: "#6b8e23",
         info: "#c084fc",
     },
-    {
-        name: "black",
+    black: {
         bg: "#000000",
         bgSecondary: "#1a1a1a",
         bgTertiary: "#2a2a2a",
@@ -126,8 +119,7 @@ export const themes: Theme[] = [
         success: "#4caf50",
         info: "#2196f3",
     },
-    {
-        name: "wine",
+    wine: {
         bg: "#23181E",
         bgSecondary: "#2C1C25",
         bgTertiary: "#422A37",
@@ -143,97 +135,92 @@ export const themes: Theme[] = [
         success: "#bbf7d0",
         info: "#bae6fd",
     },
-    {
-        name: "pearl",
-        bg: "#FFFFFF", 
-        bgSecondary: "#EEEEEE", 
-        bgTertiary: "#E0E0E0", 
-        fg: "#333333", 
-        fgSecondary: "#555555", 
+    pearl: {
+        bg: "#FFFFFF",
+        bgSecondary: "#EEEEEE",
+        bgTertiary: "#E0E0E0",
+        fg: "#333333",
+        fgSecondary: "#555555",
         fgTertiary: "#777777",
-        primary: "#007BFF", 
+        primary: "#007BFF",
         primaryDim: "#0056B3",
-        accent: "#28A745", 
-        accentDim: "#1E7E34", 
-        error: "#DC3545", 
-        warning: "#FFC107", 
-        success: "#28A745", 
-        info: "#17A2B8", 
+        accent: "#28A745",
+        accentDim: "#1E7E34",
+        error: "#DC3545",
+        warning: "#FFC107",
+        success: "#28A745",
+        info: "#17A2B8",
     },
-    {
-        name: "asuka",
-        bg: "#3B1212", 
-        bgSecondary: "#471B1B", 
-        bgTertiary: "#020202", 
-        fg: "#F1E9E6", 
-        fgSecondary: "#CCB6AE", 
+    asuka: {
+        bg: "#3B1212",
+        bgSecondary: "#471B1B",
+        bgTertiary: "#020202",
+        fg: "#F1E9E6",
+        fgSecondary: "#CCB6AE",
         fgTertiary: "#9F8176",
-        primary: "#F1E9E6", 
+        primary: "#F1E9E6",
         primaryDim: "#CCB6AE",
-        accent: "#41CE41", 
-        accentDim: "#3BA03B", 
-        error: "#DC143C", 
-        warning: "#FFD700", 
-        success: "#32CD32", 
-        info: "#1E90FF", 
+        accent: "#41CE41",
+        accentDim: "#3BA03B",
+        error: "#DC143C",
+        warning: "#FFD700",
+        success: "#32CD32",
+        info: "#1E90FF",
     },
-    {
-        name: "urim",
-        bg: "#101713", 
-        bgSecondary: "#1B2921", 
-        bgTertiary: "#273B30", 
-        fg: "#D2E79E", 
-        fgSecondary: "#B4DA55", 
+    urim: {
+        bg: "#101713",
+        bgSecondary: "#1B2921",
+        bgTertiary: "#273B30",
+        fg: "#D2E79E",
+        fgSecondary: "#B4DA55",
         fgTertiary: "#7E9F2A",
-        primary: "#ead500", 
+        primary: "#ead500",
         primaryDim: "#C1B210",
-        accent: "#28A745", 
-        accentDim: "#1E7E34", 
-        error: "#EE5237", 
-        warning: "#FFC107", 
-        success: "#28A745", 
-        info: "#17A2B8", 
+        accent: "#28A745",
+        accentDim: "#1E7E34",
+        error: "#EE5237",
+        warning: "#FFC107",
+        success: "#28A745",
+        info: "#17A2B8",
     },
-    {
-        name: "match",
-        bg: "#071014", 
-        bgSecondary: "#0A181E", 
-        bgTertiary: "#112A34", 
-        fg: "#ebeaeb", 
-        fgSecondary: "#BDBDBD", 
+    match: {
+        bg: "#071014",
+        bgSecondary: "#0A181E",
+        bgTertiary: "#112A34",
+        fg: "#ebeaeb",
+        fgSecondary: "#BDBDBD",
         fgTertiary: "#A2A2A2",
-        primary: "#fda827", 
+        primary: "#fda827",
         primaryDim: "#C78420",
-        accent: "#277CFD", 
-        accentDim: "#1F60C1", 
-        error: "#F14426", 
-        warning: "#FFC107", 
-        success: "#28A745", 
-        info: "#17A2B8", 
+        accent: "#277CFD",
+        accentDim: "#1F60C1",
+        error: "#F14426",
+        warning: "#FFC107",
+        success: "#28A745",
+        info: "#17A2B8",
     },
-    {
-        name: "lemon",
-        bg: "#1a171a", 
-        bgSecondary: "#2E272E", 
-        bgTertiary: "#443844", 
-        fg: "#E6E2DC", 
-        fgSecondary: "#B2ACA1", 
+    lemon: {
+        bg: "#1a171a",
+        bgSecondary: "#2E272E",
+        bgTertiary: "#443844",
+        fg: "#E6E2DC",
+        fgSecondary: "#B2ACA1",
         fgTertiary: "#968F82",
-        primary: "#f5c737", 
+        primary: "#f5c737",
         primaryDim: "#C29D2F",
-        accent: "#277CFD", 
-        accentDim: "#1F60C1", 
-        error: "#F14426", 
-        warning: "#FFC107", 
-        success: "#28A745", 
-        info: "#17A2B8", 
+        accent: "#277CFD",
+        accentDim: "#1F60C1",
+        error: "#F14426",
+        warning: "#FFC107",
+        success: "#28A745",
+        info: "#17A2B8",
     }
-];
+};
 
 export default themes
 
-themes.forEach((theme) => {
-    const selector = `[data-theme="${theme.name}"]`
+Object.entries(themes).forEach(([name, theme]) => {
+    const selector = `[data-theme="${name}"]`
 
     globalStyle(selector, {
         vars: {

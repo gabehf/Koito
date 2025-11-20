@@ -1,10 +1,11 @@
-import type { User } from "api/api";
+import { getCfg, type User } from "api/api";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface AppContextType {
   user: User | null | undefined;
   configurableHomeActivity: boolean;
   homeItems: number;
+  defaultTheme: string;
   setConfigurableHomeActivity: (value: boolean) => void;
   setHomeItems: (value: number) => void;
   setUsername: (value: string) => void;
@@ -22,15 +23,19 @@ export const useAppContext = () => {
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null | undefined>(undefined);
-  const [configurableHomeActivity, setConfigurableHomeActivity] = useState<boolean>(false);
+  const [defaultTheme, setDefaultTheme] = useState<string | undefined>(
+    undefined
+  );
+  const [configurableHomeActivity, setConfigurableHomeActivity] =
+    useState<boolean>(false);
   const [homeItems, setHomeItems] = useState<number>(0);
 
   const setUsername = (value: string) => {
     if (!user) {
-      return
+      return;
     }
-    setUser({...user, username: value})
-  }
+    setUser({ ...user, username: value });
+  };
 
   useEffect(() => {
     fetch("/apis/web/v1/user/me")
@@ -42,9 +47,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
     setConfigurableHomeActivity(true);
     setHomeItems(12);
+
+    getCfg().then((cfg) => {
+      console.log(cfg);
+      if (cfg.default_theme !== "") {
+        setDefaultTheme(cfg.default_theme);
+      } else {
+        setDefaultTheme("yuu");
+      }
+    });
   }, []);
 
-  if (user === undefined) {
+  // Block rendering the app until config is loaded
+  if (user === undefined || defaultTheme === undefined) {
     return null;
   }
 
@@ -52,10 +67,13 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     configurableHomeActivity,
     homeItems,
+    defaultTheme,
     setConfigurableHomeActivity,
     setHomeItems,
     setUsername,
   };
 
-  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
+  );
 };

@@ -3,6 +3,7 @@ package cfg
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,9 +32,12 @@ const (
 	CONFIG_DIR_ENV                 = "KOITO_CONFIG_DIR"
 	DEFAULT_USERNAME_ENV           = "KOITO_DEFAULT_USERNAME"
 	DEFAULT_PASSWORD_ENV           = "KOITO_DEFAULT_PASSWORD"
+	DEFAULT_THEME_ENV              = "KOITO_DEFAULT_THEME"
 	DISABLE_DEEZER_ENV             = "KOITO_DISABLE_DEEZER"
 	DISABLE_COVER_ART_ARCHIVE_ENV  = "KOITO_DISABLE_COVER_ART_ARCHIVE"
 	DISABLE_MUSICBRAINZ_ENV        = "KOITO_DISABLE_MUSICBRAINZ"
+	SUBSONIC_URL_ENV               = "KOITO_SUBSONIC_URL"
+	SUBSONIC_PARAMS_ENV            = "KOITO_SUBSONIC_PARAMS"
 	SKIP_IMPORT_ENV                = "KOITO_SKIP_IMPORT"
 	ALLOWED_HOSTS_ENV              = "KOITO_ALLOWED_HOSTS"
 	CORS_ORIGINS_ENV               = "KOITO_CORS_ALLOWED_ORIGINS"
@@ -42,6 +46,7 @@ const (
 	IMPORT_BEFORE_UNIX_ENV         = "KOITO_IMPORT_BEFORE_UNIX"
 	IMPORT_AFTER_UNIX_ENV          = "KOITO_IMPORT_AFTER_UNIX"
 	FETCH_IMAGES_DURING_IMPORT_ENV = "KOITO_FETCH_IMAGES_DURING_IMPORT"
+	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
 )
 
 type config struct {
@@ -60,9 +65,13 @@ type config struct {
 	lbzRelayToken          string
 	defaultPw              string
 	defaultUsername        string
+	defaultTheme           string
 	disableDeezer          bool
 	disableCAA             bool
 	disableMusicBrainz     bool
+	subsonicUrl            string
+	subsonicParams         string
+	subsonicEnabled        bool
 	skipImport             bool
 	fetchImageDuringImport bool
 	allowedHosts           []string
@@ -73,6 +82,7 @@ type config struct {
 	userAgent              string
 	importBefore           time.Time
 	importAfter            time.Time
+	artistSeparators       []*regexp.Regexp
 }
 
 var (
@@ -147,6 +157,12 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg.disableDeezer = parseBool(getenv(DISABLE_DEEZER_ENV))
 	cfg.disableCAA = parseBool(getenv(DISABLE_COVER_ART_ARCHIVE_ENV))
 	cfg.disableMusicBrainz = parseBool(getenv(DISABLE_MUSICBRAINZ_ENV))
+	cfg.subsonicUrl = getenv(SUBSONIC_URL_ENV)
+	cfg.subsonicParams = getenv(SUBSONIC_PARAMS_ENV)
+	cfg.subsonicEnabled = cfg.subsonicUrl != "" && cfg.subsonicParams != ""
+	if cfg.subsonicEnabled && (cfg.subsonicUrl == "" || cfg.subsonicParams == "") {
+		return nil, fmt.Errorf("loadConfig: invalid configuration: both %s and %s must be set in order to use subsonic image fetching", SUBSONIC_URL_ENV, SUBSONIC_PARAMS_ENV)
+	}
 	cfg.skipImport = parseBool(getenv(SKIP_IMPORT_ENV))
 
 	cfg.userAgent = fmt.Sprintf("Koito %s (contact@koito.io)", version)
@@ -162,6 +178,8 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 		cfg.defaultPw = getenv(DEFAULT_PASSWORD_ENV)
 	}
 
+	cfg.defaultTheme = getenv(DEFAULT_THEME_ENV)
+
 	cfg.configDir = getenv(CONFIG_DIR_ENV)
 	if cfg.configDir == "" {
 		cfg.configDir = "/etc/koito"
@@ -173,6 +191,18 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 
 	rawCors := getenv(CORS_ORIGINS_ENV)
 	cfg.allowedOrigins = strings.Split(rawCors, ",")
+
+	if getenv(ARTIST_SEPARATORS_ENV) != "" {
+		for pattern := range strings.SplitSeq(getenv(ARTIST_SEPARATORS_ENV), ";;") {
+			regex, err := regexp.Compile(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("failed to compile regex pattern %s", pattern)
+			}
+			cfg.artistSeparators = append(cfg.artistSeparators, regex)
+		}
+	} else {
+		cfg.artistSeparators = []*regexp.Regexp{regexp.MustCompile(`\s+·\s+`)}
+	}
 
 	switch strings.ToLower(getenv(LOG_LEVEL_ENV)) {
 	case "debug":
@@ -277,6 +307,12 @@ func DefaultUsername() string {
 	return globalConfig.defaultUsername
 }
 
+func DefaultTheme() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.defaultTheme
+}
+
 func FullImageCacheEnabled() bool {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -299,6 +335,24 @@ func MusicBrainzDisabled() bool {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.disableMusicBrainz
+}
+
+func SubsonicEnabled() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.subsonicEnabled
+}
+
+func SubsonicUrl() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.subsonicUrl
+}
+
+func SubsonicParams() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.subsonicParams
 }
 
 func SkipImport() bool {
@@ -348,4 +402,10 @@ func FetchImagesDuringImport() bool {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.fetchImageDuringImport
+}
+
+func ArtistSeparators() []*regexp.Regexp {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.artistSeparators
 }

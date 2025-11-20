@@ -203,6 +203,22 @@ func TestSubmitListen_CreateAllNoMbzIDsNoArtistNamesNoReleaseTitle(t *testing.T)
     )`, "Madeline Kenney")
 	require.NoError(t, err)
 	assert.True(t, exists, "expected featured artist to be created")
+
+	// assert that Rat Tally is the primary artist
+	exists, err = store.RowExists(ctx, `
+    SELECT EXISTS (
+      SELECT 1 FROM artist_tracks
+      WHERE artist_id = $1 AND is_primary = $2
+    )`, 1, true)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected primary artist to be marked as primary for track")
+	exists, err = store.RowExists(ctx, `
+    SELECT EXISTS (
+      SELECT 1 FROM artist_releases
+      WHERE artist_id = $1 AND is_primary = $2
+    )`, 1, true)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected primary artist to be marked as primary for release")
 }
 
 func TestSubmitListen_MatchAllMbzIDs(t *testing.T) {

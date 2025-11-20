@@ -8,12 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/mbz"
+	"github.com/gabehf/koito/internal/memkv"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/google/uuid"
 )
@@ -56,8 +58,9 @@ type SubmitListenOpts struct {
 	ReleaseGroupMbzID  uuid.UUID
 	Time               time.Time
 
-	UserID int32
-	Client string
+	UserID       int32
+	Client       string
+	IsNowPlaying bool
 }
 
 const (
@@ -165,6 +168,14 @@ func SubmitListen(ctx context.Context, store db.DB, opts SubmitListenOpts) error
 		}
 	}
 
+	if opts.IsNowPlaying {
+		if track.Duration == 0 {
+			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID)
+		} else {
+			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID, time.Duration(track.Duration)*time.Second)
+		}
+	}
+
 	if opts.SkipSaveListen {
 		return nil
 	}
@@ -190,21 +201,18 @@ func buildArtistStr(artists []*models.Artist) string {
 var (
 	// Bracketed feat patterns
 	bracketFeatPatterns = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)\(feat\. ([^)]*)\)`),
-		regexp.MustCompile(`(?i)\[feat\. ([^\]]*)\]`),
+		regexp.MustCompile(`(?i)\([fF]eat\. ([^)]*)\)`),
+		regexp.MustCompile(`(?i)\[[fF]eat\. ([^\]]*)\]`),
 	}
 	// Inline feat (not in brackets)
-	inlineFeatPattern = regexp.MustCompile(`(?i)feat\. ([^()\[\]]+)$`)
+	inlineFeatPattern = regexp.MustCompile(`(?i)[fF]eat\. ([^()\[\]]+)$`)
 
 	// Delimiters only used inside feat. sections
 	featSplitDelimiters = regexp.MustCompile(`(?i)\s*(?:,|&|and|·)\s*`)
-
-	// Delimiter for separating artists in main string (rare but real usage)
-	mainArtistDotSplitter = regexp.MustCompile(`\s+·\s+`)
 )
 
 // ParseArtists extracts all contributing artist names from the artist and title strings
-func ParseArtists(artist string, title string) []string {
+func ParseArtists(artist string, title string, addlSeparators []*regexp.Regexp) []string {
 	seen := make(map[string]struct{})
 	var out []string
 
@@ -219,12 +227,9 @@ func ParseArtists(artist string, title string) []string {
 		}
 	}
 
-	foundFeat := false
-
 	// Extract bracketed features from artist
 	for _, re := range bracketFeatPatterns {
 		if matches := re.FindStringSubmatch(artist); matches != nil {
-			foundFeat = true
 			artist = strings.Replace(artist, matches[0], "", 1)
 			for _, name := range featSplitDelimiters.Split(matches[1], -1) {
 				add(name)
@@ -233,7 +238,6 @@ func ParseArtists(artist string, title string) []string {
 	}
 	// Extract inline feat. from artist
 	if matches := inlineFeatPattern.FindStringSubmatch(artist); matches != nil {
-		foundFeat = true
 		artist = strings.Replace(artist, matches[0], "", 1)
 		for _, name := range featSplitDelimiters.Split(matches[1], -1) {
 			add(name)
@@ -241,13 +245,18 @@ func ParseArtists(artist string, title string) []string {
 	}
 
 	// Add base artist(s)
-	if foundFeat {
-		add(strings.TrimSpace(artist))
-	} else {
-		// Only split on " · " in base artist string
-		for _, name := range mainArtistDotSplitter.Split(artist, -1) {
+	l1 := len(out)
+	for _, re := range addlSeparators {
+		for _, name := range re.Split(artist, -1) {
+			if name == artist {
+				continue
+			}
 			add(name)
 		}
+	}
+	// Only add the full artist string if no splitters were matched
+	if l1 == len(out) {
+		add(artist)
 	}
 
 	// Extract features from title

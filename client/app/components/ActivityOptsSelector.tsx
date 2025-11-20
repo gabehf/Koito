@@ -43,7 +43,8 @@ export default function ActivityOptsSelector({
 
     useEffect(() => {
         if (!disableCache) {
-            const cachedRange = parseInt(localStorage.getItem('activity_range_' + window.location.pathname.split('/')[1]) ?? '35');
+            // TODO: the '182' here overwrites the default range as configured in the ActivityGrid. This is bad. Only one of these should determine the default.
+            const cachedRange = parseInt(localStorage.getItem('activity_range_' + window.location.pathname.split('/')[1]) ?? '182');
             if (cachedRange) rangeSetter(cachedRange);
             const cachedStep = localStorage.getItem('activity_step_' + window.location.pathname.split('/')[1]);
             if (cachedStep) stepSetter(cachedStep);

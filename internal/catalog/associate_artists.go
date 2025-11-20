@@ -62,7 +62,7 @@ func AssociateArtists(ctx context.Context, d db.DB, opts AssociateArtistsOpts) (
 	}
 
 	if len(result) < 1 {
-		allArtists := slices.Concat(opts.ArtistNames, ParseArtists(opts.ArtistName, opts.TrackTitle))
+		allArtists := slices.Concat(opts.ArtistNames, ParseArtists(opts.ArtistName, opts.TrackTitle, cfg.ArtistSeparators()))
 		l.Debug().Msgf("Associating artists by artist name(s) %v and track title '%s'", allArtists, opts.TrackTitle)
 		fallbackMatches, err := matchArtistsByNames(ctx, allArtists, nil, d, opts)
 		if err != nil {
@@ -180,7 +180,7 @@ func matchArtistsByMBID(ctx context.Context, d db.DB, opts AssociateArtistsOpts,
 		}
 
 		if len(opts.ArtistNames) < 1 {
-			opts.ArtistNames = slices.Concat(opts.ArtistNames, ParseArtists(opts.ArtistName, opts.TrackTitle))
+			opts.ArtistNames = slices.Concat(opts.ArtistNames, ParseArtists(opts.ArtistName, opts.TrackTitle, cfg.ArtistSeparators()))
 		}
 
 		a, err = resolveAliasOrCreateArtist(ctx, id, opts.ArtistNames, d, opts)

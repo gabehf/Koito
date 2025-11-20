@@ -211,10 +211,8 @@ func LbzSubmitListenHandler(store db.DB, mbzc mbz.MusicBrainzCaller) func(w http
 				Time:               listenedAt,
 				UserID:             u.ID,
 				Client:             client,
-			}
-
-			if req.ListenType == ListenTypePlayingNow {
-				opts.SkipSaveListen = true
+				IsNowPlaying:       req.ListenType == ListenTypePlayingNow,
+				SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
 			}
 
 			_, err, shared := sfGroup.Do(buildCaolescingKey(payload), func() (interface{}, error) {

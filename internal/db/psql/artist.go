@@ -41,6 +41,10 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 		if err != nil {
 			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
 		}
+		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
+		}
 		return &models.Artist{
 			ID:           row.ID,
 			MbzID:        row.MusicBrainzID,
@@ -49,6 +53,7 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 			Image:        row.Image,
 			ListenCount:  count,
 			TimeListened: seconds,
+			FirstListen:  firstListen.ListenedAt.Unix(),
 		}, nil
 	} else if opts.MusicBrainzID != uuid.Nil {
 		l.Debug().Msgf("Fetching artist from DB with MusicBrainz ID %s", opts.MusicBrainzID)
@@ -71,14 +76,19 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 		if err != nil {
 			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
 		}
+		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
+		}
 		return &models.Artist{
 			ID:           row.ID,
 			MbzID:        row.MusicBrainzID,
 			Name:         row.Name,
 			Aliases:      row.Aliases,
 			Image:        row.Image,
-			TimeListened: seconds,
 			ListenCount:  count,
+			TimeListened: seconds,
+			FirstListen:  firstListen.ListenedAt.Unix(),
 		}, nil
 	} else if opts.Name != "" {
 		l.Debug().Msgf("Fetching artist from DB with name '%s'", opts.Name)
@@ -101,6 +111,10 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 		if err != nil {
 			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
 		}
+		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
+		}
 		return &models.Artist{
 			ID:           row.ID,
 			MbzID:        row.MusicBrainzID,
@@ -109,6 +123,7 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 			Image:        row.Image,
 			ListenCount:  count,
 			TimeListened: seconds,
+			FirstListen:  firstListen.ListenedAt.Unix(),
 		}, nil
 	} else {
 		return nil, errors.New("insufficient information to get artist")

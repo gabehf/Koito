@@ -29,6 +29,16 @@ WHERE at.artist_id = $5
 ORDER BY l.listened_at DESC
 LIMIT $3 OFFSET $4;
 
+-- name: GetFirstListenFromArtist :one
+SELECT 
+  l.*
+FROM listens l
+JOIN tracks_with_title t ON l.track_id = t.id
+JOIN artist_tracks at ON t.id = at.track_id 
+WHERE at.artist_id = $1
+ORDER BY l.listened_at ASC
+LIMIT 1;
+
 -- name: GetLastListensFromReleasePaginated :many
 SELECT 
   l.*,
@@ -42,6 +52,15 @@ WHERE l.listened_at BETWEEN $1 AND $2
 ORDER BY l.listened_at DESC
 LIMIT $3 OFFSET $4;
 
+-- name: GetFirstListenFromRelease :one
+SELECT 
+  l.*
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE t.release_id = $1
+ORDER BY l.listened_at ASC
+LIMIT 1;
+
 -- name: GetLastListensFromTrackPaginated :many
 SELECT 
   l.*,
@@ -54,6 +73,15 @@ WHERE l.listened_at BETWEEN $1 AND $2
   AND t.id = $5
 ORDER BY l.listened_at DESC
 LIMIT $3 OFFSET $4;
+
+-- name: GetFirstListenFromTrack :one
+SELECT 
+  l.*
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE t.id = $1
+ORDER BY l.listened_at ASC
+LIMIT 1;
 
 -- name: CountListens :one
 SELECT COUNT(*) AS total_count

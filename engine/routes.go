@@ -35,6 +35,7 @@ func bindRoutes(
 		Get("/images/{size}/{filename}", handlers.ImageHandler(db))
 
 	r.Route("/apis/web/v1", func(r chi.Router) {
+		r.Get("/config", handlers.GetCfgHandler())
 		r.Get("/artist", handlers.GetArtistHandler(db))
 		r.Get("/artists", handlers.GetArtistsForItemHandler(db))
 		r.Get("/album", handlers.GetAlbumHandler(db))
@@ -44,6 +45,7 @@ func bindRoutes(
 		r.Get("/top-artists", handlers.GetTopArtistsHandler(db))
 		r.Get("/listens", handlers.GetListensHandler(db))
 		r.Get("/listen-activity", handlers.GetListenActivityHandler(db))
+		r.Get("/now-playing", handlers.NowPlayingHandler(db))
 		r.Get("/stats", handlers.StatsHandler(db))
 		r.Get("/search", handlers.SearchHandler(db))
 		r.Get("/aliases", handlers.GetAliasesHandler(db))
@@ -80,6 +82,7 @@ func bindRoutes(
 			r.Post("/artists/primary", handlers.SetPrimaryArtistHandler(db))
 			r.Delete("/album", handlers.DeleteAlbumHandler(db))
 			r.Delete("/track", handlers.DeleteTrackHandler(db))
+			r.Post("/listen", handlers.SubmitListenWithIDHandler(db))
 			r.Delete("/listen", handlers.DeleteListenHandler(db))
 			r.Post("/aliases", handlers.CreateAliasHandler(db))
 			r.Post("/aliases/delete", handlers.DeleteAliasHandler(db))

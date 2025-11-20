@@ -89,8 +89,14 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 		return nil, fmt.Errorf("GetTrack: CountTimeListenedToItem: %w", err)
 	}
 
+	firstListen, err := d.q.GetFirstListenFromTrack(ctx, track.ID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("GetAlbum: GetFirstListenFromRelease: %w", err)
+	}
+
 	track.ListenCount = count
 	track.TimeListened = seconds
+	track.FirstListen = firstListen.ListenedAt.Unix()
 
 	return &track, nil
 }
@@ -132,8 +138,9 @@ func (d *Psql) SaveTrack(ctx context.Context, opts db.SaveTrackOpts) (*models.Tr
 	// insert associated artists
 	for _, aid := range opts.ArtistIDs {
 		err = qtx.AssociateArtistToTrack(ctx, repository.AssociateArtistToTrackParams{
-			ArtistID: aid,
-			TrackID:  trackRow.ID,
+			ArtistID:  aid,
+			TrackID:   trackRow.ID,
+			IsPrimary: opts.ArtistIDs[0] == aid,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("SaveTrack: AssociateArtistToTrack: %w", err)
