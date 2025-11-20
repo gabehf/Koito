@@ -12,9 +12,9 @@ name: Publish Docker image
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
     branches:
-      - dev
+      - main
 
   workflow_dispatch:
 
@@ -76,11 +76,11 @@ jobs:
             gabehf/koito:${{ env.KOITO_VERSION }}
           build-args: |
             KOITO_VERSION=${{ env.KOITO_VERSION }}
-          platforms: linux/amd64,linux/arm64     
+          platforms: linux/amd64,linux/arm64
 
   push_dev:
     name: Push Docker image (dev branch)
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
     steps:
