@@ -47,6 +47,7 @@ const (
 	IMPORT_AFTER_UNIX_ENV          = "KOITO_IMPORT_AFTER_UNIX"
 	FETCH_IMAGES_DURING_IMPORT_ENV = "KOITO_FETCH_IMAGES_DURING_IMPORT"
 	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
+	LOGIN_GATE_ENV                 = "KOITO_LOGIN_GATE"
 )
 
 type config struct {
@@ -83,6 +84,7 @@ type config struct {
 	importBefore           time.Time
 	importAfter            time.Time
 	artistSeparators       []*regexp.Regexp
+	loginGate              bool
 }
 
 var (
@@ -202,6 +204,10 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 		}
 	} else {
 		cfg.artistSeparators = []*regexp.Regexp{regexp.MustCompile(`\s+·\s+`)}
+	}
+
+	if strings.ToLower(getenv(LOGIN_GATE_ENV)) == "true" {
+		cfg.loginGate = true
 	}
 
 	switch strings.ToLower(getenv(LOG_LEVEL_ENV)) {
@@ -408,4 +414,10 @@ func ArtistSeparators() []*regexp.Regexp {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.artistSeparators
+}
+
+func LoginGate() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.loginGate
 }
