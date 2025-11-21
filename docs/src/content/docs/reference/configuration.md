@@ -26,6 +26,9 @@ If the environment variable is defined without **and** with the suffix at the sa
 ##### KOITO_DEFAULT_THEME
 - Default: `yuu`
 - Description: The lowercase name of the default theme to be used by the client. Overridden if a user picks a theme in the theme switcher.
+##### KOITO_LOGIN_GATE
+- Default: `false`
+- Description: When `true`, Koito will not show any statistics unless the user is logged in.
 ##### KOITO_BIND_ADDR
 - Description: The address to bind to. The default blank value is equivalent to `0.0.0.0`.
 ##### KOITO_LISTEN_PORT
