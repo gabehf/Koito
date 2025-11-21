@@ -72,6 +72,8 @@ export default function LastPlays(props: Props) {
     return <p className="error">Error: {error.message}</p>;
   }
 
+  if (!data.items) return;
+
   const listens = items ?? data.items;
 
   let params = "";

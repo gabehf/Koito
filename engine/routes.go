@@ -36,19 +36,25 @@ func bindRoutes(
 
 	r.Route("/apis/web/v1", func(r chi.Router) {
 		r.Get("/config", handlers.GetCfgHandler())
-		r.Get("/artist", handlers.GetArtistHandler(db))
-		r.Get("/artists", handlers.GetArtistsForItemHandler(db))
-		r.Get("/album", handlers.GetAlbumHandler(db))
-		r.Get("/track", handlers.GetTrackHandler(db))
-		r.Get("/top-tracks", handlers.GetTopTracksHandler(db))
-		r.Get("/top-albums", handlers.GetTopAlbumsHandler(db))
-		r.Get("/top-artists", handlers.GetTopArtistsHandler(db))
-		r.Get("/listens", handlers.GetListensHandler(db))
-		r.Get("/listen-activity", handlers.GetListenActivityHandler(db))
-		r.Get("/now-playing", handlers.NowPlayingHandler(db))
-		r.Get("/stats", handlers.StatsHandler(db))
-		r.Get("/search", handlers.SearchHandler(db))
-		r.Get("/aliases", handlers.GetAliasesHandler(db))
+
+		r.Group(func(r chi.Router) {
+			if cfg.LoginGate() {
+				r.Use(middleware.ValidateSession(db))
+			}
+			r.Get("/artist", handlers.GetArtistHandler(db))
+			r.Get("/artists", handlers.GetArtistsForItemHandler(db))
+			r.Get("/album", handlers.GetAlbumHandler(db))
+			r.Get("/track", handlers.GetTrackHandler(db))
+			r.Get("/top-tracks", handlers.GetTopTracksHandler(db))
+			r.Get("/top-albums", handlers.GetTopAlbumsHandler(db))
+			r.Get("/top-artists", handlers.GetTopArtistsHandler(db))
+			r.Get("/listens", handlers.GetListensHandler(db))
+			r.Get("/listen-activity", handlers.GetListenActivityHandler(db))
+			r.Get("/now-playing", handlers.NowPlayingHandler(db))
+			r.Get("/stats", handlers.StatsHandler(db))
+			r.Get("/search", handlers.SearchHandler(db))
+			r.Get("/aliases", handlers.GetAliasesHandler(db))
+		})
 		r.Post("/logout", handlers.LogoutHandler(db))
 		if !cfg.RateLimitDisabled() {
 			r.With(httprate.Limit(
