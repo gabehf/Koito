@@ -19,42 +19,58 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
 export default function Album() {
   const album = useLoaderData() as Album;
-  const [period, setPeriod] = useState('week')
+  const [period, setPeriod] = useState("week");
 
-  console.log(album)
+  console.log(album);
 
   return (
-    <MediaLayout type="Album"
-        title={album.title}
-        img={album.image}
-        id={album.id}
-        musicbrainzId={album.musicbrainz_id}
-        imgItemId={album.id}
-        mergeFunc={mergeAlbums}
-        mergeCleanerFunc={(r, id) => {
-            r.artists = []
-            r.tracks = []
-            for (let i = 0; i < r.albums.length; i ++) {
-                if (r.albums[i].id === id) {
-                    delete r.albums[i]
-                }
-            }
-            return r
-        }}
-        subContent={<div className="flex flex-col gap-2 items-start">
-        {album.listen_count && <p>{album.listen_count} play{ album.listen_count > 1 ? 's' : ''}</p>}
-        {<p title={Math.floor(album.time_listened / 60) + " minutes"}>{timeListenedString(album.time_listened)}</p>}
-        {<p title={new Date(album.first_listen * 1000).toLocaleString()}>Listening since {new Date(album.first_listen * 1000).toLocaleDateString()}</p>}
-        </div>}
+    <MediaLayout
+      type="Album"
+      title={album.title}
+      img={album.image}
+      id={album.id}
+      musicbrainzId={album.musicbrainz_id}
+      imgItemId={album.id}
+      mergeFunc={mergeAlbums}
+      mergeCleanerFunc={(r, id) => {
+        r.artists = [];
+        r.tracks = [];
+        for (let i = 0; i < r.albums.length; i++) {
+          if (r.albums[i].id === id) {
+            delete r.albums[i];
+          }
+        }
+        return r;
+      }}
+      subContent={
+        <div className="flex flex-col gap-2 items-start">
+          {album.listen_count && (
+            <p>
+              {album.listen_count} play{album.listen_count > 1 ? "s" : ""}
+            </p>
+          )}
+          {
+            <p title={Math.floor(album.time_listened / 60 / 60) + " hours"}>
+              {timeListenedString(album.time_listened)}
+            </p>
+          }
+          {
+            <p title={new Date(album.first_listen * 1000).toLocaleString()}>
+              Listening since{" "}
+              {new Date(album.first_listen * 1000).toLocaleDateString()}
+            </p>
+          }
+        </div>
+      }
     >
-        <div className="mt-10">
-            <PeriodSelector setter={setPeriod} current={period} />
-        </div>
-        <div className="flex flex-wrap gap-20 mt-10">
-            <LastPlays limit={30} albumId={album.id} />
-            <TopTracks limit={12} period={period} albumId={album.id} />
-            <ActivityGrid configurable albumId={album.id} />
-        </div>
+      <div className="mt-10">
+        <PeriodSelector setter={setPeriod} current={period} />
+      </div>
+      <div className="flex flex-wrap gap-20 mt-10">
+        <LastPlays limit={30} albumId={album.id} />
+        <TopTracks limit={12} period={period} albumId={album.id} />
+        <ActivityGrid configurable albumId={album.id} />
+      </div>
     </MediaLayout>
   );
 }

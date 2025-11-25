@@ -20,50 +20,66 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
 export default function Artist() {
   const artist = useLoaderData() as Artist;
-  const [period, setPeriod] = useState('week')
+  const [period, setPeriod] = useState("week");
 
   // remove canonical name from alias list
-  console.log(artist.aliases)
+  console.log(artist.aliases);
   let index = artist.aliases.indexOf(artist.name);
   if (index !== -1) {
     artist.aliases.splice(index, 1);
   }
 
   return (
-    <MediaLayout type="Artist"
-        title={artist.name}
-        img={artist.image}
-        id={artist.id}
-        musicbrainzId={artist.musicbrainz_id}
-        imgItemId={artist.id}
-        mergeFunc={mergeArtists}
-        mergeCleanerFunc={(r, id) => {
-            r.albums = []
-            r.tracks = []
-            for (let i = 0; i < r.artists.length; i ++) {
-                if (r.artists[i].id === id) {
-                    delete r.artists[i]
-                }
-            }
-            return r
-        }}
-        subContent={<div className="flex flex-col gap-2 items-start">
-        {artist.listen_count && <p>{artist.listen_count} play{ artist.listen_count > 1 ? 's' : ''}</p>}
-        {<p title={Math.floor(artist.time_listened / 60) + " minutes"}>{timeListenedString(artist.time_listened)}</p>}
-        {<p title={new Date(artist.first_listen * 1000).toLocaleString()}>Listening since {new Date(artist.first_listen * 1000).toLocaleDateString()}</p>}
-        </div>}
+    <MediaLayout
+      type="Artist"
+      title={artist.name}
+      img={artist.image}
+      id={artist.id}
+      musicbrainzId={artist.musicbrainz_id}
+      imgItemId={artist.id}
+      mergeFunc={mergeArtists}
+      mergeCleanerFunc={(r, id) => {
+        r.albums = [];
+        r.tracks = [];
+        for (let i = 0; i < r.artists.length; i++) {
+          if (r.artists[i].id === id) {
+            delete r.artists[i];
+          }
+        }
+        return r;
+      }}
+      subContent={
+        <div className="flex flex-col gap-2 items-start">
+          {artist.listen_count && (
+            <p>
+              {artist.listen_count} play{artist.listen_count > 1 ? "s" : ""}
+            </p>
+          )}
+          {
+            <p title={Math.floor(artist.time_listened / 60 / 60) + " hours"}>
+              {timeListenedString(artist.time_listened)}
+            </p>
+          }
+          {
+            <p title={new Date(artist.first_listen * 1000).toLocaleString()}>
+              Listening since{" "}
+              {new Date(artist.first_listen * 1000).toLocaleDateString()}
+            </p>
+          }
+        </div>
+      }
     >
-        <div className="mt-10">
-            <PeriodSelector setter={setPeriod} current={period} />
+      <div className="mt-10">
+        <PeriodSelector setter={setPeriod} current={period} />
+      </div>
+      <div className="flex flex-col gap-20">
+        <div className="flex gap-15 mt-10 flex-wrap">
+          <LastPlays limit={20} artistId={artist.id} />
+          <TopTracks limit={8} period={period} artistId={artist.id} />
+          <ActivityGrid configurable artistId={artist.id} />
         </div>
-        <div className="flex flex-col gap-20">
-            <div className="flex gap-15 mt-10 flex-wrap">
-                <LastPlays limit={20} artistId={artist.id} />
-                <TopTracks limit={8} period={period} artistId={artist.id} />
-                <ActivityGrid configurable artistId={artist.id} />
-            </div>
-            <ArtistAlbums period={period} artistId={artist.id} name={artist.name} />
-        </div>
+        <ArtistAlbums period={period} artistId={artist.id} name={artist.name} />
+      </div>
     </MediaLayout>
   );
 }
