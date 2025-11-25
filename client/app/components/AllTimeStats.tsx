@@ -33,23 +33,23 @@ export default function AllTimeStats() {
       <div>
         <span
           className={numberClasses}
-          title={data.minutes_listened + " minutes"}
+          title={Math.floor(data.minutes_listened / 60) + " hours"}
         >
-          {Math.floor(data.minutes_listened / 60)}
+          {data.minutes_listened}
         </span>{" "}
-        Hours Listened
+        Minutes Listened
       </div>
       <div>
         <span className={numberClasses}>{data.listen_count}</span> Plays
       </div>
       <div>
-        <span className={numberClasses}>{data.artist_count}</span> Artists
+        <span className={numberClasses}>{data.track_count}</span> Tracks
       </div>
       <div>
         <span className={numberClasses}>{data.album_count}</span> Albums
       </div>
       <div>
-        <span className={numberClasses}>{data.track_count}</span> Tracks
+        <span className={numberClasses}>{data.artist_count}</span> Artists
       </div>
     </div>
   );
