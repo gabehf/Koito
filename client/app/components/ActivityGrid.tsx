@@ -73,8 +73,14 @@ export default function ActivityGrid({
         <p>Loading...</p>
       </div>
     );
+  } else if (isError) {
+    return (
+      <div className="w-[500px]">
+        <h2>Activity</h2>
+        <p className="error">Error: {error.message}</p>
+      </div>
+    );
   }
-  if (isError) return <p className="error">Error:{error.message}</p>;
 
   // from https://css-tricks.com/snippets/javascript/lighten-darken-color/
   function LightenDarkenColor(hex: string, lum: number) {

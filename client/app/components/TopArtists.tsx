@@ -28,11 +28,14 @@ export default function TopArtists(props: Props) {
         <p>Loading...</p>
       </div>
     );
+  } else if (isError) {
+    return (
+      <div className="w-[300px]">
+        <h2>Top Artists</h2>
+        <p className="error">Error: {error.message}</p>
+      </div>
+    );
   }
-  if (isError) {
-    return <p className="error">Error:{error.message}</p>;
-  }
-  if (!data.items) return;
 
   return (
     <div>

@@ -16,60 +16,65 @@ interface getActivityArgs {
   track_id: number;
 }
 
-function getLastListens(
+async function handleJson<T>(r: Response): Promise<T> {
+  if (!r.ok) {
+    const err = await r.json();
+    throw Error(err.error);
+  }
+  return (await r.json()) as T;
+}
+async function getLastListens(
   args: getItemsArgs
 ): Promise<PaginatedResponse<Listen>> {
-  return fetch(
+  const r = await fetch(
     `/apis/web/v1/listens?period=${args.period}&limit=${args.limit}&artist_id=${args.artist_id}&album_id=${args.album_id}&track_id=${args.track_id}&page=${args.page}`
-  ).then((r) => r.json() as Promise<PaginatedResponse<Listen>>);
-}
-
-function getTopTracks(args: getItemsArgs): Promise<PaginatedResponse<Track>> {
-  if (args.artist_id) {
-    return fetch(
-      `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&artist_id=${args.artist_id}&page=${args.page}`
-    ).then((r) => r.json() as Promise<PaginatedResponse<Track>>);
-  } else if (args.album_id) {
-    return fetch(
-      `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&album_id=${args.album_id}&page=${args.page}`
-    ).then((r) => r.json() as Promise<PaginatedResponse<Track>>);
-  } else {
-    return fetch(
-      `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&page=${args.page}`
-    ).then((r) => r.json() as Promise<PaginatedResponse<Track>>);
-  }
-}
-
-function getTopAlbums(args: getItemsArgs): Promise<PaginatedResponse<Album>> {
-  const baseUri = `/apis/web/v1/top-albums?period=${args.period}&limit=${args.limit}&page=${args.page}`;
-  if (args.artist_id) {
-    return fetch(baseUri + `&artist_id=${args.artist_id}`).then(
-      (r) => r.json() as Promise<PaginatedResponse<Album>>
-    );
-  } else {
-    return fetch(baseUri).then(
-      (r) => r.json() as Promise<PaginatedResponse<Album>>
-    );
-  }
-}
-
-function getTopArtists(args: getItemsArgs): Promise<PaginatedResponse<Artist>> {
-  const baseUri = `/apis/web/v1/top-artists?period=${args.period}&limit=${args.limit}&page=${args.page}`;
-  return fetch(baseUri).then(
-    (r) => r.json() as Promise<PaginatedResponse<Artist>>
   );
+  return handleJson<PaginatedResponse<Listen>>(r);
 }
 
-function getActivity(args: getActivityArgs): Promise<ListenActivityItem[]> {
-  return fetch(
+async function getTopTracks(
+  args: getItemsArgs
+): Promise<PaginatedResponse<Track>> {
+  let url = `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&page=${args.page}`;
+
+  if (args.artist_id) url += `&artist_id=${args.artist_id}`;
+  else if (args.album_id) url += `&album_id=${args.album_id}`;
+
+  const r = await fetch(url);
+  return handleJson<PaginatedResponse<Track>>(r);
+}
+
+async function getTopAlbums(
+  args: getItemsArgs
+): Promise<PaginatedResponse<Album>> {
+  let url = `/apis/web/v1/top-albums?period=${args.period}&limit=${args.limit}&page=${args.page}`;
+  if (args.artist_id) url += `&artist_id=${args.artist_id}`;
+
+  const r = await fetch(url);
+  return handleJson<PaginatedResponse<Album>>(r);
+}
+
+async function getTopArtists(
+  args: getItemsArgs
+): Promise<PaginatedResponse<Artist>> {
+  const url = `/apis/web/v1/top-artists?period=${args.period}&limit=${args.limit}&page=${args.page}`;
+  const r = await fetch(url);
+  return handleJson<PaginatedResponse<Artist>>(r);
+}
+
+async function getActivity(
+  args: getActivityArgs
+): Promise<ListenActivityItem[]> {
+  const r = await fetch(
     `/apis/web/v1/listen-activity?step=${args.step}&range=${args.range}&month=${args.month}&year=${args.year}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
-  ).then((r) => r.json() as Promise<ListenActivityItem[]>);
+  );
+  return handleJson<ListenActivityItem[]>(r);
 }
 
-function getStats(period: string): Promise<Stats> {
-  return fetch(`/apis/web/v1/stats?period=${period}`).then(
-    (r) => r.json() as Promise<Stats>
-  );
+async function getStats(period: string): Promise<Stats> {
+  const r = await fetch(`/apis/web/v1/stats?period=${period}`);
+
+  return handleJson<Stats>(r);
 }
 
 function search(q: string): Promise<SearchResponse> {
@@ -416,4 +421,5 @@ export type {
   ApiError,
   Config,
   NowPlaying,
+  Stats,
 };
