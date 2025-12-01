@@ -53,7 +53,9 @@ function getStoredCustomTheme(): Theme | undefined {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   let defaultTheme = useAppContext().defaultTheme;
   let initialTheme = localStorage.getItem("theme") ?? defaultTheme;
-  const [themeName, setThemeName] = useState(initialTheme);
+  const [themeName, setThemeName] = useState(
+    themes[initialTheme] ? initialTheme : defaultTheme
+  );
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
     if (initialTheme === "custom") {
       const customTheme = getStoredCustomTheme();
@@ -78,6 +80,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (foundTheme) {
         localStorage.setItem("theme", newThemeName);
         setCurrentTheme(foundTheme);
+      } else {
+        setTheme(defaultTheme);
       }
     }
   };
