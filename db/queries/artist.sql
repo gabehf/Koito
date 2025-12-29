@@ -4,7 +4,7 @@ VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: GetArtist :one
-SELECT 
+SELECT
   a.*,
   array_agg(aa.alias)::text[] AS aliases
 FROM artists_with_name a
@@ -13,7 +13,7 @@ WHERE a.id = $1
 GROUP BY a.id, a.musicbrainz_id, a.image, a.image_source, a.name;
 
 -- name: GetTrackArtists :many
-SELECT 
+SELECT
   a.*,
   at.is_primary as is_primary
 FROM artists_with_name a
@@ -25,7 +25,7 @@ GROUP BY a.id, a.musicbrainz_id, a.image, a.image_source, a.name, at.is_primary;
 SELECT * FROM artists WHERE image = $1 LIMIT 1;
 
 -- name: GetReleaseArtists :many
-SELECT 
+SELECT
   a.*,
   ar.is_primary as is_primary
 FROM artists_with_name a
@@ -35,7 +35,7 @@ GROUP BY a.id, a.musicbrainz_id, a.image, a.image_source, a.name, ar.is_primary;
 
 -- name: GetArtistByName :one
 WITH artist_with_aliases AS (
-  SELECT 
+  SELECT
     a.*,
     COALESCE(array_agg(aa.alias), '{}')::text[] AS aliases
   FROM artists_with_name a
@@ -48,7 +48,7 @@ WITH artist_with_aliases AS (
 SELECT * FROM artist_with_aliases;
 
 -- name: GetArtistByMbzID :one
-SELECT 
+SELECT
   a.*,
   array_agg(aa.alias)::text[] AS aliases
 FROM artists_with_name a
@@ -77,6 +77,17 @@ SELECT COUNT(DISTINCT at.artist_id) AS total_count
 FROM listens l
 JOIN artist_tracks at ON l.track_id = at.track_id
 WHERE l.listened_at BETWEEN $1 AND $2;
+
+-- name: CountNewArtists :one
+SELECT COUNT(*) AS total_count
+FROM (
+  SELECT at.artist_id
+  FROM listens l
+  JOIN tracks t ON l.track_id = t.id
+  JOIN artist_tracks at ON t.id = at.track_id
+  GROUP BY at.artist_id
+  HAVING MIN(l.listened_at) BETWEEN $1 AND $2
+) first_appearances;
 
 -- name: UpdateArtistMbzID :exec
 UPDATE artists SET musicbrainz_id = $2

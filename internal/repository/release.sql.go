@@ -30,9 +30,32 @@ func (q *Queries) AssociateArtistToRelease(ctx context.Context, arg AssociateArt
 	return err
 }
 
+const countNewReleases = `-- name: CountNewReleases :one
+SELECT COUNT(*) AS total_count
+FROM (
+  SELECT t.release_id
+  FROM listens l
+  JOIN tracks t ON l.track_id = t.id
+  GROUP BY t.release_id
+  HAVING MIN(l.listened_at) BETWEEN $1 AND $2
+) first_appearances
+`
+
+type CountNewReleasesParams struct {
+	ListenedAt   time.Time
+	ListenedAt_2 time.Time
+}
+
+func (q *Queries) CountNewReleases(ctx context.Context, arg CountNewReleasesParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countNewReleases, arg.ListenedAt, arg.ListenedAt_2)
+	var total_count int64
+	err := row.Scan(&total_count)
+	return total_count, err
+}
+
 const countReleasesFromArtist = `-- name: CountReleasesFromArtist :one
 SELECT COUNT(*)
-FROM releases r 
+FROM releases r
 JOIN artist_releases ar ON r.id = ar.release_id
 WHERE ar.artist_id = $1
 `
@@ -86,7 +109,7 @@ func (q *Queries) DeleteReleasesFromArtist(ctx context.Context, artistID int32) 
 }
 
 const getRelease = `-- name: GetRelease :one
-SELECT 
+SELECT
   id, musicbrainz_id, image, various_artists, image_source, title,
   get_artists_for_release(id) AS artists
 FROM releases_with_title
@@ -213,8 +236,8 @@ const getReleasesWithoutImages = `-- name: GetReleasesWithoutImages :many
 SELECT
   r.id, r.musicbrainz_id, r.image, r.various_artists, r.image_source, r.title,
   get_artists_for_release(r.id) AS artists
-FROM releases_with_title r 
-WHERE r.image IS NULL 
+FROM releases_with_title r
+WHERE r.image IS NULL
   AND r.id > $2
 ORDER BY r.id ASC
 LIMIT $1

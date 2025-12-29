@@ -9,7 +9,7 @@ VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
 
 -- name: GetTrack :one
-SELECT 
+SELECT
   t.*,
   get_artists_for_track(t.id) AS artists,
   r.image
@@ -108,6 +108,15 @@ FROM listens l
 JOIN tracks t ON l.track_id = t.id
 WHERE l.listened_at BETWEEN $1 AND $2
 AND t.release_id = $3;
+
+-- name: CountNewTracks :one
+SELECT COUNT(*) AS total_count
+FROM (
+  SELECT track_id
+  FROM listens
+  GROUP BY track_id
+  HAVING MIN(listened_at) BETWEEN $1 AND $2
+) first_appearances;
 
 -- name: UpdateTrackMbzID :exec
 UPDATE tracks SET musicbrainz_id = $2

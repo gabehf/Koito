@@ -3,6 +3,7 @@ package psql_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/stretchr/testify/assert"
@@ -35,6 +36,23 @@ func TestCountTracks(t *testing.T) {
 	truncateTestData(t)
 }
 
+func TestCountNewTracks(t *testing.T) {
+	ctx := context.Background()
+	testDataForTopItems(t)
+	testDataAbsoluteListenTimes(t)
+
+	// Test CountTracks
+	t1, _ := time.Parse(time.DateOnly, "2025-01-01")
+	t1u := t1.Unix()
+	t2, _ := time.Parse(time.DateOnly, "2025-12-31")
+	t2u := t2.Unix()
+	count, err := store.CountNewTracks(ctx, db.Timeframe{T1u: t1u, T2u: t2u})
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), count, "expected tracks count to match inserted data")
+
+	truncateTestData(t)
+}
+
 func TestCountAlbums(t *testing.T) {
 	ctx := context.Background()
 	testDataForTopItems(t)
@@ -48,6 +66,23 @@ func TestCountAlbums(t *testing.T) {
 	truncateTestData(t)
 }
 
+func TestCountNewAlbums(t *testing.T) {
+	ctx := context.Background()
+	testDataForTopItems(t)
+	testDataAbsoluteListenTimes(t)
+
+	// Test CountTracks
+	t1, _ := time.Parse(time.DateOnly, "2025-01-01")
+	t1u := t1.Unix()
+	t2, _ := time.Parse(time.DateOnly, "2025-12-31")
+	t2u := t2.Unix()
+	count, err := store.CountNewAlbums(ctx, db.Timeframe{T1u: t1u, T2u: t2u})
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), count, "expected albums count to match inserted data")
+
+	truncateTestData(t)
+}
+
 func TestCountArtists(t *testing.T) {
 	ctx := context.Background()
 	testDataForTopItems(t)
@@ -57,6 +92,23 @@ func TestCountArtists(t *testing.T) {
 	count, err := store.CountArtists(ctx, db.Timeframe{Period: period})
 	require.NoError(t, err)
 	assert.Equal(t, int64(4), count, "expected artists count to match inserted data")
+
+	truncateTestData(t)
+}
+
+func TestCountNewArtists(t *testing.T) {
+	ctx := context.Background()
+	testDataForTopItems(t)
+	testDataAbsoluteListenTimes(t)
+
+	// Test CountTracks
+	t1, _ := time.Parse(time.DateOnly, "2025-01-01")
+	t1u := t1.Unix()
+	t2, _ := time.Parse(time.DateOnly, "2025-12-31")
+	t2u := t2.Unix()
+	count, err := store.CountNewArtists(ctx, db.Timeframe{T1u: t1u, T2u: t2u})
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), count, "expected artists count to match inserted data")
 
 	truncateTestData(t)
 }

@@ -142,3 +142,60 @@ func (p *Psql) CountTimeListenedToItem(ctx context.Context, opts db.TimeListened
 	}
 	return 0, errors.New("CountTimeListenedToItem: an id must be provided")
 }
+
+func (p *Psql) CountNewTracks(ctx context.Context, timeframe db.Timeframe) (int64, error) {
+	var t1, t2 time.Time
+	if timeframe.T1u == 0 && timeframe.T2u == 0 {
+		t2 = time.Now()
+		t1 = db.StartTimeFromPeriod(timeframe.Period)
+	} else {
+		t1 = time.Unix(timeframe.T1u, 0)
+		t2 = time.Unix(timeframe.T2u, 0)
+	}
+	count, err := p.q.CountNewTracks(ctx, repository.CountNewTracksParams{
+		ListenedAt:   t1,
+		ListenedAt_2: t2,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("CountNewTracks: %w", err)
+	}
+	return count, nil
+}
+
+func (p *Psql) CountNewAlbums(ctx context.Context, timeframe db.Timeframe) (int64, error) {
+	var t1, t2 time.Time
+	if timeframe.T1u == 0 && timeframe.T2u == 0 {
+		t2 = time.Now()
+		t1 = db.StartTimeFromPeriod(timeframe.Period)
+	} else {
+		t1 = time.Unix(timeframe.T1u, 0)
+		t2 = time.Unix(timeframe.T2u, 0)
+	}
+	count, err := p.q.CountNewReleases(ctx, repository.CountNewReleasesParams{
+		ListenedAt:   t1,
+		ListenedAt_2: t2,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("CountNewAlbums: %w", err)
+	}
+	return count, nil
+}
+
+func (p *Psql) CountNewArtists(ctx context.Context, timeframe db.Timeframe) (int64, error) {
+	var t1, t2 time.Time
+	if timeframe.T1u == 0 && timeframe.T2u == 0 {
+		t2 = time.Now()
+		t1 = db.StartTimeFromPeriod(timeframe.Period)
+	} else {
+		t1 = time.Unix(timeframe.T1u, 0)
+		t2 = time.Unix(timeframe.T2u, 0)
+	}
+	count, err := p.q.CountNewArtists(ctx, repository.CountNewArtistsParams{
+		ListenedAt:   t1,
+		ListenedAt_2: t2,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("CountNewArtists: %w", err)
+	}
+	return count, nil
+}

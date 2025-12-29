@@ -29,6 +29,28 @@ func (q *Queries) AssociateArtistToTrack(ctx context.Context, arg AssociateArtis
 	return err
 }
 
+const countNewTracks = `-- name: CountNewTracks :one
+SELECT COUNT(*) AS total_count
+FROM (
+  SELECT track_id
+  FROM listens
+  GROUP BY track_id
+  HAVING MIN(listened_at) BETWEEN $1 AND $2
+) first_appearances
+`
+
+type CountNewTracksParams struct {
+	ListenedAt   time.Time
+	ListenedAt_2 time.Time
+}
+
+func (q *Queries) CountNewTracks(ctx context.Context, arg CountNewTracksParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countNewTracks, arg.ListenedAt, arg.ListenedAt_2)
+	var total_count int64
+	err := row.Scan(&total_count)
+	return total_count, err
+}
+
 const countTopTracks = `-- name: CountTopTracks :one
 SELECT COUNT(DISTINCT l.track_id) AS total_count
 FROM listens l
@@ -343,7 +365,7 @@ func (q *Queries) GetTopTracksPaginated(ctx context.Context, arg GetTopTracksPag
 }
 
 const getTrack = `-- name: GetTrack :one
-SELECT 
+SELECT
   t.id, t.musicbrainz_id, t.duration, t.release_id, t.title,
   get_artists_for_track(t.id) AS artists,
   r.image
