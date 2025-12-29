@@ -63,11 +63,11 @@ type DB interface {
 	DeleteSession(ctx context.Context, sessionId uuid.UUID) error
 	DeleteApiKey(ctx context.Context, id int32) error
 	// Count
-	CountListens(ctx context.Context, period Period) (int64, error)
-	CountTracks(ctx context.Context, period Period) (int64, error)
-	CountAlbums(ctx context.Context, period Period) (int64, error)
-	CountArtists(ctx context.Context, period Period) (int64, error)
-	CountTimeListened(ctx context.Context, period Period) (int64, error)
+	CountListens(ctx context.Context, timeframe Timeframe) (int64, error)
+	CountTracks(ctx context.Context, timeframe Timeframe) (int64, error)
+	CountAlbums(ctx context.Context, timeframe Timeframe) (int64, error)
+	CountArtists(ctx context.Context, timeframe Timeframe) (int64, error)
+	CountTimeListened(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountTimeListenedToItem(ctx context.Context, opts TimeListenedOpts) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	// Search

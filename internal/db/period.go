@@ -6,6 +6,12 @@ import (
 
 // should this be in db package ???
 
+type Timeframe struct {
+	Period Period
+	T1u    int64
+	T2u    int64
+}
+
 type Period string
 
 const (

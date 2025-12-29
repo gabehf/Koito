@@ -15,7 +15,7 @@ func TestCountListens(t *testing.T) {
 
 	// Test CountListens
 	period := db.PeriodWeek
-	count, err := store.CountListens(ctx, period)
+	count, err := store.CountListens(ctx, db.Timeframe{Period: period})
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), count, "expected listens count to match inserted data")
 
@@ -28,7 +28,7 @@ func TestCountTracks(t *testing.T) {
 
 	// Test CountTracks
 	period := db.PeriodMonth
-	count, err := store.CountTracks(ctx, period)
+	count, err := store.CountTracks(ctx, db.Timeframe{Period: period})
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count, "expected tracks count to match inserted data")
 
@@ -41,7 +41,7 @@ func TestCountAlbums(t *testing.T) {
 
 	// Test CountAlbums
 	period := db.PeriodYear
-	count, err := store.CountAlbums(ctx, period)
+	count, err := store.CountAlbums(ctx, db.Timeframe{Period: period})
 	require.NoError(t, err)
 	assert.Equal(t, int64(3), count, "expected albums count to match inserted data")
 
@@ -54,7 +54,7 @@ func TestCountArtists(t *testing.T) {
 
 	// Test CountArtists
 	period := db.PeriodAllTime
-	count, err := store.CountArtists(ctx, period)
+	count, err := store.CountArtists(ctx, db.Timeframe{Period: period})
 	require.NoError(t, err)
 	assert.Equal(t, int64(4), count, "expected artists count to match inserted data")
 
@@ -67,7 +67,7 @@ func TestCountTimeListened(t *testing.T) {
 
 	// Test CountTimeListened
 	period := db.PeriodMonth
-	count, err := store.CountTimeListened(ctx, period)
+	count, err := store.CountTimeListened(ctx, db.Timeframe{Period: period})
 	require.NoError(t, err)
 	// 3 listens in past month, each 100 seconds
 	assert.Equal(t, int64(300), count, "expected total time listened to match inserted data")
