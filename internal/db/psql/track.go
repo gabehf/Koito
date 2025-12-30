@@ -82,8 +82,8 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 	}
 
 	seconds, err := d.CountTimeListenedToItem(ctx, db.TimeListenedOpts{
-		Period:  db.PeriodAllTime,
-		TrackID: track.ID,
+		Timeframe: db.Timeframe{Period: db.PeriodAllTime},
+		TrackID:   track.ID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("GetTrack: CountTimeListenedToItem: %w", err)

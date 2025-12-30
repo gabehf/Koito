@@ -11,6 +11,7 @@ import (
 
 type DB interface {
 	// Get
+
 	GetArtist(ctx context.Context, opts GetArtistOpts) (*models.Artist, error)
 	GetAlbum(ctx context.Context, opts GetAlbumOpts) (*models.Album, error)
 	GetTrack(ctx context.Context, opts GetTrackOpts) (*models.Track, error)
@@ -28,7 +29,9 @@ type DB interface {
 	GetUserBySession(ctx context.Context, sessionId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetUserByApiKey(ctx context.Context, key string) (*models.User, error)
+
 	// Save
+
 	SaveArtist(ctx context.Context, opts SaveArtistOpts) (*models.Artist, error)
 	SaveArtistAliases(ctx context.Context, id int32, aliases []string, source string) error
 	SaveAlbum(ctx context.Context, opts SaveAlbumOpts) (*models.Album, error)
@@ -39,7 +42,9 @@ type DB interface {
 	SaveUser(ctx context.Context, opts SaveUserOpts) (*models.User, error)
 	SaveApiKey(ctx context.Context, opts SaveApiKeyOpts) (*models.ApiKey, error)
 	SaveSession(ctx context.Context, userId int32, expiresAt time.Time, persistent bool) (*models.Session, error)
+
 	// Update
+
 	UpdateArtist(ctx context.Context, opts UpdateArtistOpts) error
 	UpdateTrack(ctx context.Context, opts UpdateTrackOpts) error
 	UpdateAlbum(ctx context.Context, opts UpdateAlbumOpts) error
@@ -52,7 +57,9 @@ type DB interface {
 	SetPrimaryTrackAlias(ctx context.Context, id int32, alias string) error
 	SetPrimaryAlbumArtist(ctx context.Context, id int32, artistId int32, value bool) error
 	SetPrimaryTrackArtist(ctx context.Context, id int32, artistId int32, value bool) error
+
 	// Delete
+
 	DeleteArtist(ctx context.Context, id int32) error
 	DeleteAlbum(ctx context.Context, id int32) error
 	DeleteTrack(ctx context.Context, id int32) error
@@ -62,26 +69,36 @@ type DB interface {
 	DeleteTrackAlias(ctx context.Context, id int32, alias string) error
 	DeleteSession(ctx context.Context, sessionId uuid.UUID) error
 	DeleteApiKey(ctx context.Context, id int32) error
+
 	// Count
+
 	CountListens(ctx context.Context, timeframe Timeframe) (int64, error)
+	CountListensToItem(ctx context.Context, opts TimeListenedOpts) (int64, error)
 	CountTracks(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountAlbums(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountArtists(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountNewTracks(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountNewAlbums(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountNewArtists(ctx context.Context, timeframe Timeframe) (int64, error)
+	// in seconds
 	CountTimeListened(ctx context.Context, timeframe Timeframe) (int64, error)
+	// in seconds
 	CountTimeListenedToItem(ctx context.Context, opts TimeListenedOpts) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	// Search
+
 	SearchArtists(ctx context.Context, q string) ([]*models.Artist, error)
 	SearchAlbums(ctx context.Context, q string) ([]*models.Album, error)
 	SearchTracks(ctx context.Context, q string) ([]*models.Track, error)
+
 	// Merge
+
 	MergeTracks(ctx context.Context, fromId, toId int32) error
 	MergeAlbums(ctx context.Context, fromId, toId int32, replaceImage bool) error
 	MergeArtists(ctx context.Context, fromId, toId int32, replaceImage bool) error
+
 	// Etc
+
 	ImageHasAssociation(ctx context.Context, image uuid.UUID) (bool, error)
 	GetImageSource(ctx context.Context, image uuid.UUID) (string, error)
 	AlbumsWithoutImages(ctx context.Context, from int32) ([]*models.Album, error)

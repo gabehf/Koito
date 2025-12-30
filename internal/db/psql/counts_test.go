@@ -131,7 +131,7 @@ func TestCountTimeListenedToArtist(t *testing.T) {
 	ctx := context.Background()
 	testDataForTopItems(t)
 	period := db.PeriodAllTime
-	count, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{Period: period, ArtistID: 1})
+	count, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{Timeframe: db.Timeframe{Period: period}, ArtistID: 1})
 	require.NoError(t, err)
 	assert.EqualValues(t, 400, count)
 	truncateTestData(t)
@@ -141,7 +141,7 @@ func TestCountTimeListenedToAlbum(t *testing.T) {
 	ctx := context.Background()
 	testDataForTopItems(t)
 	period := db.PeriodAllTime
-	count, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{Period: period, AlbumID: 2})
+	count, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{Timeframe: db.Timeframe{Period: period}, AlbumID: 2})
 	require.NoError(t, err)
 	assert.EqualValues(t, 300, count)
 	truncateTestData(t)
@@ -151,8 +151,38 @@ func TestCountTimeListenedToTrack(t *testing.T) {
 	ctx := context.Background()
 	testDataForTopItems(t)
 	period := db.PeriodAllTime
-	count, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{Period: period, TrackID: 3})
+	count, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{Timeframe: db.Timeframe{Period: period}, TrackID: 3})
 	require.NoError(t, err)
 	assert.EqualValues(t, 200, count)
+	truncateTestData(t)
+}
+
+func TestListensToArtist(t *testing.T) {
+	ctx := context.Background()
+	testDataForTopItems(t)
+	period := db.PeriodAllTime
+	count, err := store.CountListensToItem(ctx, db.TimeListenedOpts{Timeframe: db.Timeframe{Period: period}, ArtistID: 1})
+	require.NoError(t, err)
+	assert.EqualValues(t, 4, count)
+	truncateTestData(t)
+}
+
+func TestListensToAlbum(t *testing.T) {
+	ctx := context.Background()
+	testDataForTopItems(t)
+	period := db.PeriodAllTime
+	count, err := store.CountListensToItem(ctx, db.TimeListenedOpts{Timeframe: db.Timeframe{Period: period}, AlbumID: 2})
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, count)
+	truncateTestData(t)
+}
+
+func TestListensToTrack(t *testing.T) {
+	ctx := context.Background()
+	testDataForTopItems(t)
+	period := db.PeriodAllTime
+	count, err := store.CountListensToItem(ctx, db.TimeListenedOpts{Timeframe: db.Timeframe{Period: period}, TrackID: 3})
+	require.NoError(t, err)
+	assert.EqualValues(t, 2, count)
 	truncateTestData(t)
 }

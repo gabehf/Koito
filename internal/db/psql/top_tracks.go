@@ -25,6 +25,10 @@ func (d *Psql) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		t2 = time.Now()
 		t1 = db.StartTimeFromPeriod(opts.Period)
 	}
+	if opts.From != 0 || opts.To != 0 {
+		t1 = time.Unix(opts.From, 0)
+		t2 = time.Unix(opts.To, 0)
+	}
 	if opts.Limit == 0 {
 		opts.Limit = DefaultItemsPerPage
 	}

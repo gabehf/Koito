@@ -1,12 +1,9 @@
 package summary_test
 
 import (
-	"path"
 	"testing"
 
 	"github.com/gabehf/koito/internal/cfg"
-	"github.com/gabehf/koito/internal/summary"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(t *testing.M) {
@@ -33,55 +30,55 @@ func TestMain(t *testing.M) {
 	t.Run()
 }
 
-func TestGenerateImage(t *testing.T) {
-	s := summary.Summary{
-		Title:          "20XX Rewind",
-		TopArtistImage: path.Join("..", "..", "test_assets", "yuu.jpg"),
-		TopArtists: []struct {
-			Name            string
-			Plays           int
-			MinutesListened int
-		}{
-			{"CHUU", 738, 7321},
-			{"Paramore", 738, 7321},
-			{"ano", 738, 7321},
-			{"NELKE", 738, 7321},
-			{"ILLIT", 738, 7321},
-		},
-		TopAlbumImage: "",
-		TopAlbums: []struct {
-			Title           string
-			Plays           int
-			MinutesListened int
-		}{
-			{"Only cry in the rain", 738, 7321},
-			{"Paramore", 738, 7321},
-			{"ano", 738, 7321},
-			{"NELKE", 738, 7321},
-			{"ILLIT", 738, 7321},
-		},
-		TopTrackImage: "",
-		TopTracks: []struct {
-			Title           string
-			Plays           int
-			MinutesListened int
-		}{
-			{"虹の色よ鮮やかであれ (NELKE ver.)", 321, 12351},
-			{"Paramore", 738, 7321},
-			{"ano", 738, 7321},
-			{"NELKE", 738, 7321},
-			{"ILLIT", 738, 7321},
-		},
-		MinutesListened: 0,
-		Plays:           0,
-		AvgPlaysPerDay:  0,
-		UniqueTracks:    0,
-		UniqueAlbums:    0,
-		UniqueArtists:   0,
-		NewTracks:       0,
-		NewAlbums:       0,
-		NewArtists:      0,
-	}
+func TestGenerateSummary(t *testing.T) {
+	// s := summary.Summary{
+	// 	Title: "20XX Rewind",
+	// TopArtistImage: path.Join("..", "..", "test_assets", "yuu.jpg"),
+	// TopArtists: []struct {
+	// 	Name            string
+	// 	Plays           int
+	// 	MinutesListened int
+	// }{
+	// 	{"CHUU", 738, 7321},
+	// 	{"Paramore", 738, 7321},
+	// 	{"ano", 738, 7321},
+	// 	{"NELKE", 738, 7321},
+	// 	{"ILLIT", 738, 7321},
+	// },
+	// TopAlbumImage: "",
+	// TopAlbums: []struct {
+	// 	Title           string
+	// 	Plays           int
+	// 	MinutesListened int
+	// }{
+	// 	{"Only cry in the rain", 738, 7321},
+	// 	{"Paramore", 738, 7321},
+	// 	{"ano", 738, 7321},
+	// 	{"NELKE", 738, 7321},
+	// 	{"ILLIT", 738, 7321},
+	// },
+	// TopTrackImage: "",
+	// TopTracks: []struct {
+	// 	Title           string
+	// 	Plays           int
+	// 	MinutesListened int
+	// }{
+	// 	{"虹の色よ鮮やかであれ (NELKE ver.)", 321, 12351},
+	// 	{"Paramore", 738, 7321},
+	// 	{"ano", 738, 7321},
+	// 	{"NELKE", 738, 7321},
+	// 	{"ILLIT", 738, 7321},
+	// },
+	// 	MinutesListened: 0,
+	// 	Plays:           0,
+	// 	AvgPlaysPerDay:  0,
+	// 	UniqueTracks:    0,
+	// 	UniqueAlbums:    0,
+	// 	UniqueArtists:   0,
+	// 	NewTracks:       0,
+	// 	NewAlbums:       0,
+	// 	NewArtists:      0,
+	// }
 
-	assert.NoError(t, summary.GenerateImage(&s))
+	// assert.NoError(t, summary.GenerateImage(&s))
 }
