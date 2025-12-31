@@ -27,10 +27,10 @@ postgres.remove:
 postgres.remove-scratch:
 	docker stop koito-scratch && docker rm koito-scratch
 
-api.debug:
+api.debug: postgres.start
 	KOITO_ALLOWED_HOSTS=* KOITO_LOG_LEVEL=debug KOITO_CONFIG_DIR=test_config_dir KOITO_DATABASE_URL=postgres://postgres:secret@localhost:5432?sslmode=disable go run cmd/api/main.go
 
-api.scratch:
+api.scratch: postgres.run-scratch
 	KOITO_ALLOWED_HOSTS=* KOITO_LOG_LEVEL=debug KOITO_CONFIG_DIR=test_config_dir/scratch KOITO_DATABASE_URL=postgres://postgres:secret@localhost:5433?sslmode=disable go run cmd/api/main.go
 
 api.test:
@@ -45,7 +45,7 @@ client.dev:
 docs.dev:
 	cd docs && yarn dev
 
-client.deps: 
+client.deps:
 	cd client && yarn install
 
 client.build: client.deps

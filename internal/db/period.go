@@ -6,6 +6,23 @@ import (
 
 // should this be in db package ???
 
+type Timeframe struct {
+	Period Period
+	T1u    int64
+	T2u    int64
+}
+
+func TimeframeToTimeRange(timeframe Timeframe) (t1, t2 time.Time) {
+	if timeframe.T1u == 0 && timeframe.T2u == 0 {
+		t2 = time.Now()
+		t1 = StartTimeFromPeriod(timeframe.Period)
+	} else {
+		t1 = time.Unix(timeframe.T1u, 0)
+		t2 = time.Unix(timeframe.T2u, 0)
+	}
+	return
+}
+
 type Period string
 
 const (

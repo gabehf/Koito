@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
@@ -81,10 +82,93 @@ func OptsFromRequest(r *http.Request) db.GetItemsOpts {
 		Week:     week,
 		Month:    month,
 		Year:     year,
-		From:     from,
-		To:       to,
+		From:     int64(from),
+		To:       int64(to),
 		ArtistID: artistId,
 		AlbumID:  albumId,
 		TrackID:  trackId,
 	}
+}
+
+// Takes a request and returns a db.Timeframe representing the week, month, year, period, or unix
+// time range specified by the request parameters
+func TimeframeFromRequest(r *http.Request) db.Timeframe {
+	opts := OptsFromRequest(r)
+	now := time.Now()
+	loc := now.Location()
+
+	// if 'from' is set, but 'to' is not set, assume 'to' should be now
+	if opts.From != 0 && opts.To == 0 {
+		opts.To = now.Unix()
+	}
+
+	// YEAR
+	if opts.Year != 0 && opts.Month == 0 && opts.Week == 0 {
+		start := time.Date(opts.Year, 1, 1, 0, 0, 0, 0, loc)
+		end := time.Date(opts.Year+1, 1, 1, 0, 0, 0, 0, loc).Add(-time.Second)
+
+		opts.From = start.Unix()
+		opts.To = end.Unix()
+	}
+
+	// MONTH (+ optional year)
+	if opts.Month != 0 {
+		year := opts.Year
+		if year == 0 {
+			year = now.Year()
+			if int(now.Month()) < opts.Month {
+				year--
+			}
+		}
+
+		start := time.Date(year, time.Month(opts.Month), 1, 0, 0, 0, 0, loc)
+		end := endOfMonth(year, time.Month(opts.Month), loc)
+
+		opts.From = start.Unix()
+		opts.To = end.Unix()
+	}
+
+	// WEEK (+ optional year)
+	if opts.Week != 0 {
+		year := opts.Year
+		if year == 0 {
+			year = now.Year()
+
+			_, currentWeek := now.ISOWeek()
+			if currentWeek < opts.Week {
+				year--
+			}
+		}
+
+		// ISO week 1 is defined as the week with Jan 4 in it
+		jan4 := time.Date(year, 1, 4, 0, 0, 0, 0, loc)
+		week1Start := startOfWeek(jan4)
+
+		start := week1Start.AddDate(0, 0, (opts.Week-1)*7)
+		end := endOfWeek(start)
+
+		opts.From = start.Unix()
+		opts.To = end.Unix()
+	}
+
+	return db.Timeframe{
+		Period: opts.Period,
+		T1u:    opts.From,
+		T2u:    opts.To,
+	}
+}
+func startOfWeek(t time.Time) time.Time {
+	// ISO week: Monday = 1
+	weekday := int(t.Weekday())
+	if weekday == 0 { // Sunday
+		weekday = 7
+	}
+	return time.Date(t.Year(), t.Month(), t.Day()-weekday+1, 0, 0, 0, 0, t.Location())
+}
+func endOfWeek(t time.Time) time.Time {
+	return startOfWeek(t).AddDate(0, 0, 7).Add(-time.Second)
+}
+func endOfMonth(year int, month time.Month, loc *time.Location) time.Time {
+	startNextMonth := time.Date(year, month+1, 1, 0, 0, 0, 0, loc)
+	return startNextMonth.Add(-time.Second)
 }

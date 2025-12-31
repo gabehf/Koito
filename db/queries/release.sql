@@ -4,7 +4,7 @@ VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetRelease :one
-SELECT 
+SELECT
   *,
   get_artists_for_release(id) AS artists
 FROM releases_with_title
@@ -69,9 +69,19 @@ WHERE l.listened_at BETWEEN $1 AND $2;
 
 -- name: CountReleasesFromArtist :one
 SELECT COUNT(*)
-FROM releases r 
+FROM releases r
 JOIN artist_releases ar ON r.id = ar.release_id
 WHERE ar.artist_id = $1;
+
+-- name: CountNewReleases :one
+SELECT COUNT(*) AS total_count
+FROM (
+  SELECT t.release_id
+  FROM listens l
+  JOIN tracks t ON l.track_id = t.id
+  GROUP BY t.release_id
+  HAVING MIN(l.listened_at) BETWEEN $1 AND $2
+) first_appearances;
 
 -- name: AssociateArtistToRelease :exec
 INSERT INTO artist_releases (artist_id, release_id, is_primary)
@@ -82,8 +92,8 @@ ON CONFLICT DO NOTHING;
 SELECT
   r.*,
   get_artists_for_release(r.id) AS artists
-FROM releases_with_title r 
-WHERE r.image IS NULL 
+FROM releases_with_title r
+WHERE r.image IS NULL
   AND r.id > $2
 ORDER BY r.id ASC
 LIMIT $1;
@@ -107,7 +117,7 @@ WHERE id = $1;
 -- name: DeleteRelease :exec
 DELETE FROM releases WHERE id = $1;
 
--- name: DeleteReleasesFromArtist :exec 
+-- name: DeleteReleasesFromArtist :exec
 DELETE FROM releases r
 USING artist_releases ar
 WHERE ar.release_id = r.id

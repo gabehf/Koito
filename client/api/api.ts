@@ -15,6 +15,14 @@ interface getActivityArgs {
   album_id: number;
   track_id: number;
 }
+interface timeframe {
+  week?: number;
+  month?: number;
+  year?: number;
+  from?: number;
+  to?: number;
+  period?: string;
+}
 
 async function handleJson<T>(r: Response): Promise<T> {
   if (!r.ok) {
@@ -281,6 +289,13 @@ function getNowPlaying(): Promise<NowPlaying> {
   return fetch("/apis/web/v1/now-playing").then((r) => r.json());
 }
 
+async function getRewindStats(args: timeframe): Promise<RewindStats> {
+  const r = await fetch(
+    `/apis/web/v1/summary?week=${args.week}&month=${args.month}&year=${args.year}&from=${args.from}&to=${args.to}`
+  );
+  return handleJson<RewindStats>(r);
+}
+
 export {
   getLastListens,
   getTopTracks,
@@ -312,6 +327,7 @@ export {
   getExport,
   submitListen,
   getNowPlaying,
+  getRewindStats,
 };
 type Track = {
   id: number;
@@ -404,6 +420,22 @@ type NowPlaying = {
   currently_playing: boolean;
   track: Track;
 };
+type RewindStats = {
+  title: string;
+  top_artists: Artist[];
+  top_albums: Album[];
+  top_tracks: Track[];
+  minutes_listened: number;
+  avg_minutes_listened_per_day: number;
+  plays: number;
+  avg_plays_per_day: number;
+  unique_tracks: number;
+  unique_albums: number;
+  unique_artists: number;
+  new_tracks: number;
+  new_albums: number;
+  new_artists: number;
+};
 
 export type {
   getItemsArgs,
@@ -422,4 +454,5 @@ export type {
   Config,
   NowPlaying,
   Stats,
+  RewindStats,
 };

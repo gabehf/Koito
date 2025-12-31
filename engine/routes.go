@@ -54,6 +54,7 @@ func bindRoutes(
 			r.Get("/stats", handlers.StatsHandler(db))
 			r.Get("/search", handlers.SearchHandler(db))
 			r.Get("/aliases", handlers.GetAliasesHandler(db))
+			r.Get("/summary", handlers.SummaryHandler(db))
 		})
 		r.Post("/logout", handlers.LogoutHandler(db))
 		if !cfg.RateLimitDisabled() {

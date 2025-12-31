@@ -69,14 +69,14 @@ export default function ActivityGrid({
   if (isPending) {
     return (
       <div className="w-[500px]">
-        <h2>Activity</h2>
+        <h3>Activity</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[500px]">
-        <h2>Activity</h2>
+        <h3>Activity</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -148,7 +148,7 @@ export default function ActivityGrid({
 
   return (
     <div className="flex flex-col items-start">
-      <h2>Activity</h2>
+      <h3>Activity</h3>
       {configurable ? (
         <ActivityOptsSelector
           rangeSetter={setRange}

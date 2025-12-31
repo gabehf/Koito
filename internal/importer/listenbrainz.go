@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path"
 	"strings"
 	"time"
@@ -34,15 +33,16 @@ func ImportListenBrainzExport(ctx context.Context, store db.DB, mbzc mbz.MusicBr
 	for _, f := range r.File {
 
 		if f.FileInfo().IsDir() {
+			l.Debug().Msgf("File %s is dir, skipping...", f.Name)
 			continue
 		}
 
 		if strings.HasPrefix(f.Name, "listens/") && strings.HasSuffix(f.Name, ".jsonl") {
-			fmt.Println("Found:", f.Name)
+			l.Info().Msgf("Found: %s\n", f.Name)
 
 			rc, err := f.Open()
 			if err != nil {
-				log.Printf("Failed to open %s: %v\n", f.Name, err)
+				l.Err(err).Msgf("Failed to open %s\n", f.Name)
 				continue
 			}
 
@@ -75,7 +75,7 @@ func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrai
 		payload := new(handlers.LbzSubmitListenPayload)
 		err := json.Unmarshal(line, payload)
 		if err != nil {
-			fmt.Println("Error unmarshaling JSON:", err)
+			l.Err(err).Msg("Error unmarshaling JSON")
 			continue
 		}
 		ts := time.Unix(payload.ListenedAt, 0)

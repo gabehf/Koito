@@ -13,6 +13,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countNewArtists = `-- name: CountNewArtists :one
+SELECT COUNT(*) AS total_count
+FROM (
+  SELECT at.artist_id
+  FROM listens l
+  JOIN tracks t ON l.track_id = t.id
+  JOIN artist_tracks at ON t.id = at.track_id
+  GROUP BY at.artist_id
+  HAVING MIN(l.listened_at) BETWEEN $1 AND $2
+) first_appearances
+`
+
+type CountNewArtistsParams struct {
+	ListenedAt   time.Time
+	ListenedAt_2 time.Time
+}
+
+func (q *Queries) CountNewArtists(ctx context.Context, arg CountNewArtistsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countNewArtists, arg.ListenedAt, arg.ListenedAt_2)
+	var total_count int64
+	err := row.Scan(&total_count)
+	return total_count, err
+}
+
 const countTopArtists = `-- name: CountTopArtists :one
 SELECT COUNT(DISTINCT at.artist_id) AS total_count
 FROM listens l
@@ -78,7 +102,7 @@ func (q *Queries) DeleteConflictingArtistTracks(ctx context.Context, arg DeleteC
 }
 
 const getArtist = `-- name: GetArtist :one
-SELECT 
+SELECT
   a.id, a.musicbrainz_id, a.image, a.image_source, a.name,
   array_agg(aa.alias)::text[] AS aliases
 FROM artists_with_name a
@@ -127,7 +151,7 @@ func (q *Queries) GetArtistByImage(ctx context.Context, image *uuid.UUID) (Artis
 }
 
 const getArtistByMbzID = `-- name: GetArtistByMbzID :one
-SELECT 
+SELECT
   a.id, a.musicbrainz_id, a.image, a.image_source, a.name,
   array_agg(aa.alias)::text[] AS aliases
 FROM artists_with_name a
@@ -161,7 +185,7 @@ func (q *Queries) GetArtistByMbzID(ctx context.Context, musicbrainzID *uuid.UUID
 
 const getArtistByName = `-- name: GetArtistByName :one
 WITH artist_with_aliases AS (
-  SELECT 
+  SELECT
     a.id, a.musicbrainz_id, a.image, a.image_source, a.name,
     COALESCE(array_agg(aa.alias), '{}')::text[] AS aliases
   FROM artists_with_name a
@@ -198,7 +222,7 @@ func (q *Queries) GetArtistByName(ctx context.Context, alias string) (GetArtistB
 }
 
 const getReleaseArtists = `-- name: GetReleaseArtists :many
-SELECT 
+SELECT
   a.id, a.musicbrainz_id, a.image, a.image_source, a.name,
   ar.is_primary as is_primary
 FROM artists_with_name a
@@ -307,7 +331,7 @@ func (q *Queries) GetTopArtistsPaginated(ctx context.Context, arg GetTopArtistsP
 }
 
 const getTrackArtists = `-- name: GetTrackArtists :many
-SELECT 
+SELECT
   a.id, a.musicbrainz_id, a.image, a.image_source, a.name,
   at.is_primary as is_primary
 FROM artists_with_name a

@@ -63,14 +63,14 @@ export default function LastPlays(props: Props) {
   if (isPending) {
     return (
       <div className="w-[300px] sm:w-[500px]">
-        <h2>Last Played</h2>
+        <h3>Last Played</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px] sm:w-[500px]">
-        <h2>Last Played</h2>
+        <h3>Last Played</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -85,9 +85,9 @@ export default function LastPlays(props: Props) {
 
   return (
     <div className="text-sm sm:text-[16px]">
-      <h2 className="hover:underline">
+      <h3 className="hover:underline">
         <Link to={`/listens?period=all_time${params}`}>Last Played</Link>
-      </h2>
+      </h3>
       <table className="-ml-4">
         <tbody>
           {props.showNowPlaying && npData && npData.currently_playing && (
