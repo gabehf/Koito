@@ -38,7 +38,7 @@ export default function Rewind(props: Props) {
         includeTime={props.includeTime}
       />
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-3 gap-y-5">
         <RewindStatText
           figure={`${props.stats.minutes_listened}`}
           text="Minutes listened"

@@ -20,7 +20,7 @@ export function RewindTopItem<
   return (
     <div className="flex gap-5">
       <div className="rewind-top-item-image">
-        <img className="w-50 h-50" src={imageSrc} />
+        <img className="max-w-48 max-h-48" src={imageSrc} />
       </div>
 
       <div className="flex flex-col gap-1">

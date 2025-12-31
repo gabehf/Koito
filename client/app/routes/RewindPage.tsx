@@ -12,5 +12,10 @@ export default function RewindPage() {
   useEffect(() => {
     getRewindStats({ year: 2025 }).then((r) => setStats(r));
   }, []);
-  return <>{stats !== undefined && <Rewind stats={stats} />}</>;
+  return (
+    <div className="flex flex-col items-start">
+      <h2 className="mt-12">Your 2025 Rewind</h2>
+      {stats !== undefined && <Rewind stats={stats} />}
+    </div>
+  );
 }

@@ -6,7 +6,7 @@ interface Props {
 export default function RewindStatText(props: Props) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <div className="w-20 text-end shrink-0">
+      <div className="w-23 text-end shrink-0">
         <span
           className="
             relative inline-block
