@@ -63,7 +63,7 @@
 @media (min-width: 60rem) {
   :root {
     --header-xl: 78px;
-    --header-lg: 44px;
+    --header-lg: 36px;
     --header-md: 22px;
     --header-sm: 16px;
     --header-xl-weight: 600;

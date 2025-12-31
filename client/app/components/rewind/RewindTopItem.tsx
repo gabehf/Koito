@@ -1,30 +1,53 @@
-import { imageUrl, type Artist } from "api/api";
+type TopItemProps<T> = {
+  title: string;
+  imageSrc: string;
+  items: T[];
+  getLabel: (item: T) => string;
+  includeTime?: boolean;
+};
 
-interface args {
-  title?: string;
-  name?: string;
-  image: string;
-  minutes_listened: number;
-  time_listened: number;
-  artists?: Artist;
-}
-
-export default function RewindTopItem(args: args[]) {
-  console.log(args);
-  if (args === undefined || args.length < 1) {
-    return <></>;
+export function RewindTopItem<
+  T extends {
+    id: string | number;
+    listen_count: number;
+    time_listened: number;
   }
-  const img = imageUrl(args[0].image, "medium");
+>({ title, imageSrc, items, getLabel, includeTime }: TopItemProps<T>) {
+  const [top, ...rest] = items;
+
+  if (!top) return null;
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-5">
       <div className="rewind-top-item-image">
-        <img src={img} />
+        <img className="w-50 h-50" src={imageSrc} />
       </div>
+
       <div className="flex flex-col gap-1">
-        <h3>{args[0].title || args[0].name}</h3>
-        {args.map((e) => (
-          <div className="">{e.title || e.name}</div>
+        <h4 className="-mb-1">{title}</h4>
+
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col items-start mb-2">
+            <h2>{getLabel(top)}</h2>
+            <span className="text-(--color-fg-tertiary) -mt-3 text-sm">
+              {`${top.listen_count} plays`}
+              {includeTime
+                ? ` (${Math.floor(top.time_listened / 60)} minutes)`
+                : ``}
+            </span>
+          </div>
+        </div>
+
+        {rest.map((e) => (
+          <div key={e.id} className="text-sm">
+            {getLabel(e)}
+            <span className="text-(--color-fg-tertiary)">
+              {` - ${e.listen_count} plays`}
+              {includeTime
+                ? ` (${Math.floor(e.time_listened / 60)} minutes)`
+                : ``}
+            </span>
+          </div>
         ))}
       </div>
     </div>

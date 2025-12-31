@@ -12,5 +12,5 @@ export default function RewindPage() {
   useEffect(() => {
     getRewindStats({ year: 2025 }).then((r) => setStats(r));
   }, []);
-  return <>{stats !== undefined && <Rewind stats={stats} includeTime />}</>;
+  return <>{stats !== undefined && <Rewind stats={stats} />}</>;
 }

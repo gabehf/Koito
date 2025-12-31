@@ -1,9 +1,10 @@
 import { imageUrl, type RewindStats } from "api/api";
-import RewindTopItem from "./RewindTopItem";
+import RewindStatText from "./RewindStatText";
+import { RewindTopItem } from "./RewindTopItem";
 
 interface Props {
   stats: RewindStats;
-  includeTime: boolean;
+  includeTime?: boolean;
 }
 
 export default function Rewind(props: Props) {
@@ -11,103 +12,60 @@ export default function Rewind(props: Props) {
   const albumimg = props.stats.top_albums[0].image;
   const trackimg = props.stats.top_tracks[0].image;
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-7">
       <h1>{props.stats.title}</h1>
-      <div className="flex gap-5">
-        <div className="rewind-top-item-image">
-          <img className="w-58 h-58" src={imageUrl(artistimg, "medium")} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <h4>Top Artist</h4>
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-start mb-3">
-              <h2>{props.stats.top_artists[0].name}</h2>
-              <span className="text-(--color-fg-tertiary) -mt-3">
-                {`${props.stats.top_artists[0].listen_count} plays`}
-                {props.includeTime
-                  ? ` (${Math.floor(
-                      props.stats.top_artists[0].time_listened / 60
-                    )} minutes)`
-                  : ``}
-              </span>
-            </div>
-          </div>
-          {props.stats.top_artists.slice(1).map((e, i) => (
-            <div className="" key={e.id}>
-              {e.name}
-              <span className="text-(--color-fg-tertiary)">
-                {` - ${e.listen_count} plays`}
-                {props.includeTime
-                  ? ` (${Math.floor(e.time_listened / 60)} minutes)`
-                  : ``}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex gap-5">
-        <div className="rewind-top-item-image">
-          <img className="w-58 h-58" src={imageUrl(albumimg, "medium")} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <h4>Top Album</h4>
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-start mb-3">
-              <h2>{props.stats.top_albums[0].title}</h2>
-              <span className="text-(--color-fg-tertiary) -mt-3">
-                {`${props.stats.top_albums[0].listen_count} plays`}
-                {props.includeTime
-                  ? ` (${Math.floor(
-                      props.stats.top_albums[0].time_listened / 60
-                    )} minutes)`
-                  : ``}
-              </span>
-            </div>
-          </div>
-          {props.stats.top_albums.slice(1).map((e, i) => (
-            <div className="" key={e.id}>
-              {e.title}
-              <span className="text-(--color-fg-tertiary)">
-                {` - ${e.listen_count} plays`}
-                {props.includeTime
-                  ? ` (${Math.floor(e.time_listened / 60)} minutes)`
-                  : ``}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex gap-5">
-        <div className="rewind-top-item-image">
-          <img className="w-58 h-58" src={imageUrl(trackimg, "medium")} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <h4>Top Track</h4>
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-start mb-3">
-              <h2>{props.stats.top_tracks[0].title}</h2>
-              <span className="text-(--color-fg-tertiary) -mt-3">
-                {`${props.stats.top_tracks[0].listen_count} plays`}
-                {props.includeTime
-                  ? ` (${Math.floor(
-                      props.stats.top_tracks[0].time_listened / 60
-                    )} minutes)`
-                  : ``}
-              </span>
-            </div>
-          </div>
-          {props.stats.top_tracks.slice(1).map((e, i) => (
-            <div className="" key={e.id}>
-              {e.title}
-              <span className="text-(--color-fg-tertiary)">
-                {` - ${e.listen_count} plays`}
-                {props.includeTime
-                  ? ` (${Math.floor(e.time_listened / 60)} minutes)`
-                  : ``}
-              </span>
-            </div>
-          ))}
-        </div>
+      <RewindTopItem
+        title="Top Artist"
+        imageSrc={imageUrl(artistimg, "medium")}
+        items={props.stats.top_artists}
+        getLabel={(a) => a.name}
+        includeTime={props.includeTime}
+      />
+
+      <RewindTopItem
+        title="Top Album"
+        imageSrc={imageUrl(albumimg, "medium")}
+        items={props.stats.top_albums}
+        getLabel={(a) => a.title}
+        includeTime={props.includeTime}
+      />
+
+      <RewindTopItem
+        title="Top Track"
+        imageSrc={imageUrl(trackimg, "medium")}
+        items={props.stats.top_tracks}
+        getLabel={(t) => t.title}
+        includeTime={props.includeTime}
+      />
+
+      <div className="grid grid-cols-3 gap-5">
+        <RewindStatText
+          figure={`${props.stats.minutes_listened}`}
+          text="Minutes listened"
+        />
+        <RewindStatText figure={`${props.stats.unique_tracks}`} text="Tracks" />
+        <RewindStatText
+          figure={`${props.stats.new_tracks}`}
+          text="New tracks"
+        />
+        <RewindStatText figure={`${props.stats.plays}`} text="Plays" />
+        <RewindStatText figure={`${props.stats.unique_albums}`} text="Albums" />
+        <RewindStatText
+          figure={`${props.stats.new_albums}`}
+          text="New albums"
+        />
+        <RewindStatText
+          figure={`${props.stats.avg_plays_per_day.toFixed(1)}`}
+          text="Plays per day"
+        />
+        <RewindStatText
+          figure={`${props.stats.unique_artists}`}
+          text="Artists"
+        />
+        <RewindStatText
+          figure={`${props.stats.new_artists}`}
+          text="New artists"
+        />
       </div>
     </div>
   );
