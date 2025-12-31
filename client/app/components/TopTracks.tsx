@@ -31,14 +31,14 @@ const TopTracks = (props: Props) => {
   if (isPending) {
     return (
       <div className="w-[300px]">
-        <h2>Top Tracks</h2>
+        <h3>Top Tracks</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <h2>Top Tracks</h2>
+        <h3>Top Tracks</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -51,11 +51,11 @@ const TopTracks = (props: Props) => {
 
   return (
     <div>
-      <h2 className="hover:underline">
+      <h3 className="hover:underline">
         <Link to={`/chart/top-tracks?period=${props.period}${params}`}>
           Top Tracks
         </Link>
-      </h2>
+      </h3>
       <div className="max-w-[300px]">
         <TopItemList type="track" data={data} />
         {data.items.length < 1 ? "Nothing to show" : ""}

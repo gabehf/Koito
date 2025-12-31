@@ -10,7 +10,7 @@ export default function AllTimeStats() {
   if (isPending) {
     return (
       <div className="w-[200px]">
-        <h2>All Time Stats</h2>
+        <h3>All Time Stats</h3>
         <p>Loading...</p>
       </div>
     );
@@ -18,7 +18,7 @@ export default function AllTimeStats() {
     return (
       <>
         <div>
-          <h2>All Time Stats</h2>
+          <h3>All Time Stats</h3>
           <p className="error">Error: {error.message}</p>
         </div>
       </>
@@ -29,7 +29,7 @@ export default function AllTimeStats() {
 
   return (
     <div>
-      <h2>All Time Stats</h2>
+      <h3>All Time Stats</h3>
       <div>
         <span
           className={numberClasses}

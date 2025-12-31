@@ -1,58 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=League+Spartan:wght@100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=League+Spartan:wght@100..900&display=swap");
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Jost", "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --animate-fade-in-scale: fade-in-scale 0.1s ease forwards;
-    --animate-fade-out-scale: fade-out-scale 0.1s ease forwards;
-    
-    @keyframes fade-in-scale {
-      0% {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
+  --animate-fade-in-scale: fade-in-scale 0.1s ease forwards;
+  --animate-fade-out-scale: fade-out-scale 0.1s ease forwards;
+
+  @keyframes fade-in-scale {
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
     }
-    
-    @keyframes fade-out-scale {
-      0% {
-        opacity: 1;
-        transform: scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: scale(0.95);
-      }
+    100% {
+      opacity: 1;
+      transform: scale(1);
     }
-    
-    --animate-fade-in: fade-in 0.1s ease forwards;
-    --animate-fade-out: fade-out 0.1s ease forwards;
-    
-    @keyframes fade-in {
-      0% {
-        opacity: 0;
-      }
-      100% {
-        opacity: 1;
-      }
+  }
+
+  @keyframes fade-out-scale {
+    0% {
+      opacity: 1;
+      transform: scale(1);
     }
-    
-    @keyframes fade-out {
-      0% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-      }
+    100% {
+      opacity: 0;
+      transform: scale(0.95);
     }
-    
+  }
+
+  --animate-fade-in: fade-in 0.1s ease forwards;
+  --animate-fade-out: fade-out 0.1s ease forwards;
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-out {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 }
-
-
 
 :root {
   --header-xl: 36px;
@@ -66,14 +63,13 @@
 @media (min-width: 60rem) {
   :root {
     --header-xl: 78px;
-    --header-lg: 28px;
+    --header-lg: 44px;
     --header-md: 22px;
     --header-sm: 16px;
     --header-xl-weight: 600;
     --header-weight: 600;
   }
 }
-
 
 html,
 body {
@@ -106,16 +102,18 @@ h1 {
 h2 {
   font-family: "League Spartan";
   font-weight: var(--header-weight);
-  font-size: var(--header-md);
-  margin-bottom: 0.5em;
+  font-size: var(--header-lg);
 }
 h3 {
   font-family: "League Spartan";
-  font-size: var(--header-sm);
   font-weight: var(--header-weight);
+  font-size: var(--header-md);
+  margin-bottom: 0.5em;
 }
 h4 {
-  font-size: var(--header-md);
+  font-family: "League Spartan";
+  font-size: var(--header-sm);
+  font-weight: var(--header-weight);
 }
 .header-font {
   font-family: "League Spartan";

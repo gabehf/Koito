@@ -24,14 +24,14 @@ export default function TopArtists(props: Props) {
   if (isPending) {
     return (
       <div className="w-[300px]">
-        <h2>Top Artists</h2>
+        <h3>Top Artists</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <h2>Top Artists</h2>
+        <h3>Top Artists</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -39,11 +39,11 @@ export default function TopArtists(props: Props) {
 
   return (
     <div>
-      <h2 className="hover:underline">
+      <h3 className="hover:underline">
         <Link to={`/chart/top-artists?period=${props.period}`}>
           Top Artists
         </Link>
-      </h2>
+      </h3>
       <div className="max-w-[300px]">
         <TopItemList type="artist" data={data} />
         {data.items.length < 1 ? "Nothing to show" : ""}

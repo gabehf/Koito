@@ -108,7 +108,7 @@ export default function EditModal({ open, setOpen, type, id }: Props) {
     <Modal maxW={1000} isOpen={open} onClose={handleClose}>
       <div className="flex flex-col items-start gap-6 w-full">
         <div className="w-full">
-          <h2>Alias Manager</h2>
+          <h3>Alias Manager</h3>
           <div className="flex flex-col gap-4">
             {displayData.map((v) => (
               <div className="flex gap-2">

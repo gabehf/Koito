@@ -50,7 +50,7 @@ export default function ImageReplaceModal({
 
   return (
     <Modal isOpen={open} onClose={closeModal}>
-      <h2>Replace Image</h2>
+      <h3>Replace Image</h3>
       <div className="flex flex-col items-center">
         <input
           type="text"
