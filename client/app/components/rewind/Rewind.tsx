@@ -13,7 +13,7 @@ export default function Rewind(props: Props) {
   const trackimg = props.stats.top_tracks[0].image;
   return (
     <div className="flex flex-col gap-7">
-      <h1>{props.stats.title}</h1>
+      <h2>{props.stats.title}</h2>
       <RewindTopItem
         title="Top Artist"
         imageSrc={imageUrl(artistimg, "medium")}
