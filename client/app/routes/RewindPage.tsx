@@ -1,13 +1,14 @@
 import Rewind from "~/components/rewind/Rewind";
 import type { Route } from "./+types/Home";
-import { getRewindStats, type RewindStats } from "api/api";
-import { useEffect, useState } from "react";
+import { type RewindStats } from "api/api";
+import { useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
+import { getRewindYear } from "~/utils/utils";
 
 export async function clientLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const year = url.searchParams.get("year") || new Date().getFullYear();
+  const year = url.searchParams.get("year") || getRewindYear();
 
   const res = await fetch(`/apis/web/v1/summary?year=${year}`);
   if (!res.ok) {

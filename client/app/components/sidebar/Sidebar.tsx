@@ -2,6 +2,7 @@ import { ExternalLink, History, Home, Info } from "lucide-react";
 import SidebarSearch from "./SidebarSearch";
 import SidebarItem from "./SidebarItem";
 import SidebarSettings from "./SidebarSettings";
+import { getRewindYear } from "~/utils/utils";
 
 export default function Sidebar() {
   const iconSize = 20;
@@ -44,7 +45,7 @@ export default function Sidebar() {
         <SidebarSearch size={iconSize} />
         <SidebarItem
           space={10}
-          to={`/rewind?year=${new Date().getFullYear()}`}
+          to={`/rewind?year=${getRewindYear()}`}
           name="Rewind"
           onClick={() => {}}
           modal={<></>}

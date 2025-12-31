@@ -15,6 +15,16 @@ const timeframeToInterval = (timeframe: Timeframe): string => {
   }
 };
 
+const getRewindYear = (): number => {
+  const today = new Date();
+  if (today.getMonth() > 10 && today.getDate() >= 30) {
+    // if we are in december 30/31, just serve current year
+    return today.getFullYear();
+  } else {
+    return today.getFullYear() - 1;
+  }
+};
+
 function timeSince(date: Date) {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -104,5 +114,5 @@ const timeListenedString = (seconds: number) => {
   return `${minutes} minutes listened`;
 };
 
-export { hexToHSL, timeListenedString };
+export { hexToHSL, timeListenedString, getRewindYear };
 export type { hsl };
