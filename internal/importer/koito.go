@@ -126,6 +126,7 @@ func ImportKoitoFile(ctx context.Context, store db.DB, filename string) error {
 		track, err := store.GetTrack(ctx, db.GetTrackOpts{
 			MusicBrainzID: mbid,
 			Title:         getPrimaryAliasFromAliasSlice(data.Listens[i].Track.Aliases),
+			ReleaseID:     albumId,
 			ArtistIDs:     artistIds,
 		})
 		if errors.Is(err, pgx.ErrNoRows) {

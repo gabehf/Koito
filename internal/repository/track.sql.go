@@ -417,23 +417,25 @@ func (q *Queries) GetTrackByMbzID(ctx context.Context, musicbrainzID *uuid.UUID)
 	return i, err
 }
 
-const getTrackByTitleAndArtists = `-- name: GetTrackByTitleAndArtists :one
+const getTrackByTrackInfo = `-- name: GetTrackByTrackInfo :one
 SELECT t.id, t.musicbrainz_id, t.duration, t.release_id, t.title
 FROM tracks_with_title t
 JOIN artist_tracks at ON at.track_id = t.id
 WHERE t.title = $1
-  AND at.artist_id = ANY($2::int[])
+  AND at.artist_id = ANY($3::int[])
+  AND t.release_id = $2
 GROUP BY t.id, t.title, t.musicbrainz_id, t.duration, t.release_id
-HAVING COUNT(DISTINCT at.artist_id) = cardinality($2::int[])
+HAVING COUNT(DISTINCT at.artist_id) = cardinality($3::int[])
 `
 
-type GetTrackByTitleAndArtistsParams struct {
-	Title   string
-	Column2 []int32
+type GetTrackByTrackInfoParams struct {
+	Title     string
+	ReleaseID int32
+	Column3   []int32
 }
 
-func (q *Queries) GetTrackByTitleAndArtists(ctx context.Context, arg GetTrackByTitleAndArtistsParams) (TracksWithTitle, error) {
-	row := q.db.QueryRow(ctx, getTrackByTitleAndArtists, arg.Title, arg.Column2)
+func (q *Queries) GetTrackByTrackInfo(ctx context.Context, arg GetTrackByTrackInfoParams) (TracksWithTitle, error) {
+	row := q.db.QueryRow(ctx, getTrackByTrackInfo, arg.Title, arg.ReleaseID, arg.Column3)
 	var i TracksWithTitle
 	err := row.Scan(
 		&i.ID,
