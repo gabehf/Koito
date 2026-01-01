@@ -27,14 +27,15 @@ FROM tracks_with_title t
 JOIN artist_tracks at ON t.id = at.track_id
 WHERE at.artist_id = $1;
 
--- name: GetTrackByTitleAndArtists :one
+-- name: GetTrackByTrackInfo :one
 SELECT t.*
 FROM tracks_with_title t
 JOIN artist_tracks at ON at.track_id = t.id
 WHERE t.title = $1
-  AND at.artist_id = ANY($2::int[])
+  AND at.artist_id = ANY($3::int[])
+  AND t.release_id = $2
 GROUP BY t.id, t.title, t.musicbrainz_id, t.duration, t.release_id
-HAVING COUNT(DISTINCT at.artist_id) = cardinality($2::int[]);
+HAVING COUNT(DISTINCT at.artist_id) = cardinality($3::int[]);
 
 -- name: GetTopTracksPaginated :many
 SELECT

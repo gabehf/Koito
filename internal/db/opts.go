@@ -27,6 +27,7 @@ type GetTrackOpts struct {
 	ID            int32
 	MusicBrainzID uuid.UUID
 	Title         string
+	ReleaseID     int32
 	ArtistIDs     []int32
 }
 

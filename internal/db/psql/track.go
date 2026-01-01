@@ -52,14 +52,15 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 			AlbumID:  t.ReleaseID,
 			Duration: t.Duration,
 		}
-	} else if len(opts.ArtistIDs) > 0 {
-		l.Debug().Msgf("Fetching track from DB with title '%s' and artist id(s) '%v'", opts.Title, opts.ArtistIDs)
-		t, err := d.q.GetTrackByTitleAndArtists(ctx, repository.GetTrackByTitleAndArtistsParams{
-			Title:   opts.Title,
-			Column2: opts.ArtistIDs,
+	} else if len(opts.ArtistIDs) > 0 && opts.ReleaseID != 0 {
+		l.Debug().Msgf("Fetching track from DB from release id %d with title '%s' and artist id(s) '%v'", opts.ReleaseID, opts.Title, opts.ArtistIDs)
+		t, err := d.q.GetTrackByTrackInfo(ctx, repository.GetTrackByTrackInfoParams{
+			Title:     opts.Title,
+			ReleaseID: opts.ReleaseID,
+			Column3:   opts.ArtistIDs,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("GetTrack: GetTrackByTitleAndArtists: %w", err)
+			return nil, fmt.Errorf("GetTrack: GetTrackByTrackInfo: %w", err)
 		}
 		track = models.Track{
 			ID:       t.ID,
