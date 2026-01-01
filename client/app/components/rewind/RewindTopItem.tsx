@@ -18,7 +18,7 @@ export function RewindTopItem<
   if (!top) return null;
 
   return (
-    <div className="flex gap-5">
+    <div className="flex flex-col sm:flex-row gap-5">
       <div className="rewind-top-item-image">
         <img className="max-w-48 max-h-48" src={imageSrc} />
       </div>
