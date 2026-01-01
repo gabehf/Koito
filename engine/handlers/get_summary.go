@@ -13,7 +13,7 @@ func SummaryHandler(store db.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
-		l.Debug().Msg("GetTopAlbumsHandler: Received request to retrieve top albums")
+		l.Debug().Msg("SummaryHandler: Received request to retrieve summary")
 		timeframe := TimeframeFromRequest(r)
 
 		summary, err := summary.GenerateSummary(ctx, store, 1, timeframe, "")

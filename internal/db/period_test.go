@@ -3,6 +3,9 @@ package db_test
 import (
 	"testing"
 	"time"
+
+	"github.com/gabehf/koito/internal/db"
+	"github.com/stretchr/testify/require"
 )
 
 func TestListenActivityOptsToTimes(t *testing.T) {
@@ -19,6 +22,11 @@ func eod(t time.Time) time.Time {
 	year, month, day := t.Date()
 	loc := t.Location()
 	return time.Date(year, month, day, 23, 59, 59, 0, loc)
+}
+
+func TestPeriodUnset(t *testing.T) {
+	var p db.Period
+	require.True(t, p.IsZero())
 }
 
 func bod(t time.Time) time.Time {

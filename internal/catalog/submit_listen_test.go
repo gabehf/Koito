@@ -63,7 +63,7 @@ func TestSubmitListen_CreateAllMbzIDs(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// Verify that listen time is correct
-	p, err := store.GetListensPaginated(ctx, db.GetItemsOpts{Limit: 1, Page: 1})
+	p, err := store.GetListensPaginated(ctx, db.GetItemsOpts{Limit: 1, Page: 1, Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
 	require.NoError(t, err)
 	require.Len(t, p.Items, 1)
 	l := p.Items[0]
