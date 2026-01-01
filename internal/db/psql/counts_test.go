@@ -46,7 +46,7 @@ func TestCountNewTracks(t *testing.T) {
 	t1u := t1.Unix()
 	t2, _ := time.Parse(time.DateOnly, "2025-12-31")
 	t2u := t2.Unix()
-	count, err := store.CountNewTracks(ctx, db.Timeframe{T1u: t1u, T2u: t2u})
+	count, err := store.CountNewTracks(ctx, db.Timeframe{FromUnix: t1u, ToUnix: t2u})
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), count, "expected tracks count to match inserted data")
 
@@ -76,7 +76,7 @@ func TestCountNewAlbums(t *testing.T) {
 	t1u := t1.Unix()
 	t2, _ := time.Parse(time.DateOnly, "2025-12-31")
 	t2u := t2.Unix()
-	count, err := store.CountNewAlbums(ctx, db.Timeframe{T1u: t1u, T2u: t2u})
+	count, err := store.CountNewAlbums(ctx, db.Timeframe{FromUnix: t1u, ToUnix: t2u})
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), count, "expected albums count to match inserted data")
 
@@ -106,7 +106,7 @@ func TestCountNewArtists(t *testing.T) {
 	t1u := t1.Unix()
 	t2, _ := time.Parse(time.DateOnly, "2025-12-31")
 	t2u := t2.Unix()
-	count, err := store.CountNewArtists(ctx, db.Timeframe{T1u: t1u, T2u: t2u})
+	count, err := store.CountNewArtists(ctx, db.Timeframe{FromUnix: t1u, ToUnix: t2u})
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), count, "expected artists count to match inserted data")
 

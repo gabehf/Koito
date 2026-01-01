@@ -4,39 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/repository"
-	"github.com/gabehf/koito/internal/utils"
 )
 
 func (d *Psql) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts) (*db.PaginatedResponse[*models.Track], error) {
 	l := logger.FromContext(ctx)
 	offset := (opts.Page - 1) * opts.Limit
-	t1, t2, err := utils.DateRange(opts.Week, opts.Month, opts.Year)
-	if err != nil {
-		return nil, fmt.Errorf("GetTopTracksPaginated: %w", err)
-	}
-	if opts.Month == 0 && opts.Year == 0 {
-		// use period, not date range
-		t2 = time.Now()
-		t1 = db.StartTimeFromPeriod(opts.Period)
-	}
-	if opts.From != 0 || opts.To != 0 {
-		t1 = time.Unix(opts.From, 0)
-		t2 = time.Unix(opts.To, 0)
-	}
+	t1, t2 := db.TimeframeToTimeRange(opts.Timeframe)
 	if opts.Limit == 0 {
 		opts.Limit = DefaultItemsPerPage
 	}
 	var tracks []*models.Track
 	var count int64
 	if opts.AlbumID > 0 {
-		l.Debug().Msgf("Fetching top %d tracks with period %s on page %d from range %v to %v",
-			opts.Limit, opts.Period, opts.Page, t1.Format("Jan 02, 2006"), t2.Format("Jan 02, 2006"))
+		l.Debug().Msgf("Fetching top %d tracks on page %d from range %v to %v",
+			opts.Limit, opts.Page, t1.Format("Jan 02, 2006"), t2.Format("Jan 02, 2006"))
 		rows, err := d.q.GetTopTracksInReleasePaginated(ctx, repository.GetTopTracksInReleasePaginatedParams{
 			ListenedAt:   t1,
 			ListenedAt_2: t2,
@@ -75,8 +61,8 @@ func (d *Psql) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts) 
 			return nil, err
 		}
 	} else if opts.ArtistID > 0 {
-		l.Debug().Msgf("Fetching top %d tracks with period %s on page %d from range %v to %v",
-			opts.Limit, opts.Period, opts.Page, t1.Format("Jan 02, 2006"), t2.Format("Jan 02, 2006"))
+		l.Debug().Msgf("Fetching top %d tracks on page %d from range %v to %v",
+			opts.Limit, opts.Page, t1.Format("Jan 02, 2006"), t2.Format("Jan 02, 2006"))
 		rows, err := d.q.GetTopTracksByArtistPaginated(ctx, repository.GetTopTracksByArtistPaginatedParams{
 			ListenedAt:   t1,
 			ListenedAt_2: t2,
@@ -115,8 +101,8 @@ func (d *Psql) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts) 
 			return nil, fmt.Errorf("GetTopTracksPaginated: CountTopTracksByArtist: %w", err)
 		}
 	} else {
-		l.Debug().Msgf("Fetching top %d tracks with period %s on page %d from range %v to %v",
-			opts.Limit, opts.Period, opts.Page, t1.Format("Jan 02, 2006"), t2.Format("Jan 02, 2006"))
+		l.Debug().Msgf("Fetching top %d tracks on page %d from range %v to %v",
+			opts.Limit, opts.Page, t1.Format("Jan 02, 2006"), t2.Format("Jan 02, 2006"))
 		rows, err := d.q.GetTopTracksPaginated(ctx, repository.GetTopTracksPaginatedParams{
 			ListenedAt:   t1,
 			ListenedAt_2: t2,

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
@@ -23,54 +22,39 @@ func StatsHandler(store db.DB) http.HandlerFunc {
 
 		l.Debug().Msg("StatsHandler: Received request to retrieve statistics")
 
-		var period db.Period
-		switch strings.ToLower(r.URL.Query().Get("period")) {
-		case "day":
-			period = db.PeriodDay
-		case "week":
-			period = db.PeriodWeek
-		case "month":
-			period = db.PeriodMonth
-		case "year":
-			period = db.PeriodYear
-		case "all_time":
-			period = db.PeriodAllTime
-		default:
-			l.Debug().Msgf("StatsHandler: Using default value '%s' for period", db.PeriodDay)
-			period = db.PeriodDay
-		}
+		tf := TimeframeFromRequest(r)
 
-		l.Debug().Msgf("StatsHandler: Fetching statistics for period '%s'", period)
+		l.Debug().Msg("StatsHandler: Fetching statistics")
 
-		listens, err := store.CountListens(r.Context(), db.Timeframe{Period: period})
+		listens, err := store.CountListens(r.Context(), tf)
 		if err != nil {
 			l.Err(err).Msg("StatsHandler: Failed to fetch listen count")
 			utils.WriteError(w, "failed to get listens: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		tracks, err := store.CountTracks(r.Context(), db.Timeframe{Period: period})
+		tracks, err := store.CountTracks(r.Context(), tf)
 		if err != nil {
 			l.Err(err).Msg("StatsHandler: Failed to fetch track count")
 			utils.WriteError(w, "failed to get tracks: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		albums, err := store.CountAlbums(r.Context(), db.Timeframe{Period: period})
+		albums, err := store.CountAlbums(r.Context(), tf)
 		if err != nil {
 			l.Err(err).Msg("StatsHandler: Failed to fetch album count")
 			utils.WriteError(w, "failed to get albums: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		artists, err := store.CountArtists(r.Context(), db.Timeframe{Period: period})
+		artists, err := store.CountArtists(r.Context(), tf)
 		if err != nil {
 			l.Err(err).Msg("StatsHandler: Failed to fetch artist count")
 			utils.WriteError(w, "failed to get artists: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		timeListenedS, err := store.CountTimeListened(r.Context(), db.Timeframe{Period: period})
+		timeListenedS, err := store.CountTimeListened(r.Context(), tf)
 		if err != nil {
 			l.Err(err).Msg("StatsHandler: Failed to fetch time listened")
 			utils.WriteError(w, "failed to get time listened: "+err.Error(), http.StatusInternalServerError)

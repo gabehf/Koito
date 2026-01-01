@@ -116,14 +116,9 @@ type AddArtistsToAlbumOpts struct {
 }
 
 type GetItemsOpts struct {
-	Limit  int
-	Period Period
-	Page   int
-	Week   int // 1-52
-	Month  int // 1-12
-	Year   int
-	From   int64 // unix timestamp
-	To     int64 // unix timestamp
+	Limit     int
+	Page      int
+	Timeframe Timeframe
 
 	// Used only for getting top tracks
 	ArtistID int

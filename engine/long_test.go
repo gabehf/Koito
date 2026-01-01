@@ -74,15 +74,15 @@ func getApiKey(t *testing.T, session string) {
 
 func truncateTestData(t *testing.T) {
 	err := store.Exec(context.Background(),
-		`TRUNCATE 
-		artists, 
+		`TRUNCATE
+		artists,
 		artist_aliases,
-		tracks, 
-		artist_tracks, 
-		releases, 
-		artist_releases, 
-		release_aliases, 
-		listens 
+		tracks,
+		artist_tracks,
+		releases,
+		artist_releases,
+		release_aliases,
+		listens
 		RESTART IDENTITY CASCADE`)
 	require.NoError(t, err)
 }
@@ -211,7 +211,7 @@ func TestGetters(t *testing.T) {
 	assert.Equal(t, "花の塔", track.Title)
 
 	// Listen was saved
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/listens")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/listens?period=all_time")
 	assert.NoError(t, err)
 	var listens db.PaginatedResponse[models.Listen]
 	err = json.NewDecoder(resp.Body).Decode(&listens)
@@ -220,21 +220,21 @@ func TestGetters(t *testing.T) {
 	assert.EqualValues(t, 2, listens.Items[0].Track.ID)
 	assert.Equal(t, "Where Our Blue Is", listens.Items[0].Track.Title)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-artists")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-artists?period=all_time")
 	assert.NoError(t, err)
 	var artists db.PaginatedResponse[models.Artist]
 	err = json.NewDecoder(resp.Body).Decode(&artists)
 	require.NoError(t, err)
 	require.Len(t, artists.Items, 3)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-albums")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-albums?period=all_time")
 	assert.NoError(t, err)
 	var albums db.PaginatedResponse[models.Album]
 	err = json.NewDecoder(resp.Body).Decode(&albums)
 	require.NoError(t, err)
 	require.Len(t, albums.Items, 3)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-tracks")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-tracks?period=all_time")
 	assert.NoError(t, err)
 	var tracks db.PaginatedResponse[models.Track]
 	err = json.NewDecoder(resp.Body).Decode(&tracks)
@@ -439,7 +439,7 @@ func TestStats(t *testing.T) {
 
 	t.Run("Submit Listens", doSubmitListens)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/stats")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/stats?period=all_time")
 	t.Log(resp)
 	require.NoError(t, err)
 	var actual handlers.StatsResponse
