@@ -19,7 +19,7 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 
 		rangeStr := r.URL.Query().Get("range")
 		_range, err := strconv.Atoi(rangeStr)
-		if err != nil {
+		if err != nil && rangeStr != "" {
 			l.Debug().AnErr("error", err).Msg("GetListenActivityHandler: Invalid range parameter")
 			utils.WriteError(w, "invalid range parameter", http.StatusBadRequest)
 			return
@@ -27,7 +27,7 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 
 		monthStr := r.URL.Query().Get("month")
 		month, err := strconv.Atoi(monthStr)
-		if err != nil {
+		if err != nil && monthStr != "" {
 			l.Debug().AnErr("error", err).Msg("GetListenActivityHandler: Invalid month parameter")
 			utils.WriteError(w, "invalid month parameter", http.StatusBadRequest)
 			return
@@ -35,7 +35,7 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 
 		yearStr := r.URL.Query().Get("year")
 		year, err := strconv.Atoi(yearStr)
-		if err != nil {
+		if err != nil && yearStr != "" {
 			l.Debug().AnErr("error", err).Msg("GetListenActivityHandler: Invalid year parameter")
 			utils.WriteError(w, "invalid year parameter", http.StatusBadRequest)
 			return
@@ -43,7 +43,7 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 
 		artistIdStr := r.URL.Query().Get("artist_id")
 		artistId, err := strconv.Atoi(artistIdStr)
-		if err != nil {
+		if err != nil && artistIdStr != "" {
 			l.Debug().AnErr("error", err).Msg("GetListenActivityHandler: Invalid artist ID parameter")
 			utils.WriteError(w, "invalid artist ID parameter", http.StatusBadRequest)
 			return
@@ -51,7 +51,7 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 
 		albumIdStr := r.URL.Query().Get("album_id")
 		albumId, err := strconv.Atoi(albumIdStr)
-		if err != nil {
+		if err != nil && albumIdStr != "" {
 			l.Debug().AnErr("error", err).Msg("GetListenActivityHandler: Invalid album ID parameter")
 			utils.WriteError(w, "invalid album ID parameter", http.StatusBadRequest)
 			return
@@ -59,7 +59,7 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 
 		trackIdStr := r.URL.Query().Get("track_id")
 		trackId, err := strconv.Atoi(trackIdStr)
-		if err != nil {
+		if err != nil && trackIdStr != "" {
 			l.Debug().AnErr("error", err).Msg("GetListenActivityHandler: Invalid track ID parameter")
 			utils.WriteError(w, "invalid track ID parameter", http.StatusBadRequest)
 			return

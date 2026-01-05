@@ -127,6 +127,12 @@ func DateRange(week, month, year int) (time.Time, time.Time, error) {
 	return start, end, nil
 }
 
+// Returns a time.Time that represents the first moment of the day of t.
+func BeginningOfDay(t time.Time) time.Time {
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+}
+
 // CopyFile copies a file from src to dst. If src and dst files exist, and are
 // the same, then return success. Otherise, attempt to create a hard link
 // between the two files. If that fail, copy the file contents from src to dst.

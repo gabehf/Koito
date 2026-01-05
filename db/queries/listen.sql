@@ -4,7 +4,7 @@ VALUES ($1, $2, $3, $4)
 ON CONFLICT DO NOTHING;
 
 -- name: GetLastListensPaginated :many
-SELECT 
+SELECT
   l.*,
   t.title AS track_title,
   t.release_id AS release_id,
@@ -16,31 +16,31 @@ ORDER BY l.listened_at DESC
 LIMIT $3 OFFSET $4;
 
 -- name: GetLastListensFromArtistPaginated :many
-SELECT 
+SELECT
   l.*,
   t.title AS track_title,
   t.release_id AS release_id,
   get_artists_for_track(t.id) AS artists
 FROM listens l
 JOIN tracks_with_title t ON l.track_id = t.id
-JOIN artist_tracks at ON t.id = at.track_id 
+JOIN artist_tracks at ON t.id = at.track_id
 WHERE at.artist_id = $5
   AND l.listened_at BETWEEN $1 AND $2
 ORDER BY l.listened_at DESC
 LIMIT $3 OFFSET $4;
 
 -- name: GetFirstListenFromArtist :one
-SELECT 
+SELECT
   l.*
 FROM listens l
 JOIN tracks_with_title t ON l.track_id = t.id
-JOIN artist_tracks at ON t.id = at.track_id 
+JOIN artist_tracks at ON t.id = at.track_id
 WHERE at.artist_id = $1
 ORDER BY l.listened_at ASC
 LIMIT 1;
 
 -- name: GetLastListensFromReleasePaginated :many
-SELECT 
+SELECT
   l.*,
   t.title AS track_title,
   t.release_id AS release_id,
@@ -53,7 +53,7 @@ ORDER BY l.listened_at DESC
 LIMIT $3 OFFSET $4;
 
 -- name: GetFirstListenFromRelease :one
-SELECT 
+SELECT
   l.*
 FROM listens l
 JOIN tracks t ON l.track_id = t.id
@@ -62,7 +62,7 @@ ORDER BY l.listened_at ASC
 LIMIT 1;
 
 -- name: GetLastListensFromTrackPaginated :many
-SELECT 
+SELECT
   l.*,
   t.title AS track_title,
   t.release_id AS release_id,
@@ -75,12 +75,19 @@ ORDER BY l.listened_at DESC
 LIMIT $3 OFFSET $4;
 
 -- name: GetFirstListenFromTrack :one
-SELECT 
+SELECT
   l.*
 FROM listens l
 JOIN tracks t ON l.track_id = t.id
 WHERE t.id = $1
 ORDER BY l.listened_at ASC
+LIMIT 1;
+
+-- name: GetFirstListen :one
+SELECT
+  *
+FROM listens
+ORDER BY listened_at ASC
 LIMIT 1;
 
 -- name: CountListens :one
@@ -138,20 +145,27 @@ WHERE l.listened_at BETWEEN $1 AND $2
 
 -- name: ListenActivity :many
 WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
+  SELECT
+    d::date AS bucket_start_date,
+    (d + $3::interval)::date AS bucket_end_date
+  FROM generate_series(
+    $1::date,
+    $2::date,
+    $3::interval
+  ) AS d
 ),
 bucketed_listens AS (
   SELECT
-    b.bucket_start,
+    b.bucket_start_date::timestamptz,
     COUNT(l.listened_at) AS listen_count
   FROM buckets b
   LEFT JOIN listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
+    ON l.listened_at >= b.bucket_start_date::timestamptz
+    AND l.listened_at < b.bucket_end_date::timestamptz
+  GROUP BY b.bucket_start_date
+  ORDER BY b.bucket_start_date
 )
-SELECT * FROM bucketed_listens;
+SELECT bucketed_listens.bucket_start_date::timestamptz, listen_count FROM bucketed_listens;
 
 -- name: ListenActivityForArtist :many
 WITH buckets AS (

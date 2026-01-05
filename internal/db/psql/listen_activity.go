@@ -8,6 +8,7 @@ import (
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/repository"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts) ([]db.ListenActivityItem, error) {
@@ -88,8 +89,8 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		l.Debug().Msgf("Fetching listen activity for %d %s(s) from %v to %v",
 			opts.Range, opts.Step, t1.Format("Jan 02, 2006 15:04:05"), t2.Format("Jan 02, 2006 15:04:05"))
 		rows, err := d.q.ListenActivity(ctx, repository.ListenActivityParams{
-			Column1: t1,
-			Column2: t2,
+			Column1: pgtype.Date{Time: t1, Valid: true},
+			Column2: pgtype.Date{Time: t2, Valid: true},
 			Column3: stepToInterval(opts.Step),
 		})
 		if err != nil {
@@ -98,7 +99,7 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		listenActivity = make([]db.ListenActivityItem, len(rows))
 		for i, row := range rows {
 			t := db.ListenActivityItem{
-				Start:   row.BucketStart,
+				Start:   row.BucketedListensBucketStartDate,
 				Listens: row.ListenCount,
 			}
 			listenActivity[i] = t
