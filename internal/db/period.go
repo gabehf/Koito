@@ -59,6 +59,9 @@ const (
 func ListenActivityOptsToTimes(opts ListenActivityOpts) (start, end time.Time) {
 	now := time.Now()
 	loc := opts.Timezone
+	if loc == nil {
+		loc, _ = time.LoadLocation("UTC")
+	}
 
 	// If Year (and optionally Month) are specified, use calendar boundaries
 	if opts.Year != 0 {
