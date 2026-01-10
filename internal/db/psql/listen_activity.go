@@ -25,10 +25,10 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		l.Debug().Msgf("Fetching listen activity for %d %s(s) from %v to %v for release group %d",
 			opts.Range, opts.Step, t1.Format("Jan 02, 2006 15:04:05"), t2.Format("Jan 02, 2006 15:04:05"), opts.AlbumID)
 		rows, err := d.q.ListenActivityForRelease(ctx, repository.ListenActivityForReleaseParams{
-			Column1:   t1,
-			Column2:   t2,
-			Column3:   stepToInterval(opts.Step),
-			ReleaseID: opts.AlbumID,
+			Column1:      opts.Timezone.String(),
+			ListenedAt:   t1,
+			ListenedAt_2: t2,
+			ReleaseID:    opts.AlbumID,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("GetListenActivity: ListenActivityForRelease: %w", err)
@@ -36,7 +36,7 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		listenActivity = make([]db.ListenActivityItem, len(rows))
 		for i, row := range rows {
 			t := db.ListenActivityItem{
-				Start:   row.BucketStart,
+				Start:   row.Day.Time,
 				Listens: row.ListenCount,
 			}
 			listenActivity[i] = t
@@ -46,10 +46,10 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		l.Debug().Msgf("Fetching listen activity for %d %s(s) from %v to %v for artist %d",
 			opts.Range, opts.Step, t1.Format("Jan 02, 2006 15:04:05"), t2.Format("Jan 02, 2006 15:04:05"), opts.ArtistID)
 		rows, err := d.q.ListenActivityForArtist(ctx, repository.ListenActivityForArtistParams{
-			Column1:  t1,
-			Column2:  t2,
-			Column3:  stepToInterval(opts.Step),
-			ArtistID: opts.ArtistID,
+			Column1:      opts.Timezone.String(),
+			ListenedAt:   t1,
+			ListenedAt_2: t2,
+			ArtistID:     opts.ArtistID,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("GetListenActivity: ListenActivityForArtist: %w", err)
@@ -57,7 +57,7 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		listenActivity = make([]db.ListenActivityItem, len(rows))
 		for i, row := range rows {
 			t := db.ListenActivityItem{
-				Start:   row.BucketStart,
+				Start:   row.Day.Time,
 				Listens: row.ListenCount,
 			}
 			listenActivity[i] = t
@@ -67,10 +67,10 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		l.Debug().Msgf("Fetching listen activity for %d %s(s) from %v to %v for track %d",
 			opts.Range, opts.Step, t1.Format("Jan 02, 2006 15:04:05"), t2.Format("Jan 02, 2006 15:04:05"), opts.TrackID)
 		rows, err := d.q.ListenActivityForTrack(ctx, repository.ListenActivityForTrackParams{
-			Column1: t1,
-			Column2: t2,
-			Column3: stepToInterval(opts.Step),
-			ID:      opts.TrackID,
+			Column1:      opts.Timezone.String(),
+			ListenedAt:   t1,
+			ListenedAt_2: t2,
+			ID:           opts.TrackID,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("GetListenActivity: ListenActivityForTrack: %w", err)
@@ -78,7 +78,7 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		listenActivity = make([]db.ListenActivityItem, len(rows))
 		for i, row := range rows {
 			t := db.ListenActivityItem{
-				Start:   row.BucketStart,
+				Start:   row.Day.Time,
 				Listens: row.ListenCount,
 			}
 			listenActivity[i] = t
@@ -88,9 +88,9 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		l.Debug().Msgf("Fetching listen activity for %d %s(s) from %v to %v",
 			opts.Range, opts.Step, t1.Format("Jan 02, 2006 15:04:05"), t2.Format("Jan 02, 2006 15:04:05"))
 		rows, err := d.q.ListenActivity(ctx, repository.ListenActivityParams{
-			Column1: t1,
-			Column2: t2,
-			Column3: stepToInterval(opts.Step),
+			Column1:      opts.Timezone.String(),
+			ListenedAt:   t1,
+			ListenedAt_2: t2,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("GetListenActivity: ListenActivity: %w", err)
@@ -98,7 +98,7 @@ func (d *Psql) GetListenActivity(ctx context.Context, opts db.ListenActivityOpts
 		listenActivity = make([]db.ListenActivityItem, len(rows))
 		for i, row := range rows {
 			t := db.ListenActivityItem{
-				Start:   row.BucketStart,
+				Start:   row.Day.Time,
 				Listens: row.ListenCount,
 			}
 			listenActivity[i] = t

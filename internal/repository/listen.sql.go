@@ -190,12 +190,32 @@ func (q *Queries) DeleteListen(ctx context.Context, arg DeleteListenParams) erro
 	return err
 }
 
+const getFirstListen = `-- name: GetFirstListen :one
+SELECT
+  track_id, listened_at, client, user_id
+FROM listens
+ORDER BY listened_at ASC
+LIMIT 1
+`
+
+func (q *Queries) GetFirstListen(ctx context.Context) (Listen, error) {
+	row := q.db.QueryRow(ctx, getFirstListen)
+	var i Listen
+	err := row.Scan(
+		&i.TrackID,
+		&i.ListenedAt,
+		&i.Client,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const getFirstListenFromArtist = `-- name: GetFirstListenFromArtist :one
-SELECT 
+SELECT
   l.track_id, l.listened_at, l.client, l.user_id
 FROM listens l
 JOIN tracks_with_title t ON l.track_id = t.id
-JOIN artist_tracks at ON t.id = at.track_id 
+JOIN artist_tracks at ON t.id = at.track_id
 WHERE at.artist_id = $1
 ORDER BY l.listened_at ASC
 LIMIT 1
@@ -214,7 +234,7 @@ func (q *Queries) GetFirstListenFromArtist(ctx context.Context, artistID int32) 
 }
 
 const getFirstListenFromRelease = `-- name: GetFirstListenFromRelease :one
-SELECT 
+SELECT
   l.track_id, l.listened_at, l.client, l.user_id
 FROM listens l
 JOIN tracks t ON l.track_id = t.id
@@ -236,7 +256,7 @@ func (q *Queries) GetFirstListenFromRelease(ctx context.Context, releaseID int32
 }
 
 const getFirstListenFromTrack = `-- name: GetFirstListenFromTrack :one
-SELECT 
+SELECT
   l.track_id, l.listened_at, l.client, l.user_id
 FROM listens l
 JOIN tracks t ON l.track_id = t.id
@@ -258,14 +278,14 @@ func (q *Queries) GetFirstListenFromTrack(ctx context.Context, id int32) (Listen
 }
 
 const getLastListensFromArtistPaginated = `-- name: GetLastListensFromArtistPaginated :many
-SELECT 
+SELECT
   l.track_id, l.listened_at, l.client, l.user_id,
   t.title AS track_title,
   t.release_id AS release_id,
   get_artists_for_track(t.id) AS artists
 FROM listens l
 JOIN tracks_with_title t ON l.track_id = t.id
-JOIN artist_tracks at ON t.id = at.track_id 
+JOIN artist_tracks at ON t.id = at.track_id
 WHERE at.artist_id = $5
   AND l.listened_at BETWEEN $1 AND $2
 ORDER BY l.listened_at DESC
@@ -325,7 +345,7 @@ func (q *Queries) GetLastListensFromArtistPaginated(ctx context.Context, arg Get
 }
 
 const getLastListensFromReleasePaginated = `-- name: GetLastListensFromReleasePaginated :many
-SELECT 
+SELECT
   l.track_id, l.listened_at, l.client, l.user_id,
   t.title AS track_title,
   t.release_id AS release_id,
@@ -391,7 +411,7 @@ func (q *Queries) GetLastListensFromReleasePaginated(ctx context.Context, arg Ge
 }
 
 const getLastListensFromTrackPaginated = `-- name: GetLastListensFromTrackPaginated :many
-SELECT 
+SELECT
   l.track_id, l.listened_at, l.client, l.user_id,
   t.title AS track_title,
   t.release_id AS release_id,
@@ -457,7 +477,7 @@ func (q *Queries) GetLastListensFromTrackPaginated(ctx context.Context, arg GetL
 }
 
 const getLastListensPaginated = `-- name: GetLastListensPaginated :many
-SELECT 
+SELECT
   l.track_id, l.listened_at, l.client, l.user_id,
   t.title AS track_title,
   t.release_id AS release_id,
@@ -675,36 +695,29 @@ func (q *Queries) InsertListen(ctx context.Context, arg InsertListenParams) erro
 }
 
 const listenActivity = `-- name: ListenActivity :many
-WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
-)
-SELECT bucket_start, listen_count FROM bucketed_listens
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens
+WHERE listened_at >= $2
+AND listened_at < $3
+GROUP BY day
+ORDER BY day
 `
 
 type ListenActivityParams struct {
-	Column1 time.Time
-	Column2 time.Time
-	Column3 pgtype.Interval
+	Column1      string
+	ListenedAt   time.Time
+	ListenedAt_2 time.Time
 }
 
 type ListenActivityRow struct {
-	BucketStart time.Time
+	Day         pgtype.Date
 	ListenCount int64
 }
 
 func (q *Queries) ListenActivity(ctx context.Context, arg ListenActivityParams) ([]ListenActivityRow, error) {
-	rows, err := q.db.Query(ctx, listenActivity, arg.Column1, arg.Column2, arg.Column3)
+	rows, err := q.db.Query(ctx, listenActivity, arg.Column1, arg.ListenedAt, arg.ListenedAt_2)
 	if err != nil {
 		return nil, err
 	}
@@ -712,7 +725,7 @@ func (q *Queries) ListenActivity(ctx context.Context, arg ListenActivityParams) 
 	var items []ListenActivityRow
 	for rows.Next() {
 		var i ListenActivityRow
-		if err := rows.Scan(&i.BucketStart, &i.ListenCount); err != nil {
+		if err := rows.Scan(&i.Day, &i.ListenCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -724,46 +737,36 @@ func (q *Queries) ListenActivity(ctx context.Context, arg ListenActivityParams) 
 }
 
 const listenActivityForArtist = `-- name: ListenActivityForArtist :many
-WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
-),
-filtered_listens AS (
-  SELECT l.track_id, l.listened_at, l.client, l.user_id
-  FROM listens l
-  JOIN artist_tracks t ON l.track_id = t.track_id
-  WHERE t.artist_id = $4
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN filtered_listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
-)
-SELECT bucket_start, listen_count FROM bucketed_listens
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+JOIN artist_tracks at ON t.id = at.track_id
+WHERE l.listened_at >= $2
+AND l.listened_at < $3
+AND at.artist_id = $4
+GROUP BY day
+ORDER BY day
 `
 
 type ListenActivityForArtistParams struct {
-	Column1  time.Time
-	Column2  time.Time
-	Column3  pgtype.Interval
-	ArtistID int32
+	Column1      string
+	ListenedAt   time.Time
+	ListenedAt_2 time.Time
+	ArtistID     int32
 }
 
 type ListenActivityForArtistRow struct {
-	BucketStart time.Time
+	Day         pgtype.Date
 	ListenCount int64
 }
 
 func (q *Queries) ListenActivityForArtist(ctx context.Context, arg ListenActivityForArtistParams) ([]ListenActivityForArtistRow, error) {
 	rows, err := q.db.Query(ctx, listenActivityForArtist,
 		arg.Column1,
-		arg.Column2,
-		arg.Column3,
+		arg.ListenedAt,
+		arg.ListenedAt_2,
 		arg.ArtistID,
 	)
 	if err != nil {
@@ -773,7 +776,7 @@ func (q *Queries) ListenActivityForArtist(ctx context.Context, arg ListenActivit
 	var items []ListenActivityForArtistRow
 	for rows.Next() {
 		var i ListenActivityForArtistRow
-		if err := rows.Scan(&i.BucketStart, &i.ListenCount); err != nil {
+		if err := rows.Scan(&i.Day, &i.ListenCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -785,46 +788,35 @@ func (q *Queries) ListenActivityForArtist(ctx context.Context, arg ListenActivit
 }
 
 const listenActivityForRelease = `-- name: ListenActivityForRelease :many
-WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
-),
-filtered_listens AS (
-  SELECT l.track_id, l.listened_at, l.client, l.user_id
-  FROM listens l
-  JOIN tracks t ON l.track_id = t.id
-  WHERE t.release_id = $4
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN filtered_listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
-)
-SELECT bucket_start, listen_count FROM bucketed_listens
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE l.listened_at >= $2
+AND l.listened_at < $3
+AND t.release_id = $4
+GROUP BY day
+ORDER BY day
 `
 
 type ListenActivityForReleaseParams struct {
-	Column1   time.Time
-	Column2   time.Time
-	Column3   pgtype.Interval
-	ReleaseID int32
+	Column1      string
+	ListenedAt   time.Time
+	ListenedAt_2 time.Time
+	ReleaseID    int32
 }
 
 type ListenActivityForReleaseRow struct {
-	BucketStart time.Time
+	Day         pgtype.Date
 	ListenCount int64
 }
 
 func (q *Queries) ListenActivityForRelease(ctx context.Context, arg ListenActivityForReleaseParams) ([]ListenActivityForReleaseRow, error) {
 	rows, err := q.db.Query(ctx, listenActivityForRelease,
 		arg.Column1,
-		arg.Column2,
-		arg.Column3,
+		arg.ListenedAt,
+		arg.ListenedAt_2,
 		arg.ReleaseID,
 	)
 	if err != nil {
@@ -834,7 +826,7 @@ func (q *Queries) ListenActivityForRelease(ctx context.Context, arg ListenActivi
 	var items []ListenActivityForReleaseRow
 	for rows.Next() {
 		var i ListenActivityForReleaseRow
-		if err := rows.Scan(&i.BucketStart, &i.ListenCount); err != nil {
+		if err := rows.Scan(&i.Day, &i.ListenCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -846,46 +838,35 @@ func (q *Queries) ListenActivityForRelease(ctx context.Context, arg ListenActivi
 }
 
 const listenActivityForTrack = `-- name: ListenActivityForTrack :many
-WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
-),
-filtered_listens AS (
-  SELECT l.track_id, l.listened_at, l.client, l.user_id
-  FROM listens l
-  JOIN tracks t ON l.track_id = t.id
-  WHERE t.id = $4
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN filtered_listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
-)
-SELECT bucket_start, listen_count FROM bucketed_listens
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE l.listened_at >= $2
+AND l.listened_at < $3
+AND t.id = $4
+GROUP BY day
+ORDER BY day
 `
 
 type ListenActivityForTrackParams struct {
-	Column1 time.Time
-	Column2 time.Time
-	Column3 pgtype.Interval
-	ID      int32
+	Column1      string
+	ListenedAt   time.Time
+	ListenedAt_2 time.Time
+	ID           int32
 }
 
 type ListenActivityForTrackRow struct {
-	BucketStart time.Time
+	Day         pgtype.Date
 	ListenCount int64
 }
 
 func (q *Queries) ListenActivityForTrack(ctx context.Context, arg ListenActivityForTrackParams) ([]ListenActivityForTrackRow, error) {
 	rows, err := q.db.Query(ctx, listenActivityForTrack,
 		arg.Column1,
-		arg.Column2,
-		arg.Column3,
+		arg.ListenedAt,
+		arg.ListenedAt_2,
 		arg.ID,
 	)
 	if err != nil {
@@ -895,7 +876,7 @@ func (q *Queries) ListenActivityForTrack(ctx context.Context, arg ListenActivity
 	var items []ListenActivityForTrackRow
 	for rows.Next() {
 		var i ListenActivityForTrackRow
-		if err := rows.Scan(&i.BucketStart, &i.ListenCount); err != nil {
+		if err := rows.Scan(&i.Day, &i.ListenCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

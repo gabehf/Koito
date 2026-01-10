@@ -134,6 +134,7 @@ type ListenActivityOpts struct {
 	Range    int
 	Month    int
 	Year     int
+	Timezone *time.Location
 	AlbumID  int32
 	ArtistID int32
 	TrackID  int32
