@@ -10,7 +10,7 @@ postgres.schemadump:
 	-v --dbname="koitodb" -f "/tmp/dump/schema.sql"
 
 postgres.run:
-	docker run --name koito-db -p 5432:5432 -e POSTGRES_PASSWORD=secret -e TZ=America/New_York -d postgres
+	docker run --name koito-db -p 5432:5432 -e POSTGRES_PASSWORD=secret -d postgres
 
 postgres.run-scratch:
 	docker run --name koito-scratch -p 5433:5432 -e POSTGRES_PASSWORD=secret -d postgres

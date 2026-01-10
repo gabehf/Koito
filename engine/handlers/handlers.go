@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
@@ -100,5 +101,23 @@ func TimeframeFromRequest(r *http.Request) db.Timeframe {
 		Week:     parseInt("week"),
 		FromUnix: parseInt64("from"),
 		ToUnix:   parseInt64("to"),
+		Timezone: parseTZ(r),
 	}
+}
+
+func parseTZ(r *http.Request) *time.Location {
+
+	if tz := r.URL.Query().Get("tz"); tz != "" {
+		if loc, err := time.LoadLocation(tz); err == nil {
+			return loc
+		}
+	}
+
+	if c, err := r.Cookie("tz"); err == nil {
+		if loc, err := time.LoadLocation(c.Value); err == nil {
+			return loc
+		}
+	}
+
+	return time.Now().Location()
 }

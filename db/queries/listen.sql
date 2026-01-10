@@ -144,97 +144,51 @@ WHERE l.listened_at BETWEEN $1 AND $2
   AND t.id = $3;
 
 -- name: ListenActivity :many
-WITH buckets AS (
-  SELECT
-    d::date AS bucket_start_date,
-    (d + $3::interval)::date AS bucket_end_date
-  FROM generate_series(
-    $1::date,
-    $2::date,
-    $3::interval
-  ) AS d
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start_date::timestamptz,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN listens l
-    ON l.listened_at >= b.bucket_start_date::timestamptz
-    AND l.listened_at < b.bucket_end_date::timestamptz
-  GROUP BY b.bucket_start_date
-  ORDER BY b.bucket_start_date
-)
-SELECT bucketed_listens.bucket_start_date::timestamptz, listen_count FROM bucketed_listens;
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens
+WHERE listened_at >= $2
+AND listened_at < $3
+GROUP BY day
+ORDER BY day;
 
 -- name: ListenActivityForArtist :many
-WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
-),
-filtered_listens AS (
-  SELECT l.*
-  FROM listens l
-  JOIN artist_tracks t ON l.track_id = t.track_id
-  WHERE t.artist_id = $4
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN filtered_listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
-)
-SELECT * FROM bucketed_listens;
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+JOIN artist_tracks at ON t.id = at.track_id
+WHERE l.listened_at >= $2
+AND l.listened_at < $3
+AND at.artist_id = $4
+GROUP BY day
+ORDER BY day;
 
 -- name: ListenActivityForRelease :many
-WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
-),
-filtered_listens AS (
-  SELECT l.*
-  FROM listens l
-  JOIN tracks t ON l.track_id = t.id
-  WHERE t.release_id = $4
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN filtered_listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
-)
-SELECT * FROM bucketed_listens;
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE l.listened_at >= $2
+AND l.listened_at < $3
+AND t.release_id = $4
+GROUP BY day
+ORDER BY day;
 
 -- name: ListenActivityForTrack :many
-WITH buckets AS (
-  SELECT generate_series($1::timestamptz, $2::timestamptz, $3::interval) AS bucket_start
-),
-filtered_listens AS (
-  SELECT l.*
-  FROM listens l
-  JOIN tracks t ON l.track_id = t.id
-  WHERE t.id = $4
-),
-bucketed_listens AS (
-  SELECT
-    b.bucket_start,
-    COUNT(l.listened_at) AS listen_count
-  FROM buckets b
-  LEFT JOIN filtered_listens l
-    ON l.listened_at >= b.bucket_start
-    AND l.listened_at < b.bucket_start + $3::interval
-  GROUP BY b.bucket_start
-  ORDER BY b.bucket_start
-)
-SELECT * FROM bucketed_listens;
+SELECT
+    (listened_at AT TIME ZONE $1::text)::date as day,
+    COUNT(*) AS listen_count
+FROM listens l
+JOIN tracks t ON l.track_id = t.id
+WHERE l.listened_at >= $2
+AND l.listened_at < $3
+AND t.id = $4
+GROUP BY day
+ORDER BY day;
 
 -- name: UpdateTrackIdForListens :exec
 UPDATE listens SET track_id = $2

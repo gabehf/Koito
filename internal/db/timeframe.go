@@ -13,11 +13,12 @@ type Timeframe struct {
 	ToUnix   int64
 	From     time.Time
 	To       time.Time
+	Timezone *time.Location
 }
 
 func TimeframeToTimeRange(tf Timeframe) (t1, t2 time.Time) {
 	now := time.Now()
-	loc := now.Location()
+	loc := tf.Timezone
 
 	// ---------------------------------------------------------------------
 	// 1. Explicit From / To (time.Time) — highest precedence

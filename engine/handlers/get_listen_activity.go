@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
@@ -85,9 +86,15 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 			Range:    _range,
 			Month:    month,
 			Year:     year,
+			Timezone: parseTZ(r),
 			AlbumID:  int32(albumId),
 			ArtistID: int32(artistId),
 			TrackID:  int32(trackId),
+		}
+
+		if strings.ToLower(opts.Timezone.String()) == "local" {
+			opts.Timezone, _ = time.LoadLocation("UTC")
+			l.Warn().Msg("GetListenActivityHandler: Timezone is unset, using UTC")
 		}
 
 		l.Debug().Msgf("GetListenActivityHandler: Retrieving listen activity with options: %+v", opts)
@@ -99,7 +106,51 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 			return
 		}
 
+		activity = fillMissingActivity(activity, opts)
+
 		l.Debug().Msg("GetListenActivityHandler: Successfully retrieved listen activity")
 		utils.WriteJSON(w, http.StatusOK, activity)
+	}
+}
+
+// ngl i hate this
+func fillMissingActivity(
+	items []db.ListenActivityItem,
+	opts db.ListenActivityOpts,
+) []db.ListenActivityItem {
+	from, to := db.ListenActivityOptsToTimes(opts)
+
+	existing := make(map[string]int64, len(items))
+	for _, item := range items {
+		existing[item.Start.Format("2006-01-02")] = item.Listens
+	}
+
+	var result []db.ListenActivityItem
+
+	for t := from; t.Before(to); t = addStep(t, opts.Step) {
+		listens := int64(0)
+		if v, ok := existing[t.Format("2006-01-02")]; ok {
+			listens = v
+		}
+
+		result = append(result, db.ListenActivityItem{
+			Start:   t,
+			Listens: int64(listens),
+		})
+	}
+
+	return result
+}
+
+func addStep(t time.Time, step db.StepInterval) time.Time {
+	switch step {
+	case db.StepDay:
+		return t.AddDate(0, 0, 1)
+	case db.StepWeek:
+		return t.AddDate(0, 0, 7)
+	case db.StepMonth:
+		return t.AddDate(0, 1, 0)
+	default:
+		return t.AddDate(0, 0, 1)
 	}
 }

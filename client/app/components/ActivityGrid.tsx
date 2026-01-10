@@ -63,7 +63,7 @@ export default function ActivityGrid({
     queryFn: ({ queryKey }) => getActivity(queryKey[1] as getActivityArgs),
   });
 
-  const { theme, themeName } = useTheme();
+  const { theme } = useTheme();
   const color = getPrimaryColor(theme);
 
   if (isPending) {
@@ -129,14 +129,7 @@ export default function ActivityGrid({
     }
 
     v = Math.min(v, t);
-    if (themeName === "pearl") {
-      // special case for the only light theme lol
-      // could be generalized by pragmatically comparing the
-      // lightness of the bg vs the primary but eh
-      return (t - v) / t;
-    } else {
-      return ((v - t) / t) * 0.8;
-    }
+    return ((v - t) / t) * 0.8;
   };
 
   const CHUNK_SIZE = 26 * 7;
