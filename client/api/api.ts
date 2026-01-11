@@ -270,6 +270,19 @@ function setPrimaryAlias(
     body: form,
   });
 }
+function updateMbzId(
+  type: string,
+  id: number,
+  mbzid: string
+): Promise<Response> {
+  const form = new URLSearchParams();
+  form.append(`${type}_id`, String(id));
+  form.append("mbz_id", mbzid);
+  return fetch(`/apis/web/v1/mbzid`, {
+    method: "PATCH",
+    body: form,
+  });
+}
 function getAlbum(id: number): Promise<Album> {
   return fetch(`/apis/web/v1/album?id=${id}`).then(
     (r) => r.json() as Promise<Album>
@@ -318,6 +331,7 @@ export {
   createAlias,
   deleteAlias,
   setPrimaryAlias,
+  updateMbzId,
   getApiKeys,
   createApiKey,
   deleteApiKey,
