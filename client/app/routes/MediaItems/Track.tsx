@@ -33,7 +33,7 @@ export default function Track() {
       title={track.title}
       img={track.image}
       id={track.id}
-      musicbrainzId={album.musicbrainz_id}
+      musicbrainzId={track.musicbrainz_id}
       imgItemId={track.album_id}
       mergeFunc={mergeTracks}
       mergeCleanerFunc={(r, id) => {
