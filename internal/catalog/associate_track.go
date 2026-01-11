@@ -61,10 +61,19 @@ func matchTrackByMbzID(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*
 			return nil, fmt.Errorf("matchTrackByMbzID: %w", err)
 		}
 		l.Debug().Msgf("Updating track '%s' with MusicBrainz ID %s", opts.TrackName, opts.TrackMbzID)
-		err = d.UpdateTrack(ctx, db.UpdateTrackOpts{
-			ID:            track.ID,
-			MusicBrainzID: opts.TrackMbzID,
-		})
+		if track.MbzID == nil || *track.MbzID == uuid.Nil {
+			err := d.UpdateTrack(ctx, db.UpdateTrackOpts{
+				ID:            track.ID,
+				MusicBrainzID: opts.TrackMbzID,
+			})
+			if err != nil {
+				l.Err(err).Msg("matchArtistsByMBIDMappings: failed to update track with MusicBrainz ID")
+				return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
+			}
+			l.Debug().Msgf("Updated track '%s' with MusicBrainz ID", track.Title)
+		} else {
+			l.Warn().Msgf("Attempted to update track %s with MusicBrainz ID, but an existing ID was already found", track.Title)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("matchTrackByMbzID: %w", err)
 		}

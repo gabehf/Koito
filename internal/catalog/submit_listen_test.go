@@ -282,6 +282,67 @@ func TestSubmitListen_MatchAllMbzIDs(t *testing.T) {
 	assert.Equal(t, 1, count, "duplicate artist created")
 }
 
+func TestSubmitListen_DoNotOverwriteMbzIDs(t *testing.T) {
+	setupTestDataWithMbzIDs(t)
+
+	// artist gets matched with musicbrainz id
+	// release gets matched with mbz id
+	// track gets matched with mbz id
+
+	ctx := context.Background()
+	mbzc := &mbz.MbzMockCaller{
+		Artists:  mbzArtistData,
+		Releases: mbzReleaseData,
+		Tracks:   mbzTrackData,
+	}
+	artistMbzID := uuid.MustParse("10000000-0000-0000-0000-000000000000")
+	releaseMbzID := uuid.MustParse("01000000-0000-0000-0000-000000000000")
+	trackMbzID := uuid.MustParse("00100000-0000-0000-0000-000000000000")
+	opts := catalog.SubmitListenOpts{
+		MbzCaller:   mbzc,
+		ArtistNames: []string{"ATARASHII GAKKO!"},
+		Artist:      "ATARASHII GAKKO!",
+		ArtistMbzIDs: []uuid.UUID{
+			artistMbzID,
+		},
+		TrackTitle:     "Tokyo Calling",
+		RecordingMbzID: trackMbzID,
+		ReleaseTitle:   "AG! Calling",
+		ReleaseMbzID:   releaseMbzID,
+		Time:           time.Now(),
+		UserID:         1,
+	}
+
+	err := catalog.SubmitListen(ctx, store, opts)
+	require.NoError(t, err)
+
+	// Verify that the listen was saved
+	exists, err := store.RowExists(ctx, `
+    SELECT EXISTS (
+      SELECT 1 FROM listens
+      WHERE track_id = $1
+    )`, 1)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected listen row to exist")
+
+	// verify that track, release group, and artist are existing ones and not duplicates
+	count, err := store.Count(ctx, `
+	SELECT COUNT(*) FROM tracks_with_title WHERE musicbrainz_id = $1
+	`, trackMbzID)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "duplicate track created")
+	count, err = store.Count(ctx, `
+	SELECT COUNT(*) FROM releases_with_title WHERE musicbrainz_id = $1
+	`, releaseMbzID)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "duplicate release group created")
+	count, err = store.Count(ctx, `
+	SELECT COUNT(*) FROM artists_with_name WHERE musicbrainz_id = $1
+	`, artistMbzID)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "duplicate artist created")
+}
+
 func TestSubmitListen_MatchTrackFromMbzTitle(t *testing.T) {
 	setupTestDataSansMbzIDs(t)
 
