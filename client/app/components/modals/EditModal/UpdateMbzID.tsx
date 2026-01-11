@@ -23,6 +23,7 @@ export default function UpdateMbzID({ type, id }: Props) {
     setLoading(true);
     updateMbzId(type, id, input).then((r) => {
       if (r.ok) {
+        setSuccess("successfully updated MusicBrainz ID");
       } else {
         r.json().then((r) => setError(r.error));
       }
@@ -44,9 +45,9 @@ export default function UpdateMbzID({ type, id }: Props) {
         <AsyncButton loading={loading} onClick={handleUpdateMbzID}>
           Submit
         </AsyncButton>
-        {err && <p className="error">{err}</p>}
-        {success && <p className="success">{success}</p>}
       </div>
+      {err && <p className="error">{err}</p>}
+      {success && <p className="success">{success}</p>}
     </div>
   );
 }

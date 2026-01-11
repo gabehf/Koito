@@ -94,7 +94,7 @@ func bindRoutes(
 			r.Post("/aliases", handlers.CreateAliasHandler(db))
 			r.Post("/aliases/delete", handlers.DeleteAliasHandler(db))
 			r.Post("/aliases/primary", handlers.SetPrimaryAliasHandler(db))
-			r.Patch("/mbzid", handlers.UpdateAlbumHandler(db))
+			r.Patch("/mbzid", handlers.UpdateMbzIdHandler(db))
 			r.Get("/user/apikeys", handlers.GetApiKeysHandler(db))
 			r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
 			r.Patch("/user/apikeys", handlers.UpdateApiKeyLabelHandler(db))
