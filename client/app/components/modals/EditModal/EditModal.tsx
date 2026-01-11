@@ -4,6 +4,7 @@ import {
   deleteAlias,
   getAliases,
   setPrimaryAlias,
+  updateMbzId,
   type Alias,
 } from "api/api";
 import { Modal } from "../Modal";
@@ -12,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Trash } from "lucide-react";
 import SetVariousArtists from "./SetVariousArtist";
 import SetPrimaryArtist from "./SetPrimaryArtist";
+import UpdateMbzID from "./UpdateMbzID";
 
 interface Props {
   type: string;
@@ -69,7 +71,7 @@ export default function EditModal({ open, setOpen, type, id }: Props) {
   const handleNewAlias = () => {
     setError(undefined);
     if (input === "") {
-      setError("alias must be provided");
+      setError("no input");
       return;
     }
     setLoading(true);
@@ -156,6 +158,7 @@ export default function EditModal({ open, setOpen, type, id }: Props) {
         {type.toLowerCase() === "track" && (
           <SetPrimaryArtist id={id} type="track" />
         )}
+        <UpdateMbzID type={type} id={id} />
       </div>
     </Modal>
   );
