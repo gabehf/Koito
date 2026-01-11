@@ -96,6 +96,19 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.DB, opts AssociateArti
 		})
 		if err == nil {
 			l.Debug().Msgf("Artist '%s' found by Name", a.Artist)
+			if artist.MbzID == nil {
+				err := d.UpdateArtist(ctx, db.UpdateArtistOpts{
+					ID:            artist.ID,
+					MusicBrainzID: a.Mbid,
+				})
+				if err != nil {
+					l.Err(err).Msg("matchArtistsByMBIDMappings: failed to update artist with MusicBrainz ID")
+					return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
+				}
+				l.Debug().Msgf("Updated artist '%s' with MusicBrainz ID", artist.Name)
+			} else {
+				l.Warn().Msgf("Attempted to update artist %s with MusicBrainz ID, but an existing ID was already found", artist.Name)
+			}
 			err = d.UpdateArtist(ctx, db.UpdateArtistOpts{ID: artist.ID, MusicBrainzID: a.Mbid})
 			if err != nil {
 				l.Err(err).Msgf("matchArtistsByMBIDMappings: Failed to associate artist '%s' with MusicBrainz ID", artist.Name)

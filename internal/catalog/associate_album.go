@@ -89,15 +89,19 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.DB, opts Asso
 	})
 	if err == nil {
 		l.Debug().Msgf("Found album %s, updating with MusicBrainz Release ID...", album.Title)
-		err := d.UpdateAlbum(ctx, db.UpdateAlbumOpts{
-			ID:            album.ID,
-			MusicBrainzID: opts.ReleaseMbzID,
-		})
-		if err != nil {
-			l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to update album with MusicBrainz Release ID")
-			return nil, fmt.Errorf("createOrUpdateAlbumWithMbzReleaseID: %w", err)
+		if album.MbzID == nil {
+			err := d.UpdateAlbum(ctx, db.UpdateAlbumOpts{
+				ID:            album.ID,
+				MusicBrainzID: opts.ReleaseMbzID,
+			})
+			if err != nil {
+				l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to update album with MusicBrainz Release ID")
+				return nil, fmt.Errorf("createOrUpdateAlbumWithMbzReleaseID: %w", err)
+			}
+			l.Debug().Msgf("Updated album '%s' with MusicBrainz Release ID", album.Title)
+		} else {
+			l.Warn().Msgf("Attempted to update album %s with MusicBrainz ID, but an existing ID was already found", album.Title)
 		}
-		l.Debug().Msgf("Updated album '%s' with MusicBrainz Release ID", album.Title)
 
 		if opts.ReleaseGroupMbzID != uuid.Nil {
 			aliases, err := opts.Mbzc.GetReleaseTitles(ctx, opts.ReleaseGroupMbzID)
