@@ -1,17 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getActivity,
-  getInterest,
-  type getActivityArgs,
-  type getInterestArgs,
-  type ListenActivityItem,
-} from "api/api";
-import Popup from "./Popup";
-import { useState } from "react";
+import { getInterest, type getInterestArgs } from "api/api";
 import { useTheme } from "~/hooks/useTheme";
-import ActivityOptsSelector from "./ActivityOptsSelector";
 import type { Theme } from "~/styles/themes.css";
-import { Area, AreaChart, Line, LineChart, Tooltip } from "recharts";
+import { Area, AreaChart } from "recharts";
 import { RechartsDevtools } from "@recharts/devtools";
 
 function getPrimaryColor(theme: Theme): string {
@@ -34,7 +25,7 @@ interface Props {
 }
 
 export default function InterestGraph({
-  buckets = 14,
+  buckets = 18,
   artistId = 0,
   albumId = 0,
   trackId = 0,
@@ -71,6 +62,10 @@ export default function InterestGraph({
     );
   }
 
+  // Note: I would really like to have the animation for the graph, however
+  // the line graph can get weirdly clipped before the animation is done
+  // so I think I just have to remove it for now.
+
   return (
     <div className="flex flex-col items-start w-full max-w-[500px]">
       <h3>Interest over time</h3>
@@ -81,13 +76,13 @@ export default function InterestGraph({
           maxWidth: 440,
           overflow: "visible",
         }}
-        margin={{ top: 5, right: 0, left: 0, bottom: 15 }}
         data={data}
+        margin={{ top: 15, bottom: 20 }}
       >
         <defs>
           <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.5} />
-            <stop offset="85%" stopColor={color} stopOpacity={0} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
         <Area
@@ -95,7 +90,7 @@ export default function InterestGraph({
           type="natural"
           stroke="none"
           fill="url(#colorGradient)"
-          animationDuration={750}
+          animationDuration={0}
           animationEasing="ease-in-out"
           activeDot={false}
         />
@@ -105,7 +100,7 @@ export default function InterestGraph({
           stroke={color}
           fill="none"
           strokeWidth={2}
-          animationDuration={750}
+          animationDuration={0}
           animationEasing="ease-in-out"
           dot={false}
           activeDot={false}
