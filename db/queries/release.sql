@@ -32,6 +32,19 @@ JOIN artist_releases ar ON r.id = ar.release_id
 WHERE r.title = ANY ($1::TEXT[]) AND ar.artist_id = $2
 LIMIT 1;
 
+-- name: GetReleaseByArtistAndTitlesNoMbzID :one
+SELECT r.*
+FROM releases_with_title r
+JOIN artist_releases ar ON r.id = ar.release_id
+WHERE r.title = ANY ($1::TEXT[])
+  AND ar.artist_id = $2
+  AND EXISTS (
+    SELECT 1
+    FROM releases r2
+    WHERE r2.id = r.id
+      AND r2.musicbrainz_id IS NULL
+  );
+
 -- name: GetTopReleasesFromArtist :many
 SELECT
   r.*,

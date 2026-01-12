@@ -82,26 +82,19 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.DB, opts Asso
 	titles := []string{release.Title, opts.ReleaseName}
 	utils.Unique(&titles)
 
-	l.Debug().Msgf("Searching for albums '%v' from artist id %d in DB", titles, opts.Artists[0].ID)
-	album, err = d.GetAlbum(ctx, db.GetAlbumOpts{
-		ArtistID: opts.Artists[0].ID,
-		Titles:   titles,
-	})
+	l.Debug().Msgf("Searching for albums '%v' from artist id %d and no associated MusicBrainz ID in DB", titles, opts.Artists[0].ID)
+	album, err = d.GetAlbumWithNoMbzIDByTitles(ctx, opts.Artists[0].ID, titles)
 	if err == nil {
 		l.Debug().Msgf("Found album %s, updating with MusicBrainz Release ID...", album.Title)
-		if album.MbzID == nil {
-			err := d.UpdateAlbum(ctx, db.UpdateAlbumOpts{
-				ID:            album.ID,
-				MusicBrainzID: opts.ReleaseMbzID,
-			})
-			if err != nil {
-				l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to update album with MusicBrainz Release ID")
-				return nil, fmt.Errorf("createOrUpdateAlbumWithMbzReleaseID: %w", err)
-			}
-			l.Debug().Msgf("Updated album '%s' with MusicBrainz Release ID", album.Title)
-		} else {
-			l.Warn().Msgf("Attempted to update album %s with MusicBrainz ID, but an existing ID was already found", album.Title)
+		err := d.UpdateAlbum(ctx, db.UpdateAlbumOpts{
+			ID:            album.ID,
+			MusicBrainzID: opts.ReleaseMbzID,
+		})
+		if err != nil {
+			l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to update album with MusicBrainz Release ID")
+			return nil, fmt.Errorf("createOrUpdateAlbumWithMbzReleaseID: %w", err)
 		}
+		l.Debug().Msgf("Updated album '%s' with MusicBrainz Release ID", album.Title)
 
 		if opts.ReleaseGroupMbzID != uuid.Nil {
 			aliases, err := opts.Mbzc.GetReleaseTitles(ctx, opts.ReleaseGroupMbzID)

@@ -195,6 +195,39 @@ func (q *Queries) GetReleaseByArtistAndTitles(ctx context.Context, arg GetReleas
 	return i, err
 }
 
+const getReleaseByArtistAndTitlesNoMbzID = `-- name: GetReleaseByArtistAndTitlesNoMbzID :one
+SELECT r.id, r.musicbrainz_id, r.image, r.various_artists, r.image_source, r.title
+FROM releases_with_title r
+JOIN artist_releases ar ON r.id = ar.release_id
+WHERE r.title = ANY ($1::TEXT[])
+  AND ar.artist_id = $2
+  AND EXISTS (
+    SELECT 1
+    FROM releases r2
+    WHERE r2.id = r.id
+      AND r2.musicbrainz_id IS NULL
+  )
+`
+
+type GetReleaseByArtistAndTitlesNoMbzIDParams struct {
+	Column1  []string
+	ArtistID int32
+}
+
+func (q *Queries) GetReleaseByArtistAndTitlesNoMbzID(ctx context.Context, arg GetReleaseByArtistAndTitlesNoMbzIDParams) (ReleasesWithTitle, error) {
+	row := q.db.QueryRow(ctx, getReleaseByArtistAndTitlesNoMbzID, arg.Column1, arg.ArtistID)
+	var i ReleasesWithTitle
+	err := row.Scan(
+		&i.ID,
+		&i.MusicBrainzID,
+		&i.Image,
+		&i.VariousArtists,
+		&i.ImageSource,
+		&i.Title,
+	)
+	return i, err
+}
+
 const getReleaseByImageID = `-- name: GetReleaseByImageID :one
 SELECT id, musicbrainz_id, image, various_artists, image_source FROM releases
 WHERE image = $1 LIMIT 1

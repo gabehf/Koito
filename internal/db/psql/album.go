@@ -110,6 +110,56 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 	return ret, nil
 }
 
+func (d *Psql) GetAlbumWithNoMbzIDByTitles(ctx context.Context, artistId int32, titles []string) (*models.Album, error) {
+	l := logger.FromContext(ctx)
+	ret := new(models.Album)
+
+	if artistId != 0 && len(titles) > 0 {
+		l.Debug().Msgf("GetAlbumWithNoMbzIDByTitles: Fetching release group from DB with artist_id %d and titles %v and no associated MusicBrainz ID", artistId, titles)
+		row, err := d.q.GetReleaseByArtistAndTitlesNoMbzID(ctx, repository.GetReleaseByArtistAndTitlesNoMbzIDParams{
+			ArtistID: artistId,
+			Column1:  titles,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("GetAlbum: %w", err)
+		}
+		ret.ID = row.ID
+		ret.MbzID = row.MusicBrainzID
+		ret.Title = row.Title
+		ret.Image = row.Image
+		ret.VariousArtists = row.VariousArtists
+	} else {
+		return nil, errors.New("GetAlbumWithNoMbzIDByTitles: insufficient information to get album")
+	}
+	count, err := d.q.CountListensFromRelease(ctx, repository.CountListensFromReleaseParams{
+		ListenedAt:   time.Unix(0, 0),
+		ListenedAt_2: time.Now(),
+		ReleaseID:    ret.ID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("GetAlbumWithNoMbzIDByTitles: CountListensFromRelease: %w", err)
+	}
+
+	seconds, err := d.CountTimeListenedToItem(ctx, db.TimeListenedOpts{
+		Timeframe: db.Timeframe{Period: db.PeriodAllTime},
+		AlbumID:   ret.ID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("GetAlbumWithNoMbzIDByTitles: CountTimeListenedToItem: %w", err)
+	}
+
+	firstListen, err := d.q.GetFirstListenFromRelease(ctx, ret.ID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("GetAlbumWithNoMbzIDByTitles: GetFirstListenFromRelease: %w", err)
+	}
+
+	ret.ListenCount = count
+	ret.TimeListened = seconds
+	ret.FirstListen = firstListen.ListenedAt.Unix()
+
+	return ret, nil
+}
+
 func (d *Psql) SaveAlbum(ctx context.Context, opts db.SaveAlbumOpts) (*models.Album, error) {
 	l := logger.FromContext(ctx)
 	var insertMbzID *uuid.UUID

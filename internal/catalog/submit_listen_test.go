@@ -297,6 +297,7 @@ func TestSubmitListen_DoNotOverwriteMbzIDs(t *testing.T) {
 	}
 	artistMbzID := uuid.MustParse("10000000-0000-0000-0000-000000000000")
 	releaseMbzID := uuid.MustParse("01000000-0000-0000-0000-000000000000")
+	existingReleaseMbzID := uuid.MustParse("00000000-0000-0000-0000-000000000101")
 	trackMbzID := uuid.MustParse("00100000-0000-0000-0000-000000000000")
 	opts := catalog.SubmitListenOpts{
 		MbzCaller:   mbzc,
@@ -336,6 +337,11 @@ func TestSubmitListen_DoNotOverwriteMbzIDs(t *testing.T) {
 	`, releaseMbzID)
 	require.NoError(t, err)
 	assert.Equal(t, 0, count, "duplicate release group created")
+	count, err = store.Count(ctx, `
+	SELECT COUNT(*) FROM releases_with_title WHERE musicbrainz_id = $1
+	`, existingReleaseMbzID)
+	require.NoError(t, err)
+	assert.Equal(t, 1, count, "existing release group should not be overwritten")
 	count, err = store.Count(ctx, `
 	SELECT COUNT(*) FROM artists_with_name WHERE musicbrainz_id = $1
 	`, artistMbzID)

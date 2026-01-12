@@ -14,6 +14,7 @@ type DB interface {
 
 	GetArtist(ctx context.Context, opts GetArtistOpts) (*models.Artist, error)
 	GetAlbum(ctx context.Context, opts GetAlbumOpts) (*models.Album, error)
+	GetAlbumWithNoMbzIDByTitles(ctx context.Context, artistId int32, titles []string) (*models.Album, error)
 	GetTrack(ctx context.Context, opts GetTrackOpts) (*models.Track, error)
 	GetArtistsForAlbum(ctx context.Context, id int32) ([]*models.Artist, error)
 	GetArtistsForTrack(ctx context.Context, id int32) ([]*models.Artist, error)
