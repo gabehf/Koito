@@ -99,97 +99,99 @@ export default function MediaLayout(props: Props) {
             <h1>{props.title}</h1>
             {props.subContent}
           </div>
-          {user && (
-            <div className="absolute left-1 sm:right-1 sm:left-auto -top-9 sm:top-1 flex gap-3 items-center">
-              {props.musicbrainzId && (
-                <Link
-                  title="View on MusicBrainz"
-                  target="_blank"
-                  to={`https://musicbrainz.org/${props.type.toLowerCase()}/${
-                    props.musicbrainzId
-                  }`}
-                >
-                  <MbzIcon size={iconSize} hover />
-                </Link>
-              )}
-              {props.type === "Track" && (
-                <>
-                  <button
-                    title="Add Listen"
-                    className="hover:cursor-pointer"
-                    onClick={() => setAddListenModalOpen(true)}
-                  >
-                    <Plus size={iconSize} />
-                  </button>
-                  <AddListenModal
-                    open={addListenModalOpen}
-                    setOpen={setAddListenModalOpen}
-                    trackid={props.id}
-                  />
-                </>
-              )}
-              <button
-                title="Edit Item"
-                className="hover:cursor-pointer"
-                onClick={() => setRenameModalOpen(true)}
+          <div className="absolute left-1 sm:right-1 sm:left-auto -top-9 sm:top-1 flex gap-3 items-center">
+            {props.musicbrainzId && (
+              <Link
+                title="View on MusicBrainz"
+                target="_blank"
+                to={`https://musicbrainz.org/${props.type.toLowerCase()}/${
+                  props.musicbrainzId
+                }`}
               >
-                <Edit size={iconSize} />
-              </button>
-
-              {props.type !== "Track" && (
+                <MbzIcon size={iconSize} hover />
+              </Link>
+            )}
+            {user && (
+              <>
+                {props.type === "Track" && (
+                  <>
+                    <button
+                      title="Add Listen"
+                      className="hover:cursor-pointer"
+                      onClick={() => setAddListenModalOpen(true)}
+                    >
+                      <Plus size={iconSize} />
+                    </button>
+                    <AddListenModal
+                      open={addListenModalOpen}
+                      setOpen={setAddListenModalOpen}
+                      trackid={props.id}
+                    />
+                  </>
+                )}
                 <button
-                  title="Replace Image"
+                  title="Edit Item"
                   className="hover:cursor-pointer"
-                  onClick={() => setImageModalOpen(true)}
+                  onClick={() => setRenameModalOpen(true)}
                 >
-                  <ImageIcon size={iconSize} />
+                  <Edit size={iconSize} />
                 </button>
-              )}
-              <button
-                title="Merge Items"
-                className="hover:cursor-pointer"
-                onClick={() => setMergeModalOpen(true)}
-              >
-                <Merge size={iconSize} />
-              </button>
-              <button
-                title="Delete Item"
-                className="hover:cursor-pointer"
-                onClick={() => setDeleteModalOpen(true)}
-              >
-                <Trash size={iconSize} />
-              </button>
-              <EditModal
-                open={renameModalOpen}
-                setOpen={setRenameModalOpen}
-                type={props.type.toLowerCase()}
-                id={props.id}
-              />
-              <ImageReplaceModal
-                open={imageModalOpen}
-                setOpen={setImageModalOpen}
-                id={props.imgItemId}
-                musicbrainzId={props.musicbrainzId}
-                type={props.type === "Track" ? "Album" : props.type}
-              />
-              <MergeModal
-                currentTitle={props.title}
-                mergeFunc={props.mergeFunc}
-                mergeCleanerFunc={props.mergeCleanerFunc}
-                type={props.type}
-                currentId={props.id}
-                open={mergeModalOpen}
-                setOpen={setMergeModalOpen}
-              />
-              <DeleteModal
-                open={deleteModalOpen}
-                setOpen={setDeleteModalOpen}
-                title={props.title}
-                id={props.id}
-                type={props.type}
-              />
-            </div>
-          )}
+
+                {props.type !== "Track" && (
+                  <button
+                    title="Replace Image"
+                    className="hover:cursor-pointer"
+                    onClick={() => setImageModalOpen(true)}
+                  >
+                    <ImageIcon size={iconSize} />
+                  </button>
+                )}
+                <button
+                  title="Merge Items"
+                  className="hover:cursor-pointer"
+                  onClick={() => setMergeModalOpen(true)}
+                >
+                  <Merge size={iconSize} />
+                </button>
+                <button
+                  title="Delete Item"
+                  className="hover:cursor-pointer"
+                  onClick={() => setDeleteModalOpen(true)}
+                >
+                  <Trash size={iconSize} />
+                </button>
+                <EditModal
+                  open={renameModalOpen}
+                  setOpen={setRenameModalOpen}
+                  type={props.type.toLowerCase()}
+                  id={props.id}
+                />
+                <ImageReplaceModal
+                  open={imageModalOpen}
+                  setOpen={setImageModalOpen}
+                  id={props.imgItemId}
+                  musicbrainzId={props.musicbrainzId}
+                  type={props.type === "Track" ? "Album" : props.type}
+                />
+                <MergeModal
+                  currentTitle={props.title}
+                  mergeFunc={props.mergeFunc}
+                  mergeCleanerFunc={props.mergeCleanerFunc}
+                  type={props.type}
+                  currentId={props.id}
+                  open={mergeModalOpen}
+                  setOpen={setMergeModalOpen}
+                />
+                <DeleteModal
+                  open={deleteModalOpen}
+                  setOpen={setDeleteModalOpen}
+                  title={props.title}
+                  id={props.id}
+                  type={props.type}
+                />
+              </>
+            )}
+          </div>
         </div>
         {props.children}
       </div>

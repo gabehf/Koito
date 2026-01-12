@@ -42,6 +42,10 @@ func ImportKoitoFile(ctx context.Context, store db.DB, filename string) error {
 	count := 0
 
 	for i := range data.Listens {
+		if !inImportTimeWindow(data.Listens[i].ListenedAt) {
+			l.Debug().Msgf("Skipping import due to import time rules")
+			continue
+		}
 		// use this for save/get mbid for all artist/album/track
 		var mbid uuid.UUID
 
