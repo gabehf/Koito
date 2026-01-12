@@ -199,9 +199,14 @@ const getReleaseByArtistAndTitlesNoMbzID = `-- name: GetReleaseByArtistAndTitles
 SELECT r.id, r.musicbrainz_id, r.image, r.various_artists, r.image_source, r.title
 FROM releases_with_title r
 JOIN artist_releases ar ON r.id = ar.release_id
-WHERE r.title = ANY ($1::TEXT[]) AND ar.artist_id = $2
-AND r.musicbrainz_id = NULL
-LIMIT 1
+WHERE r.title = ANY ($1::TEXT[])
+  AND ar.artist_id = $2
+  AND EXISTS (
+    SELECT 1
+    FROM releases r2
+    WHERE r2.id = r.id
+      AND r2.musicbrainz_id IS NULL
+  )
 `
 
 type GetReleaseByArtistAndTitlesNoMbzIDParams struct {
