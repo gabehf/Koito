@@ -1,0 +1,117 @@
+import { useQuery } from "@tanstack/react-query";
+import {
+  getActivity,
+  getInterest,
+  type getActivityArgs,
+  type getInterestArgs,
+  type ListenActivityItem,
+} from "api/api";
+import Popup from "./Popup";
+import { useState } from "react";
+import { useTheme } from "~/hooks/useTheme";
+import ActivityOptsSelector from "./ActivityOptsSelector";
+import type { Theme } from "~/styles/themes.css";
+import { Area, AreaChart, Line, LineChart, Tooltip } from "recharts";
+import { RechartsDevtools } from "@recharts/devtools";
+
+function getPrimaryColor(theme: Theme): string {
+  const value = theme.primary;
+  const rgbMatch = value.match(
+    /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/
+  );
+  if (rgbMatch) {
+    const [, r, g, b] = rgbMatch.map(Number);
+    return "#" + [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
+  }
+
+  return value;
+}
+interface Props {
+  buckets?: number;
+  artistId?: number;
+  albumId?: number;
+  trackId?: number;
+}
+
+export default function InterestGraph({
+  buckets = 14,
+  artistId = 0,
+  albumId = 0,
+  trackId = 0,
+}: Props) {
+  const { isPending, isError, data, error } = useQuery({
+    queryKey: [
+      "interest",
+      {
+        buckets: buckets,
+        artist_id: artistId,
+        album_id: albumId,
+        track_id: trackId,
+      },
+    ],
+    queryFn: ({ queryKey }) => getInterest(queryKey[1] as getInterestArgs),
+  });
+
+  const { theme } = useTheme();
+  const color = getPrimaryColor(theme);
+
+  if (isPending) {
+    return (
+      <div className="w-[500px]">
+        <h3>Interest over time</h3>
+        <p>Loading...</p>
+      </div>
+    );
+  } else if (isError) {
+    return (
+      <div className="w-[500px]">
+        <h3>Interest over time</h3>
+        <p className="error">Error: {error.message}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-start w-full max-w-[500px]">
+      <h3>Interest over time</h3>
+      <AreaChart
+        style={{
+          width: "100%",
+          aspectRatio: 3.5,
+          maxWidth: 440,
+          overflow: "visible",
+        }}
+        margin={{ top: 5, right: 0, left: 0, bottom: 10 }}
+        data={data}
+      >
+        <defs>
+          <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.5} />
+            <stop offset="85%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <Area
+          dataKey="listen_count"
+          type="natural"
+          stroke="none"
+          fill="url(#colorGradient)"
+          animationDuration={750}
+          animationEasing="ease-in-out"
+          activeDot={false}
+        />
+        <Area
+          dataKey="listen_count"
+          type="natural"
+          stroke={color}
+          fill="none"
+          strokeWidth={2}
+          animationDuration={750}
+          animationEasing="ease-in-out"
+          dot={false}
+          activeDot={false}
+          style={{ filter: `drop-shadow(0px 0px 5px ${color})` }}
+        />
+      </AreaChart>
+    </div>
+  );
+}

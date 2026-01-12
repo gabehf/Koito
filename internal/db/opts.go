@@ -153,3 +153,10 @@ type GetExportPageOpts struct {
 	TrackID    int32
 	Limit      int32
 }
+
+type GetInterestOpts struct {
+	Buckets  int
+	AlbumID  int32
+	ArtistID int32
+	TrackID  int32
+}
