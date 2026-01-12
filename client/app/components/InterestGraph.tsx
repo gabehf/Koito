@@ -79,7 +79,9 @@ export default function InterestGraph({
           width: "100%",
           aspectRatio: 3.5,
           maxWidth: 440,
+          overflow: "visible",
         }}
+        margin={{ top: 5, right: 0, left: 0, bottom: 10 }}
         data={data}
       >
         <defs>
