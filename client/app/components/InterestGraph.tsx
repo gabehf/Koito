@@ -25,7 +25,7 @@ interface Props {
 }
 
 export default function InterestGraph({
-  buckets = 18,
+  buckets = 16,
   artistId = 0,
   albumId = 0,
   trackId = 0,
