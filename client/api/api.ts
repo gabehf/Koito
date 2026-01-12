@@ -23,6 +23,12 @@ interface timeframe {
   to?: number;
   period?: string;
 }
+interface getInterestArgs {
+  buckets: number;
+  artist_id: number;
+  album_id: number;
+  track_id: number;
+}
 
 async function handleJson<T>(r: Response): Promise<T> {
   if (!r.ok) {
@@ -77,6 +83,13 @@ async function getActivity(
     `/apis/web/v1/listen-activity?step=${args.step}&range=${args.range}&month=${args.month}&year=${args.year}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
   );
   return handleJson<ListenActivityItem[]>(r);
+}
+
+async function getInterest(args: getInterestArgs): Promise<InterestBucket[]> {
+  const r = await fetch(
+    `/apis/web/v1/interest?buckets=${args.buckets}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
+  );
+  return handleJson<InterestBucket[]>(r);
 }
 
 async function getStats(period: string): Promise<Stats> {
@@ -315,6 +328,7 @@ export {
   getTopAlbums,
   getTopArtists,
   getActivity,
+  getInterest,
   getStats,
   search,
   replaceImage,
@@ -397,6 +411,11 @@ type ListenActivityItem = {
   start_time: Date;
   listens: number;
 };
+type InterestBucket = {
+  bucket_start: Date;
+  bucket_end: Date;
+  listen_count: number;
+};
 type SimpleArtists = {
   name: string;
   id: number;
@@ -454,6 +473,7 @@ type RewindStats = {
 export type {
   getItemsArgs,
   getActivityArgs,
+  getInterestArgs,
   Track,
   Artist,
   Album,
@@ -461,6 +481,7 @@ export type {
   SearchResponse,
   PaginatedResponse,
   ListenActivityItem,
+  InterestBucket,
   User,
   Alias,
   ApiKey,

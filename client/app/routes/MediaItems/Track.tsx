@@ -6,6 +6,7 @@ import PeriodSelector from "~/components/PeriodSelector";
 import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
 import { timeListenedString } from "~/utils/utils";
+import InterestGraph from "~/components/InterestGraph";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   let res = await fetch(`/apis/web/v1/track?id=${params.id}`);
@@ -73,7 +74,10 @@ export default function Track() {
       </div>
       <div className="flex flex-wrap gap-20 mt-10">
         <LastPlays limit={20} trackId={track.id} />
-        <ActivityGrid trackId={track.id} configurable />
+        <div className="flex flex-col items-start gap-4">
+          <ActivityGrid configurable trackId={track.id} />
+          <InterestGraph trackId={track.id} />
+        </div>
       </div>
     </MediaLayout>
   );
