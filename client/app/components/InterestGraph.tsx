@@ -81,7 +81,7 @@ export default function InterestGraph({
           maxWidth: 440,
           overflow: "visible",
         }}
-        margin={{ top: 5, right: 0, left: 0, bottom: 10 }}
+        margin={{ top: 5, right: 0, left: 0, bottom: 15 }}
         data={data}
       >
         <defs>
@@ -109,7 +109,7 @@ export default function InterestGraph({
           animationEasing="ease-in-out"
           dot={false}
           activeDot={false}
-          style={{ filter: `drop-shadow(0px 0px 5px ${color})` }}
+          style={{ filter: `drop-shadow(0px 0px 0px ${color})` }}
         />
       </AreaChart>
     </div>
