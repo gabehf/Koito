@@ -30,6 +30,7 @@ type DB interface {
 	GetUserBySession(ctx context.Context, sessionId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetUserByApiKey(ctx context.Context, key string) (*models.User, error)
+	GetInterest(ctx context.Context, opts GetInterestOpts) ([]InterestBucket, error)
 
 	// Save
 

@@ -44,3 +44,9 @@ type ExportItem struct {
 	ReleaseAliases     []models.Alias
 	Artists            []models.ArtistWithFullAliases
 }
+
+type InterestBucket struct {
+	BucketStart time.Time `json:"bucket_start"`
+	BucketEnd   time.Time `json:"bucket_end"`
+	ListenCount int64     `json:"listen_count"`
+}
