@@ -128,74 +128,76 @@ export default function RewindPage() {
         transition: "1000",
       }}
     >
-      <div className="flex flex-col items-start md:flex-row sm:items-center gap-4">
+      <div className="flex flex-col items-start sm:items-center gap-4">
         <title>{pgTitle}</title>
         <meta property="og:title" content={pgTitle} />
         <meta name="description" content={pgTitle} />
-        <div className="flex flex-col items-start mt-20 gap-10 w-19/20 px-20">
+        <div className="flex flex-col lg:flex-row items-start lg:mt-15 mt-5 gap-10 w-19/20 px-5 md:px-20">
+          <div className="flex flex-col items-start gap-4">
+            <div className="flex flex-col items-start gap-4 py-8">
+              <div className="flex items-center gap-6 justify-around">
+                <button
+                  onClick={() => navigateMonth("prev")}
+                  className="p-2 disabled:text-(--color-fg-tertiary)"
+                  disabled={
+                    // Previous month is in the future OR
+                    new Date(year, month - 2) > new Date() ||
+                    // We are looking at current year and prev would take us to full year
+                    (new Date().getFullYear() === year && month === 1)
+                  }
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <p className="font-medium text-xl text-center w-30">
+                  {months[month]}
+                </p>
+                <button
+                  onClick={() => navigateMonth("next")}
+                  className="p-2 disabled:text-(--color-fg-tertiary)"
+                  disabled={new Date(year, month) > new Date()}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+              <div className="flex items-center gap-6 justify-around">
+                <button
+                  onClick={() => navigateYear("prev")}
+                  className="p-2 disabled:text-(--color-fg-tertiary)"
+                  disabled={new Date(year - 1, month) > new Date()}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <p className="font-medium text-xl text-center w-30">{year}</p>
+                <button
+                  onClick={() => navigateYear("next")}
+                  className="p-2 disabled:text-(--color-fg-tertiary)"
+                  disabled={
+                    // Next year date is in the future OR
+                    new Date(year + 1, month - 1) > new Date() ||
+                    // Next year date is current full year OR
+                    (month == 0 && new Date().getFullYear() === year + 1) ||
+                    // Next year date is current month
+                    (new Date().getMonth() === month - 1 &&
+                      new Date().getFullYear() === year + 1)
+                  }
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <label htmlFor="show-time-checkbox">Show time listened?</label>
+              <input
+                type="checkbox"
+                name="show-time-checkbox"
+                checked={showTime}
+                onChange={(e) => setShowTime(!showTime)}
+              ></input>
+            </div>
+          </div>
           {stats !== undefined && (
             <Rewind stats={stats} includeTime={showTime} />
           )}
-          <div className="flex flex-col items-center gap-4 py-8">
-            <div className="flex items-center gap-6 justify-around">
-              <button
-                onClick={() => navigateMonth("prev")}
-                className="p-2 disabled:text-(--color-fg-tertiary)"
-                disabled={
-                  // Previous month is in the future OR
-                  new Date(year, month - 2) > new Date() ||
-                  // We are looking at current year and prev would take us to full year
-                  (new Date().getFullYear() === year && month === 1)
-                }
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <p className="font-medium text-xl text-center w-30">
-                {months[month]}
-              </p>
-              <button
-                onClick={() => navigateMonth("next")}
-                className="p-2 disabled:text-(--color-fg-tertiary)"
-                disabled={new Date(year, month) > new Date()}
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-            <div className="flex items-center gap-6 justify-around">
-              <button
-                onClick={() => navigateYear("prev")}
-                className="p-2 disabled:text-(--color-fg-tertiary)"
-                disabled={new Date(year - 1, month) > new Date()}
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <p className="font-medium text-xl text-center w-30">{year}</p>
-              <button
-                onClick={() => navigateYear("next")}
-                className="p-2 disabled:text-(--color-fg-tertiary)"
-                disabled={
-                  // Next year date is in the future OR
-                  new Date(year + 1, month - 1) > new Date() ||
-                  // Next year date is current full year OR
-                  (month == 0 && new Date().getFullYear() === year + 1) ||
-                  // Next year date is current month
-                  (new Date().getMonth() === month - 1 &&
-                    new Date().getFullYear() === year + 1)
-                }
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <label htmlFor="show-time-checkbox">Show time listened?</label>
-            <input
-              type="checkbox"
-              name="show-time-checkbox"
-              checked={showTime}
-              onChange={(e) => setShowTime(!showTime)}
-            ></input>
-          </div>
         </div>
       </div>
     </div>
