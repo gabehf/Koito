@@ -8,9 +8,16 @@ interface Props {
 }
 
 export default function Rewind(props: Props) {
-  const artistimg = props.stats.top_artists[0].image;
-  const albumimg = props.stats.top_albums[0].image;
-  const trackimg = props.stats.top_tracks[0].image;
+  const artistimg = props.stats.top_artists[0]?.image;
+  const albumimg = props.stats.top_albums[0]?.image;
+  const trackimg = props.stats.top_tracks[0]?.image;
+  if (
+    !props.stats.top_artists[0] ||
+    !props.stats.top_albums[0] ||
+    !props.stats.top_tracks[0]
+  ) {
+    return <p>Not enough data exists to create a Rewind for this period :(</p>;
+  }
   return (
     <div className="flex flex-col gap-7">
       <h2>{props.stats.title}</h2>
