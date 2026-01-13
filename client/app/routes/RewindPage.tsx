@@ -46,8 +46,10 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
 
 export default function RewindPage() {
   const currentParams = new URLSearchParams(location.search);
-  let year = parseInt(currentParams.get("year") || "0");
-  let month = parseInt(currentParams.get("month") || "0");
+  let year =
+    parseInt(currentParams.get("year") || "0") || getRewindParams().year;
+  let month =
+    parseInt(currentParams.get("month") || "0") || getRewindParams().month;
   const navigate = useNavigate();
   const [showTime, setShowTime] = useState(false);
   const { stats: stats } = useLoaderData<{ stats: RewindStats }>();
