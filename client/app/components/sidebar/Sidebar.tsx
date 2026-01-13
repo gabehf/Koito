@@ -45,7 +45,9 @@ export default function Sidebar() {
         <SidebarSearch size={iconSize} />
         <SidebarItem
           space={10}
-          to={`/rewind?${getRewindParams()}`}
+          to={`/rewind?year=${getRewindParams().year}&month=${
+            getRewindParams().month
+          }`}
           name="Rewind"
           onClick={() => {}}
           modal={<></>}

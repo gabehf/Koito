@@ -4,7 +4,7 @@ import { imageUrl, type RewindStats } from "api/api";
 import { useEffect, useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
-import { getRewindYear } from "~/utils/utils";
+import { getRewindParams, getRewindYear } from "~/utils/utils";
 import { useNavigate } from "react-router";
 import { average } from "color.js";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -29,8 +29,10 @@ const months = [
 
 export async function clientLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const year = parseInt(url.searchParams.get("year") || "0") || getRewindYear();
-  const month = parseInt(url.searchParams.get("month") || "0");
+  const year =
+    parseInt(url.searchParams.get("year") || "0") || getRewindParams().year;
+  const month =
+    parseInt(url.searchParams.get("month") || "0") || getRewindParams().month;
 
   const res = await fetch(`/apis/web/v1/summary?year=${year}&month=${month}`);
   if (!res.ok) {

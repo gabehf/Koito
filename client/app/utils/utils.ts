@@ -19,12 +19,12 @@ const getRewindYear = (): number => {
   return new Date().getFullYear() - 1;
 };
 
-const getRewindParams = (): string => {
+const getRewindParams = (): { month: number; year: number } => {
   const today = new Date();
   if (today.getMonth() == 0) {
-    return `year=${today.getFullYear() - 1}`;
+    return { month: 0, year: today.getFullYear() - 1 };
   } else {
-    return `month=${today.getMonth()}`;
+    return { month: today.getMonth(), year: today.getFullYear() };
   }
 };
 
