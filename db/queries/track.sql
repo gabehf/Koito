@@ -137,3 +137,13 @@ WHERE artist_id = $1 AND track_id = $2;
 
 -- name: DeleteTrack :exec
 DELETE FROM tracks WHERE id = $1;
+
+-- name: GetTracksWithNoDurationButHaveMbzID :many
+SELECT
+    *
+FROM tracks_with_title
+WHERE duration = 0
+  AND musicbrainz_id IS NOT NULL
+  AND id > $2
+ORDER BY id ASC
+LIMIT $1;
