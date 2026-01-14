@@ -3,7 +3,7 @@
 Koito is a modern, themeable ListenBrainz-compatible scrobbler for self-hosters who want control over their data and insights into their listening habits. 
 It supports relaying to other compatible scrobblers, so you can try it safely without replacing your current setup.
 
-> This project is currently pre-release, and therefore you can expect rapid development and some bugs. If you don't want to replace your current scrobbler
+> This project is under active development and still considered "unstable", and therefore you can expect some bugs. If you don't want to replace your current scrobbler
 with Koito quite yet, you can [set up a relay](https://koito.io/guides/scrobbler/#set-up-a-relay) from Koito to another ListenBrainz-compatible
 scrobbler. This is what I've been doing for the entire development of this app and it hasn't failed me once. Or, you can always use something
 like [multi-scrobbler](https://github.com/FoxxMD/multi-scrobbler).
@@ -23,8 +23,9 @@ You can view my public instance with my listening data at https://koito.mnrva.de
 ## Screenshots
 
 ![screenshot one](assets/screenshot1.png)
-![screenshot two](assets/screenshot2.png)
-![screenshot three](assets/screenshot3.png)
+<img width="2021" height="1330" alt="image" src="https://github.com/user-attachments/assets/956748ff-f61f-4102-94b2-50783d9ee72b" />
+<img width="1505" height="1018" alt="image" src="https://github.com/user-attachments/assets/5f7e1162-f723-4e4b-a528-06cf26d1d870" />
+
 
 ## Installation
 
@@ -84,5 +85,4 @@ Not just during development, you can see my complete listening data on my [live 
 #### Random notes
 
 - I find it a little annoying when READMEs use emoji but everyone else is doing it so I felt like I had to...
-- It's funny how you can see the days in my listening history when I was just working on this project because they have way more listens than other days.
 - About 50% of the reason I built this was minor/not-so-minor greivances with Maloja. Could I have just contributed to Maloja? Maybe, but I like building stuff and I like Koito's UI a lot more anyways.
