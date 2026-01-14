@@ -7,10 +7,12 @@ export default function AllTimeStats() {
     queryFn: ({ queryKey }) => getStats(queryKey[1]),
   });
 
+  const header = "All time stats";
+
   if (isPending) {
     return (
       <div className="w-[200px]">
-        <h3>All Time Stats</h3>
+        <h3>{header}</h3>
         <p>Loading...</p>
       </div>
     );
@@ -18,7 +20,7 @@ export default function AllTimeStats() {
     return (
       <>
         <div>
-          <h3>All Time Stats</h3>
+          <h3>{header}</h3>
           <p className="error">Error: {error.message}</p>
         </div>
       </>
@@ -29,7 +31,7 @@ export default function AllTimeStats() {
 
   return (
     <div>
-      <h3>All Time Stats</h3>
+      <h3>{header}</h3>
       <div>
         <span
           className={numberClasses}
