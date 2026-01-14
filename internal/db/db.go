@@ -16,6 +16,7 @@ type DB interface {
 	GetAlbum(ctx context.Context, opts GetAlbumOpts) (*models.Album, error)
 	GetAlbumWithNoMbzIDByTitles(ctx context.Context, artistId int32, titles []string) (*models.Album, error)
 	GetTrack(ctx context.Context, opts GetTrackOpts) (*models.Track, error)
+	GetTracksWithNoDurationButHaveMbzID(ctx context.Context, from int32) ([]*models.Track, error)
 	GetArtistsForAlbum(ctx context.Context, id int32) ([]*models.Artist, error)
 	GetArtistsForTrack(ctx context.Context, id int32) ([]*models.Artist, error)
 	GetTopTracksPaginated(ctx context.Context, opts GetItemsOpts) (*PaginatedResponse[*models.Track], error)

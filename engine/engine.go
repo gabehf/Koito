@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -105,6 +106,32 @@ func Run(
 		l.Warn().Msg("Engine: MusicBrainz client disabled")
 	}
 
+	if cfg.SubsonicEnabled() {
+		l.Debug().Msg("Engine: Checking Subsonic configuration")
+		pingURL := cfg.SubsonicUrl() + "/rest/ping.view?" + cfg.SubsonicParams() + "&f=json"
+
+		resp, err := http.Get(pingURL)
+		if err != nil {
+			l.Fatal().Err(err).Msg("Engine: Failed to contact Subsonic server! Ensure the provided URL is correct")
+		} else {
+			defer resp.Body.Close()
+
+			var result struct {
+				Response struct {
+					Status string `json:"status"`
+				} `json:"subsonic-response"`
+			}
+
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				l.Fatal().Err(err).Msg("Engine: Failed to parse Subsonic response")
+			} else if result.Response.Status != "ok" {
+				l.Fatal().Msg("Engine: Provided Subsonic credentials are invalid")
+			} else {
+				l.Info().Msg("Engine: Subsonic credentials validated successfully")
+			}
+		}
+	}
+
 	l.Debug().Msg("Engine: Initializing image sources")
 	images.Initialize(images.ImageSourceOpts{
 		UserAgent:      cfg.UserAgent(),
@@ -201,6 +228,8 @@ func Run(
 
 	l.Info().Msg("Engine: Pruning orphaned images")
 	go catalog.PruneOrphanedImages(logger.NewContext(l), store)
+	l.Info().Msg("Engine: Running duration backfill task")
+	go catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzC)
 
 	l.Info().Msg("Engine: Initialization finished")
 	quit := make(chan os.Signal, 1)
@@ -221,19 +250,19 @@ func Run(
 }
 
 func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
-	l.Debug().Msg("Checking for import files...")
+	l.Debug().Msg("Importer: Checking for import files...")
 	files, err := os.ReadDir(path.Join(cfg.ConfigDir(), "import"))
 	if err != nil {
-		l.Err(err).Msg("Failed to read files from import dir")
+		l.Err(err).Msg("Importer: Failed to read files from import dir")
 	}
 	if len(files) > 0 {
-		l.Info().Msg("Files found in import directory. Attempting to import...")
+		l.Info().Msg("Importer: Files found in import directory. Attempting to import...")
 	} else {
 		return
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			l.Error().Interface("recover", r).Msg("Panic when importing files")
+			l.Error().Interface("recover", r).Msg("Importer: Panic when importing files")
 		}
 	}()
 	for _, file := range files {
@@ -241,37 +270,37 @@ func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
 			continue
 		}
 		if strings.Contains(file.Name(), "Streaming_History_Audio") {
-			l.Info().Msgf("Import file %s detecting as being Spotify export", file.Name())
+			l.Info().Msgf("Importer: Import file %s detecting as being Spotify export", file.Name())
 			err := importer.ImportSpotifyFile(logger.NewContext(l), store, file.Name())
 			if err != nil {
-				l.Err(err).Msgf("Failed to import file: %s", file.Name())
+				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
 		} else if strings.Contains(file.Name(), "maloja") {
-			l.Info().Msgf("Import file %s detecting as being Maloja export", file.Name())
+			l.Info().Msgf("Importer: Import file %s detecting as being Maloja export", file.Name())
 			err := importer.ImportMalojaFile(logger.NewContext(l), store, file.Name())
 			if err != nil {
-				l.Err(err).Msgf("Failed to import file: %s", file.Name())
+				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
 		} else if strings.Contains(file.Name(), "recenttracks") {
-			l.Info().Msgf("Import file %s detecting as being ghan.nl LastFM export", file.Name())
+			l.Info().Msgf("Importer: Import file %s detecting as being ghan.nl LastFM export", file.Name())
 			err := importer.ImportLastFMFile(logger.NewContext(l), store, mbzc, file.Name())
 			if err != nil {
-				l.Err(err).Msgf("Failed to import file: %s", file.Name())
+				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
 		} else if strings.Contains(file.Name(), "listenbrainz") {
-			l.Info().Msgf("Import file %s detecting as being ListenBrainz export", file.Name())
+			l.Info().Msgf("Importer: Import file %s detecting as being ListenBrainz export", file.Name())
 			err := importer.ImportListenBrainzExport(logger.NewContext(l), store, mbzc, file.Name())
 			if err != nil {
-				l.Err(err).Msgf("Failed to import file: %s", file.Name())
+				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
 		} else if strings.Contains(file.Name(), "koito") {
-			l.Info().Msgf("Import file %s detecting as being Koito export", file.Name())
+			l.Info().Msgf("Importer: Import file %s detecting as being Koito export", file.Name())
 			err := importer.ImportKoitoFile(logger.NewContext(l), store, file.Name())
 			if err != nil {
-				l.Err(err).Msgf("Failed to import file: %s", file.Name())
+				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
 		} else {
-			l.Warn().Msgf("File %s not recognized as a valid import file; make sure it is valid and named correctly", file.Name())
+			l.Warn().Msgf("Importer: File %s not recognized as a valid import file; make sure it is valid and named correctly", file.Name())
 		}
 	}
 }

@@ -447,6 +447,48 @@ func (q *Queries) GetTrackByTrackInfo(ctx context.Context, arg GetTrackByTrackIn
 	return i, err
 }
 
+const getTracksWithNoDurationButHaveMbzID = `-- name: GetTracksWithNoDurationButHaveMbzID :many
+SELECT
+    id, musicbrainz_id, duration, release_id, title
+FROM tracks_with_title
+WHERE duration = 0
+  AND musicbrainz_id IS NOT NULL
+  AND id > $2
+ORDER BY id ASC
+LIMIT $1
+`
+
+type GetTracksWithNoDurationButHaveMbzIDParams struct {
+	Limit int32
+	ID    int32
+}
+
+func (q *Queries) GetTracksWithNoDurationButHaveMbzID(ctx context.Context, arg GetTracksWithNoDurationButHaveMbzIDParams) ([]TracksWithTitle, error) {
+	rows, err := q.db.Query(ctx, getTracksWithNoDurationButHaveMbzID, arg.Limit, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TracksWithTitle
+	for rows.Next() {
+		var i TracksWithTitle
+		if err := rows.Scan(
+			&i.ID,
+			&i.MusicBrainzID,
+			&i.Duration,
+			&i.ReleaseID,
+			&i.Title,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertTrack = `-- name: InsertTrack :one
 INSERT INTO tracks (musicbrainz_id, release_id, duration)
 VALUES ($1, $2, $3)

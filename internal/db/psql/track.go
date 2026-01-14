@@ -375,3 +375,29 @@ func (d *Psql) SetPrimaryTrackArtist(ctx context.Context, id int32, artistId int
 	}
 	return tx.Commit(ctx)
 }
+
+// returns nil, nil when no results
+func (d *Psql) GetTracksWithNoDurationButHaveMbzID(ctx context.Context, from int32) ([]*models.Track, error) {
+	results, err := d.q.GetTracksWithNoDurationButHaveMbzID(ctx, repository.GetTracksWithNoDurationButHaveMbzIDParams{
+		Limit: 20,
+		ID:    0,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("GetTracksWithNoDurationButHaveMbzID: %w", err)
+	}
+
+	ret := make([]*models.Track, 0)
+
+	for _, v := range results {
+		ret = append(ret, &models.Track{
+			ID:       v.ID,
+			Duration: v.Duration,
+			MbzID:    v.MusicBrainzID,
+			Title:    v.Title,
+		})
+	}
+
+	return ret, nil
+}
