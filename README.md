@@ -1,4 +1,14 @@
-# Koito
+<div align="center">
+  
+![Koito logo](https://github.com/user-attachments/assets/bd69a050-b40f-4da7-8ff1-4607554bfd6d)
+
+</div>
+
+<div align="center">
+  
+  [![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/gabehf)
+  
+</div>
 
 Koito is a modern, themeable ListenBrainz-compatible scrobbler for self-hosters who want control over their data and insights into their listening habits. 
 It supports relaying to other compatible scrobblers, so you can try it safely without replacing your current setup.
