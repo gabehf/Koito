@@ -28,17 +28,19 @@ const TopTracks = (props: Props) => {
     queryFn: ({ queryKey }) => getTopTracks(queryKey[1] as getItemsArgs),
   });
 
+  const header = "Top tracks";
+
   if (isPending) {
     return (
       <div className="w-[300px]">
-        <h3>Top Tracks</h3>
+        <h3>{header}</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <h3>Top Tracks</h3>
+        <h3>{header}</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -53,7 +55,7 @@ const TopTracks = (props: Props) => {
     <div>
       <h3 className="hover:underline">
         <Link to={`/chart/top-tracks?period=${props.period}${params}`}>
-          Top Tracks
+          {header}
         </Link>
       </h3>
       <div className="max-w-[300px]">

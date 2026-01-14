@@ -21,17 +21,19 @@ export default function TopArtists(props: Props) {
     queryFn: ({ queryKey }) => getTopArtists(queryKey[1] as getItemsArgs),
   });
 
+  const header = "Top artists";
+
   if (isPending) {
     return (
       <div className="w-[300px]">
-        <h3>Top Artists</h3>
+        <h3>{header}</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <h3>Top Artists</h3>
+        <h3>{header}</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -40,9 +42,7 @@ export default function TopArtists(props: Props) {
   return (
     <div>
       <h3 className="hover:underline">
-        <Link to={`/chart/top-artists?period=${props.period}`}>
-          Top Artists
-        </Link>
+        <Link to={`/chart/top-artists?period=${props.period}`}>{header}</Link>
       </h3>
       <div className="max-w-[300px]">
         <TopItemList type="artist" data={data} />

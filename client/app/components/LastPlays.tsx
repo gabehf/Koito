@@ -42,6 +42,8 @@ export default function LastPlays(props: Props) {
     queryFn: () => getNowPlaying(),
   });
 
+  const header = "Last played";
+
   const [items, setItems] = useState<Listen[] | null>(null);
 
   const handleDelete = async (listen: Listen) => {
@@ -63,14 +65,14 @@ export default function LastPlays(props: Props) {
   if (isPending) {
     return (
       <div className="w-[300px] sm:w-[500px]">
-        <h3>Last Played</h3>
+        <h3>{header}</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px] sm:w-[500px]">
-        <h3>Last Played</h3>
+        <h3>{header}</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -86,7 +88,7 @@ export default function LastPlays(props: Props) {
   return (
     <div className="text-sm sm:text-[16px]">
       <h3 className="hover:underline">
-        <Link to={`/listens?period=all_time${params}`}>Last Played</Link>
+        <Link to={`/listens?period=all_time${params}`}>{header}</Link>
       </h3>
       <table className="-ml-4">
         <tbody>

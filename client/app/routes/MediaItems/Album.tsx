@@ -50,17 +50,17 @@ export default function Album() {
               {album.listen_count} play{album.listen_count > 1 ? "s" : ""}
             </p>
           )}
-          {
+          {album.time_listened && (
             <p title={Math.floor(album.time_listened / 60 / 60) + " hours"}>
               {timeListenedString(album.time_listened)}
             </p>
-          }
-          {
+          )}
+          {album.first_listen && (
             <p title={new Date(album.first_listen * 1000).toLocaleString()}>
               Listening since{" "}
               {new Date(album.first_listen * 1000).toLocaleDateString()}
             </p>
-          }
+          )}
         </div>
       }
     >

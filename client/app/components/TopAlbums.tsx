@@ -30,17 +30,19 @@ export default function TopAlbums(props: Props) {
     queryFn: ({ queryKey }) => getTopAlbums(queryKey[1] as getItemsArgs),
   });
 
+  const header = "Top albums";
+
   if (isPending) {
     return (
       <div className="w-[300px]">
-        <h3>Top Albums</h3>
+        <h3>{header}</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <h3>Top Albums</h3>
+        <h3>{header}</h3>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -54,7 +56,7 @@ export default function TopAlbums(props: Props) {
             props.artistId ? `&artist_id=${props.artistId}` : ""
           }`}
         >
-          Top Albums
+          {header}
         </Link>
       </h3>
       <div className="max-w-[300px]">
