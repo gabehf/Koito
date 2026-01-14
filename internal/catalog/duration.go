@@ -21,6 +21,7 @@ func BackfillTrackDurationsFromMusicBrainz(
 	var from int32 = 0
 
 	for {
+		l.Debug().Int32("ID", from).Msg("Fetching tracks to backfill from ID")
 		tracks, err := store.GetTracksWithNoDurationButHaveMbzID(ctx, from)
 		if err != nil {
 			return fmt.Errorf("BackfillTrackDurationsFromMusicBrainz: failed to fetch tracks for duration backfill: %w", err)
