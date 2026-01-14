@@ -380,7 +380,7 @@ func (d *Psql) SetPrimaryTrackArtist(ctx context.Context, id int32, artistId int
 func (d *Psql) GetTracksWithNoDurationButHaveMbzID(ctx context.Context, from int32) ([]*models.Track, error) {
 	results, err := d.q.GetTracksWithNoDurationButHaveMbzID(ctx, repository.GetTracksWithNoDurationButHaveMbzIDParams{
 		Limit: 20,
-		ID:    0,
+		ID:    from,
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
