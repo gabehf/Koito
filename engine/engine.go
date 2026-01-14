@@ -108,7 +108,7 @@ func Run(
 
 	if cfg.SubsonicEnabled() {
 		l.Debug().Msg("Engine: Checking Subsonic configuration")
-		pingURL := cfg.SubsonicUrl() + "/rest/ping.view?" + cfg.SubsonicParams() + "&f=json"
+		pingURL := cfg.SubsonicUrl() + "/rest/ping.view?" + cfg.SubsonicParams() + "&f=json&v=1&c=koito"
 
 		resp, err := http.Get(pingURL)
 		if err != nil {
