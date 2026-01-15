@@ -2,6 +2,8 @@
   
 ![Koito logo](https://github.com/user-attachments/assets/bd69a050-b40f-4da7-8ff1-4607554bfd6d)
 
+*Koito (小糸) is a Japanese surname. It is also homophonous with the words 恋と (koi to), meaning "and/with love".*
+
 </div>
 
 <div align="center">
