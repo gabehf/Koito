@@ -45,17 +45,17 @@ export default function Album() {
       }}
       subContent={
         <div className="flex flex-col gap-2 items-start">
-          {album.listen_count && (
+          {album.listen_count !== 0 && (
             <p>
               {album.listen_count} play{album.listen_count > 1 ? "s" : ""}
             </p>
           )}
-          {album.time_listened && (
+          {album.time_listened !== 0 && (
             <p title={Math.floor(album.time_listened / 60 / 60) + " hours"}>
               {timeListenedString(album.time_listened)}
             </p>
           )}
-          {album.first_listen && (
+          {album.first_listen > 0 && (
             <p title={new Date(album.first_listen * 1000).toLocaleString()}>
               Listening since{" "}
               {new Date(album.first_listen * 1000).toLocaleDateString()}

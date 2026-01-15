@@ -56,17 +56,17 @@ export default function Artist() {
               {artist.listen_count} play{artist.listen_count > 1 ? "s" : ""}
             </p>
           )}
-          {
+          {artist.time_listened !== 0 && (
             <p title={Math.floor(artist.time_listened / 60 / 60) + " hours"}>
               {timeListenedString(artist.time_listened)}
             </p>
-          }
-          {
+          )}
+          {artist.first_listen > 0 && (
             <p title={new Date(artist.first_listen * 1000).toLocaleString()}>
               Listening since{" "}
               {new Date(artist.first_listen * 1000).toLocaleDateString()}
             </p>
-          }
+          )}
         </div>
       }
     >
