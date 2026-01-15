@@ -106,7 +106,7 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		activity = fillMissingActivity(activity, opts)
+		activity = processActivity(activity, opts)
 
 		l.Debug().Msg("GetListenActivityHandler: Successfully retrieved listen activity")
 		utils.WriteJSON(w, http.StatusOK, activity)
@@ -114,32 +114,53 @@ func GetListenActivityHandler(store db.DB) func(w http.ResponseWriter, r *http.R
 }
 
 // ngl i hate this
-func fillMissingActivity(
+func processActivity(
 	items []db.ListenActivityItem,
 	opts db.ListenActivityOpts,
 ) []db.ListenActivityItem {
 	from, to := db.ListenActivityOptsToTimes(opts)
 
-	existing := make(map[string]int64, len(items))
+	buckets := make(map[string]int64)
+
 	for _, item := range items {
-		existing[item.Start.Format("2006-01-02")] = item.Listens
+		bucketStart := normalizeToStep(item.Start, opts.Step)
+		key := bucketStart.Format("2006-01-02")
+		buckets[key] += item.Listens
 	}
 
 	var result []db.ListenActivityItem
 
-	for t := from; t.Before(to); t = addStep(t, opts.Step) {
-		listens := int64(0)
-		if v, ok := existing[t.Format("2006-01-02")]; ok {
-			listens = v
-		}
+	for t := normalizeToStep(from, opts.Step); t.Before(to); t = addStep(t, opts.Step) {
+		key := t.Format("2006-01-02")
 
 		result = append(result, db.ListenActivityItem{
 			Start:   t,
-			Listens: int64(listens),
+			Listens: buckets[key],
 		})
 	}
 
 	return result
+}
+
+func normalizeToStep(t time.Time, step db.StepInterval) time.Time {
+	switch step {
+	case db.StepDay:
+		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+
+	case db.StepWeek:
+		weekday := int(t.Weekday())
+		if weekday == 0 {
+			weekday = 7
+		}
+		start := t.AddDate(0, 0, -(weekday - 1))
+		return time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, t.Location())
+
+	case db.StepMonth:
+		return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
+
+	default:
+		return t
+	}
 }
 
 func addStep(t time.Time, step db.StepInterval) time.Time {

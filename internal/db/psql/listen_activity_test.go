@@ -2,6 +2,7 @@ package psql_test
 
 import (
 	"context"
+	"log"
 	"testing"
 
 	"github.com/gabehf/koito/internal/db"
@@ -97,20 +98,20 @@ func TestListenActivity(t *testing.T) {
 
 	err = store.Exec(context.Background(),
 		`INSERT INTO listens (user_id, track_id, listened_at)
-			VALUES (1, 1, NOW() - INTERVAL '1 month'),
+			VALUES (1, 1, NOW() - INTERVAL '1 month 3 days'),
 				   (1, 1, NOW() - INTERVAL '2 months'),
 				   (1, 1, NOW() - INTERVAL '3 months'),
-				   (1, 2, NOW() - INTERVAL '1 month'),
+				   (1, 2, NOW() - INTERVAL '1 month 3 days'),
+				   (1, 2, NOW() - INTERVAL '1 hour'),
+				   (1, 2, NOW()),
 				   (1, 2, NOW() - INTERVAL '2 months')`)
 	require.NoError(t, err)
 
-	// This test is bad, and I think it's because of daylight savings.
-	// I need to find a better test.
-
 	activity, err = store.GetListenActivity(ctx, db.ListenActivityOpts{Step: db.StepMonth, Range: 8})
 	require.NoError(t, err)
-	// require.Len(t, activity, 8)
-	// assert.Equal(t, []int64{0, 0, 0, 0, 1, 2, 2, 0}, flattenListenCounts(activity))
+	require.Len(t, activity, 4)
+	assert.Equal(t, []int64{1, 2, 2, 2, 1}, flattenListenCounts(activity))
+	log.Println(activity)
 
 	// Truncate listens table and insert specific dates for testing opts.Step = db.StepYear
 	err = store.Exec(context.Background(), `TRUNCATE TABLE listens RESTART IDENTITY`)

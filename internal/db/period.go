@@ -91,7 +91,9 @@ func ListenActivityOptsToTimes(opts ListenActivityOpts) (start, end time.Time) {
 		// Align to most recent Sunday
 		weekday := int(now.Weekday()) // Sunday = 0
 		startOfThisWeek := time.Date(now.Year(), now.Month(), now.Day()-weekday, 0, 0, 0, 0, loc)
-		start = startOfThisWeek.AddDate(0, 0, -7*opts.Range)
+		// need to subtract 1 from range for week because we are going back from the beginning of this
+		// week, so we sort of already went back a week
+		start = startOfThisWeek.AddDate(0, 0, -7*(opts.Range-1))
 		end = startOfThisWeek.AddDate(0, 0, 7).Add(-time.Nanosecond)
 
 	case StepMonth:
