@@ -2,7 +2,6 @@ package psql_test
 
 import (
 	"context"
-	"log"
 	"testing"
 
 	"github.com/gabehf/koito/internal/db"
@@ -111,7 +110,6 @@ func TestListenActivity(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, activity, 4)
 	assert.Equal(t, []int64{1, 2, 2, 2, 1}, flattenListenCounts(activity))
-	log.Println(activity)
 
 	// Truncate listens table and insert specific dates for testing opts.Step = db.StepYear
 	err = store.Exec(context.Background(), `TRUNCATE TABLE listens RESTART IDENTITY`)
