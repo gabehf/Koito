@@ -74,9 +74,6 @@ func matchTrackByMbzID(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*
 		} else {
 			l.Warn().Msgf("Attempted to update track %s with MusicBrainz ID, but an existing ID was already found", track.Title)
 		}
-		if err != nil {
-			return nil, fmt.Errorf("matchTrackByMbzID: %w", err)
-		}
 		track.MbzID = &opts.TrackMbzID
 		return track, nil
 	}
