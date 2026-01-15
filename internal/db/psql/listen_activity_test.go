@@ -97,19 +97,19 @@ func TestListenActivity(t *testing.T) {
 
 	err = store.Exec(context.Background(),
 		`INSERT INTO listens (user_id, track_id, listened_at)
-			VALUES (1, 1, NOW() - INTERVAL '1 month 3 days'),
-				   (1, 1, NOW() - INTERVAL '2 months'),
-				   (1, 1, NOW() - INTERVAL '3 months'),
-				   (1, 2, NOW() - INTERVAL '1 month 3 days'),
+			VALUES (1, 1, NOW() - INTERVAL '1 month 1 day'),
+				   (1, 1, NOW() - INTERVAL '2 months 1 day'),
+				   (1, 1, NOW() - INTERVAL '3 months 1 day'),
+				   (1, 2, NOW() - INTERVAL '1 month 1 day'),
 				   (1, 2, NOW() - INTERVAL '1 hour'),
-				   (1, 2, NOW()),
-				   (1, 2, NOW() - INTERVAL '2 months')`)
+				   (1, 2, NOW() - INTERVAL '1 minute'),
+				   (1, 2, NOW() - INTERVAL '2 months 1 day')`)
 	require.NoError(t, err)
 
 	activity, err = store.GetListenActivity(ctx, db.ListenActivityOpts{Step: db.StepMonth, Range: 8})
 	require.NoError(t, err)
 	require.Len(t, activity, 4)
-	assert.Equal(t, []int64{1, 2, 2, 2, 1}, flattenListenCounts(activity))
+	assert.Equal(t, []int64{1, 2, 2, 2}, flattenListenCounts(activity))
 
 	// Truncate listens table and insert specific dates for testing opts.Step = db.StepYear
 	err = store.Exec(context.Background(), `TRUNCATE TABLE listens RESTART IDENTITY`)
