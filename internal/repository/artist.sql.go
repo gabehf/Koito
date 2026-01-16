@@ -134,6 +134,39 @@ func (q *Queries) GetArtist(ctx context.Context, id int32) (GetArtistRow, error)
 	return i, err
 }
 
+const getArtistAllTimeRank = `-- name: GetArtistAllTimeRank :one
+SELECT
+    artist_id,
+    rank
+FROM (
+    SELECT
+        x.artist_id,
+        RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    FROM (
+        SELECT
+            at.artist_id,
+            COUNT(*) AS listen_count
+        FROM listens l
+        JOIN tracks t ON l.track_id = t.id
+        JOIN artist_tracks at ON t.id = at.track_id
+        GROUP BY at.artist_id
+        ) x
+    )
+WHERE artist_id = $1
+`
+
+type GetArtistAllTimeRankRow struct {
+	ArtistID int32
+	Rank     int64
+}
+
+func (q *Queries) GetArtistAllTimeRank(ctx context.Context, artistID int32) (GetArtistAllTimeRankRow, error) {
+	row := q.db.QueryRow(ctx, getArtistAllTimeRank, artistID)
+	var i GetArtistAllTimeRankRow
+	err := row.Scan(&i.ArtistID, &i.Rank)
+	return i, err
+}
+
 const getArtistByImage = `-- name: GetArtistByImage :one
 SELECT id, musicbrainz_id, image, image_source FROM artists WHERE image = $1 LIMIT 1
 `

@@ -23,32 +23,13 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 	var err error
 	var ret = new(models.Album)
 
-	if opts.ID != 0 {
-		l.Debug().Msgf("Fetching album from DB with id %d", opts.ID)
-		row, err := d.q.GetRelease(ctx, opts.ID)
-		if err != nil {
-			return nil, fmt.Errorf("GetAlbum: %w", err)
-		}
-		ret.ID = row.ID
-		ret.MbzID = row.MusicBrainzID
-		ret.Title = row.Title
-		ret.Image = row.Image
-		ret.VariousArtists = row.VariousArtists
-		err = json.Unmarshal(row.Artists, &ret.Artists)
-		if err != nil {
-			return nil, fmt.Errorf("GetAlbum: json.Unmarshal: %w", err)
-		}
-	} else if opts.MusicBrainzID != uuid.Nil {
+	if opts.MusicBrainzID != uuid.Nil {
 		l.Debug().Msgf("Fetching album from DB with MusicBrainz Release ID %s", opts.MusicBrainzID)
 		row, err := d.q.GetReleaseByMbzID(ctx, &opts.MusicBrainzID)
 		if err != nil {
 			return nil, fmt.Errorf("GetAlbum: %w", err)
 		}
-		ret.ID = row.ID
-		ret.MbzID = row.MusicBrainzID
-		ret.Title = row.Title
-		ret.Image = row.Image
-		ret.VariousArtists = row.VariousArtists
+		opts.ID = row.ID
 	} else if opts.ArtistID != 0 && opts.Title != "" {
 		l.Debug().Msgf("Fetching album from DB with artist_id %d and title %s", opts.ArtistID, opts.Title)
 		row, err := d.q.GetReleaseByArtistAndTitle(ctx, repository.GetReleaseByArtistAndTitleParams{
@@ -58,11 +39,7 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 		if err != nil {
 			return nil, fmt.Errorf("GetAlbum: %w", err)
 		}
-		ret.ID = row.ID
-		ret.MbzID = row.MusicBrainzID
-		ret.Title = row.Title
-		ret.Image = row.Image
-		ret.VariousArtists = row.VariousArtists
+		opts.ID = row.ID
 	} else if opts.ArtistID != 0 && len(opts.Titles) > 0 {
 		l.Debug().Msgf("Fetching release group from DB with artist_id %d and titles %v", opts.ArtistID, opts.Titles)
 		row, err := d.q.GetReleaseByArtistAndTitles(ctx, repository.GetReleaseByArtistAndTitlesParams{
@@ -72,19 +49,19 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 		if err != nil {
 			return nil, fmt.Errorf("GetAlbum: %w", err)
 		}
-		ret.ID = row.ID
-		ret.MbzID = row.MusicBrainzID
-		ret.Title = row.Title
-		ret.Image = row.Image
-		ret.VariousArtists = row.VariousArtists
-	} else {
-		return nil, errors.New("GetAlbum: insufficient information to get album")
+		opts.ID = row.ID
+	}
+
+	l.Debug().Msgf("Fetching album from DB with id %d", opts.ID)
+	row, err := d.q.GetRelease(ctx, opts.ID)
+	if err != nil {
+		return nil, fmt.Errorf("GetAlbum: %w", err)
 	}
 
 	count, err := d.q.CountListensFromRelease(ctx, repository.CountListensFromReleaseParams{
 		ListenedAt:   time.Unix(0, 0),
 		ListenedAt_2: time.Now(),
-		ReleaseID:    ret.ID,
+		ReleaseID:    opts.ID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("GetAlbum: CountListensFromRelease: %w", err)
@@ -92,17 +69,32 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 
 	seconds, err := d.CountTimeListenedToItem(ctx, db.TimeListenedOpts{
 		Timeframe: db.Timeframe{Period: db.PeriodAllTime},
-		AlbumID:   ret.ID,
+		AlbumID:   opts.ID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("GetAlbum: CountTimeListenedToItem: %w", err)
 	}
 
-	firstListen, err := d.q.GetFirstListenFromRelease(ctx, ret.ID)
+	firstListen, err := d.q.GetFirstListenFromRelease(ctx, opts.ID)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, fmt.Errorf("GetAlbum: GetFirstListenFromRelease: %w", err)
 	}
 
+	rank, err := d.q.GetReleaseAllTimeRank(ctx, opts.ID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("GetAlbum: GetReleaseAllTimeRank: %w", err)
+	}
+
+	ret.ID = row.ID
+	ret.MbzID = row.MusicBrainzID
+	ret.Title = row.Title
+	ret.Image = row.Image
+	ret.VariousArtists = row.VariousArtists
+	err = json.Unmarshal(row.Artists, &ret.Artists)
+	if err != nil {
+		return nil, fmt.Errorf("GetAlbum: json.Unmarshal: %w", err)
+	}
+	ret.AllTimeRank = rank.Rank
 	ret.ListenCount = count
 	ret.TimeListened = seconds
 	ret.FirstListen = firstListen.ListenedAt.Unix()

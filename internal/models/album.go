@@ -12,11 +12,5 @@ type Album struct {
 	ListenCount    int64          `json:"listen_count"`
 	TimeListened   int64          `json:"time_listened"`
 	FirstListen    int64          `json:"first_listen"`
+	AllTimeRank    int64          `json:"all_time_rank"`
 }
-
-// type SimpleAlbum struct {
-// 	ID             int32     `json:"id"`
-// 	Title          string    `json:"title"`
-// 	VariousArtists bool      `json:"is_various_artists"`
-// 	Image          uuid.UUID `json:"image"`
-// }

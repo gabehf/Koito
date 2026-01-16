@@ -8,9 +8,9 @@ interface Props {
 }
 
 export default function Rewind(props: Props) {
-  const artistimg = props.stats.top_artists[0]?.image;
-  const albumimg = props.stats.top_albums[0]?.image;
-  const trackimg = props.stats.top_tracks[0]?.image;
+  const artistimg = props.stats.top_artists[0]?.item.image;
+  const albumimg = props.stats.top_albums[0]?.item.image;
+  const trackimg = props.stats.top_tracks[0]?.item.image;
   if (
     !props.stats.top_artists[0] ||
     !props.stats.top_albums[0] ||

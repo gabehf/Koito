@@ -36,6 +36,7 @@ export default function Artist() {
       title={artist.name}
       img={artist.image}
       id={artist.id}
+      rank={artist.all_time_rank}
       musicbrainzId={artist.musicbrainz_id}
       imgItemId={artist.id}
       mergeFunc={mergeArtists}
