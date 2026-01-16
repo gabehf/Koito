@@ -141,6 +141,38 @@ func (q *Queries) GetRelease(ctx context.Context, id int32) (GetReleaseRow, erro
 	return i, err
 }
 
+const getReleaseAllTimeRank = `-- name: GetReleaseAllTimeRank :one
+SELECT
+    release_id,
+    rank
+FROM (
+    SELECT
+        x.release_id,
+        RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    FROM (
+        SELECT
+            t.release_id,
+            COUNT(*) AS listen_count
+        FROM listens l
+        JOIN tracks t ON l.track_id = t.id
+        GROUP BY t.release_id
+        ) x
+    )
+WHERE release_id = $1
+`
+
+type GetReleaseAllTimeRankRow struct {
+	ReleaseID int32
+	Rank      int64
+}
+
+func (q *Queries) GetReleaseAllTimeRank(ctx context.Context, releaseID int32) (GetReleaseAllTimeRankRow, error) {
+	row := q.db.QueryRow(ctx, getReleaseAllTimeRank, releaseID)
+	var i GetReleaseAllTimeRankRow
+	err := row.Scan(&i.ReleaseID, &i.Rank)
+	return i, err
+}
+
 const getReleaseByArtistAndTitle = `-- name: GetReleaseByArtistAndTitle :one
 SELECT r.id, r.musicbrainz_id, r.image, r.various_artists, r.image_source, r.title
 FROM releases_with_title r

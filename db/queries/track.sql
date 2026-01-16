@@ -124,6 +124,24 @@ FROM (
 ORDER BY x.listen_count DESC, x.id
 LIMIT $3 OFFSET $4;
 
+-- name: GetTrackAllTimeRank :one
+SELECT
+    id,
+    rank
+FROM (
+    SELECT
+        x.id,
+        RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    FROM (
+        SELECT
+            t.id,
+            COUNT(*) AS listen_count
+        FROM listens l
+        JOIN tracks_with_title t ON l.track_id = t.id
+        GROUP BY t.id) x
+    ) y
+WHERE id = $1;
+
 -- name: CountTopTracks :one
 SELECT COUNT(DISTINCT l.track_id) AS total_count
 FROM listens l

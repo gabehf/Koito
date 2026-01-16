@@ -83,6 +83,25 @@ FROM (
 ORDER BY listen_count DESC, x.id
 LIMIT $3 OFFSET $4;
 
+-- name: GetReleaseAllTimeRank :one
+SELECT
+    release_id,
+    rank
+FROM (
+    SELECT
+        x.release_id,
+        RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    FROM (
+        SELECT
+            t.release_id,
+            COUNT(*) AS listen_count
+        FROM listens l
+        JOIN tracks t ON l.track_id = t.id
+        GROUP BY t.release_id
+        ) x
+    )
+WHERE release_id = $1;
+
 -- name: CountTopReleases :one
 SELECT COUNT(DISTINCT r.id) AS total_count
 FROM listens l

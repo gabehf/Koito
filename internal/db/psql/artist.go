@@ -20,114 +20,60 @@ import (
 // this function sucks because sqlc keeps making new types for rows that are the same
 func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Artist, error) {
 	l := logger.FromContext(ctx)
-	if opts.ID != 0 {
-		l.Debug().Msgf("Fetching artist from DB with id %d", opts.ID)
-		row, err := d.q.GetArtist(ctx, opts.ID)
-		if err != nil {
-			return nil, fmt.Errorf("GetArtist: GetArtist by ID: %w", err)
-		}
-		count, err := d.q.CountListensFromArtist(ctx, repository.CountListensFromArtistParams{
-			ListenedAt:   time.Unix(0, 0),
-			ListenedAt_2: time.Now(),
-			ArtistID:     row.ID,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("GetArtist: CountListensFromArtist: %w", err)
-		}
-		seconds, err := d.CountTimeListenedToItem(ctx, db.TimeListenedOpts{
-			Timeframe: db.Timeframe{Period: db.PeriodAllTime},
-			ArtistID:  row.ID,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
-		}
-		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
-		}
-		return &models.Artist{
-			ID:           row.ID,
-			MbzID:        row.MusicBrainzID,
-			Name:         row.Name,
-			Aliases:      row.Aliases,
-			Image:        row.Image,
-			ListenCount:  count,
-			TimeListened: seconds,
-			FirstListen:  firstListen.ListenedAt.Unix(),
-		}, nil
-	} else if opts.MusicBrainzID != uuid.Nil {
+	if opts.MusicBrainzID != uuid.Nil {
 		l.Debug().Msgf("Fetching artist from DB with MusicBrainz ID %s", opts.MusicBrainzID)
 		row, err := d.q.GetArtistByMbzID(ctx, &opts.MusicBrainzID)
 		if err != nil {
 			return nil, fmt.Errorf("GetArtist: GetArtistByMbzID: %w", err)
 		}
-		count, err := d.q.CountListensFromArtist(ctx, repository.CountListensFromArtistParams{
-			ListenedAt:   time.Unix(0, 0),
-			ListenedAt_2: time.Now(),
-			ArtistID:     row.ID,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("GetArtist: CountListensFromArtist: %w", err)
-		}
-		seconds, err := d.CountTimeListenedToItem(ctx, db.TimeListenedOpts{
-			Timeframe: db.Timeframe{Period: db.PeriodAllTime},
-			ArtistID:  row.ID,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
-		}
-		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
-		}
-		return &models.Artist{
-			ID:           row.ID,
-			MbzID:        row.MusicBrainzID,
-			Name:         row.Name,
-			Aliases:      row.Aliases,
-			Image:        row.Image,
-			ListenCount:  count,
-			TimeListened: seconds,
-			FirstListen:  firstListen.ListenedAt.Unix(),
-		}, nil
+		opts.ID = row.ID
 	} else if opts.Name != "" {
 		l.Debug().Msgf("Fetching artist from DB with name '%s'", opts.Name)
 		row, err := d.q.GetArtistByName(ctx, opts.Name)
 		if err != nil {
 			return nil, fmt.Errorf("GetArtist: GetArtistByName: %w", err)
 		}
-		count, err := d.q.CountListensFromArtist(ctx, repository.CountListensFromArtistParams{
-			ListenedAt:   time.Unix(0, 0),
-			ListenedAt_2: time.Now(),
-			ArtistID:     row.ID,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("GetArtist: CountListensFromArtist: %w", err)
-		}
-		seconds, err := d.CountTimeListenedToItem(ctx, db.TimeListenedOpts{
-			Timeframe: db.Timeframe{Period: db.PeriodAllTime},
-			ArtistID:  row.ID,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
-		}
-		firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
-		}
-		return &models.Artist{
-			ID:           row.ID,
-			MbzID:        row.MusicBrainzID,
-			Name:         row.Name,
-			Aliases:      row.Aliases,
-			Image:        row.Image,
-			ListenCount:  count,
-			TimeListened: seconds,
-			FirstListen:  firstListen.ListenedAt.Unix(),
-		}, nil
-	} else {
-		return nil, errors.New("insufficient information to get artist")
+		opts.ID = row.ID
 	}
+	l.Debug().Msgf("Fetching artist from DB with id %d", opts.ID)
+	row, err := d.q.GetArtist(ctx, opts.ID)
+	if err != nil {
+		return nil, fmt.Errorf("GetArtist: GetArtist by ID: %w", err)
+	}
+	count, err := d.q.CountListensFromArtist(ctx, repository.CountListensFromArtistParams{
+		ListenedAt:   time.Unix(0, 0),
+		ListenedAt_2: time.Now(),
+		ArtistID:     row.ID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("GetArtist: CountListensFromArtist: %w", err)
+	}
+	seconds, err := d.CountTimeListenedToItem(ctx, db.TimeListenedOpts{
+		Timeframe: db.Timeframe{Period: db.PeriodAllTime},
+		ArtistID:  row.ID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("GetArtist: CountTimeListenedToItem: %w", err)
+	}
+	firstListen, err := d.q.GetFirstListenFromArtist(ctx, row.ID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
+	}
+	rank, err := d.q.GetArtistAllTimeRank(ctx, opts.ID)
+	if err != nil {
+		return nil, fmt.Errorf("GetArtist: GetArtistAllTimeRank: %w", err)
+	}
+	return &models.Artist{
+		ID:           row.ID,
+		MbzID:        row.MusicBrainzID,
+		Name:         row.Name,
+		Aliases:      row.Aliases,
+		Image:        row.Image,
+		ListenCount:  count,
+		TimeListened: seconds,
+		AllTimeRank:  rank.Rank,
+		FirstListen:  firstListen.ListenedAt.Unix(),
+	}, nil
 }
 
 // Inserts all unique aliases into the DB with specified source

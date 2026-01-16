@@ -28,6 +28,7 @@ interface Props {
   title: string;
   img: string;
   id: number;
+  rank: number;
   musicbrainzId: string;
   imgItemId: number;
   mergeFunc: MergeFunc;
@@ -96,7 +97,15 @@ export default function MediaLayout(props: Props) {
           </div>
           <div className="flex flex-col items-start">
             <h3>{props.type}</h3>
-            <h1>{props.title}</h1>
+            <div className="flex">
+              <h1>
+                {props.title}
+                <span className="text-xl font-medium text-(--color-fg-secondary)">
+                  {" "}
+                  #{props.rank}
+                </span>
+              </h1>
+            </div>
             {props.subContent}
           </div>
           <div className="absolute left-1 sm:right-1 sm:left-auto -top-9 sm:top-1 flex gap-3 items-center">

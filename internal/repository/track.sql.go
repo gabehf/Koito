@@ -438,6 +438,37 @@ func (q *Queries) GetTrack(ctx context.Context, id int32) (GetTrackRow, error) {
 	return i, err
 }
 
+const getTrackAllTimeRank = `-- name: GetTrackAllTimeRank :one
+SELECT
+    id,
+    rank
+FROM (
+    SELECT
+        x.id,
+        RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    FROM (
+        SELECT
+            t.id,
+            COUNT(*) AS listen_count
+        FROM listens l
+        JOIN tracks_with_title t ON l.track_id = t.id
+        GROUP BY t.id) x
+    ) y
+WHERE id = $1
+`
+
+type GetTrackAllTimeRankRow struct {
+	ID   int32
+	Rank int64
+}
+
+func (q *Queries) GetTrackAllTimeRank(ctx context.Context, id int32) (GetTrackAllTimeRankRow, error) {
+	row := q.db.QueryRow(ctx, getTrackAllTimeRank, id)
+	var i GetTrackAllTimeRankRow
+	err := row.Scan(&i.ID, &i.Rank)
+	return i, err
+}
+
 const getTrackByMbzID = `-- name: GetTrackByMbzID :one
 SELECT id, musicbrainz_id, duration, release_id, title FROM tracks_with_title
 WHERE musicbrainz_id = $1 LIMIT 1

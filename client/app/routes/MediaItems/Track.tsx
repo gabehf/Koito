@@ -34,6 +34,7 @@ export default function Track() {
       title={track.title}
       img={track.image}
       id={track.id}
+      rank={track.all_time_rank}
       musicbrainzId={track.musicbrainz_id}
       imgItemId={track.album_id}
       mergeFunc={mergeTracks}

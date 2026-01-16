@@ -81,6 +81,26 @@ FROM (
 ORDER BY x.listen_count DESC, x.id
 LIMIT $3 OFFSET $4;
 
+-- name: GetArtistAllTimeRank :one
+SELECT
+    artist_id,
+    rank
+FROM (
+    SELECT
+        x.artist_id,
+        RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    FROM (
+        SELECT
+            at.artist_id,
+            COUNT(*) AS listen_count
+        FROM listens l
+        JOIN tracks t ON l.track_id = t.id
+        JOIN artist_tracks at ON t.id = at.track_id
+        GROUP BY at.artist_id
+        ) x
+    )
+WHERE artist_id = $1;
+
 -- name: CountTopArtists :one
 SELECT COUNT(DISTINCT at.artist_id) AS total_count
 FROM listens l

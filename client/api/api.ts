@@ -367,6 +367,7 @@ type Track = {
   musicbrainz_id: string;
   time_listened: number;
   first_listen: number;
+  all_time_rank: number;
 };
 type Artist = {
   id: number;
@@ -378,6 +379,7 @@ type Artist = {
   time_listened: number;
   first_listen: number;
   is_primary: boolean;
+  all_time_rank: number;
 };
 type Album = {
   id: number;
@@ -389,6 +391,7 @@ type Album = {
   musicbrainz_id: string;
   time_listened: number;
   first_listen: number;
+  all_time_rank: number;
 };
 type Alias = {
   id: number;

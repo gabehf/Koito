@@ -30,6 +30,7 @@ export default function Album() {
       title={album.title}
       img={album.image}
       id={album.id}
+      rank={album.all_time_rank}
       musicbrainzId={album.musicbrainz_id}
       imgItemId={album.id}
       mergeFunc={mergeAlbums}
