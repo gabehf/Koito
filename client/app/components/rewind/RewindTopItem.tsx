@@ -1,7 +1,9 @@
+import type { Ranked } from "api/api";
+
 type TopItemProps<T> = {
   title: string;
   imageSrc: string;
-  items: T[];
+  items: Ranked<T>[];
   getLabel: (item: T) => string;
   includeTime?: boolean;
 };
@@ -28,23 +30,23 @@ export function RewindTopItem<
 
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-start mb-2">
-            <h2>{getLabel(top)}</h2>
+            <h2>{getLabel(top.item)}</h2>
             <span className="text-(--color-fg-tertiary) -mt-3 text-sm">
-              {`${top.listen_count} plays`}
+              {`${top.item.listen_count} plays`}
               {includeTime
-                ? ` (${Math.floor(top.time_listened / 60)} minutes)`
+                ? ` (${Math.floor(top.item.time_listened / 60)} minutes)`
                 : ``}
             </span>
           </div>
         </div>
 
         {rest.map((e) => (
-          <div key={e.id} className="text-sm">
-            {getLabel(e)}
+          <div key={e.item.id} className="text-sm">
+            {getLabel(e.item)}
             <span className="text-(--color-fg-tertiary)">
-              {` - ${e.listen_count} plays`}
+              {` - ${e.item.listen_count} plays`}
               {includeTime
-                ? ` (${Math.floor(e.time_listened / 60)} minutes)`
+                ? ` (${Math.floor(e.item.time_listened / 60)} minutes)`
                 : ``}
             </span>
           </div>

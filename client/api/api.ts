@@ -462,9 +462,9 @@ type NowPlaying = {
 };
 type RewindStats = {
   title: string;
-  top_artists: Artist[];
-  top_albums: Album[];
-  top_tracks: Track[];
+  top_artists: Ranked<Artist>[];
+  top_albums: Ranked<Album>[];
+  top_tracks: Ranked<Track>[];
   minutes_listened: number;
   avg_minutes_listened_per_day: number;
   plays: number;
