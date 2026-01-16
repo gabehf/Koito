@@ -84,9 +84,23 @@ See the [configuration reference](https://koito.io/reference/configuration/) in 
 
 ## Contributing
 
-There are currently some known issues that I am actively working on, in addition to adding new features. If you want to contribute (especially more and more robust testing) feel free to fork the repository and make a pull request with your changes.
+Issues and pull requests to find and fix bugs are always appreciated! If you have any feature ideas, open a GitHub issue to let me know. I'm sorting through ideas to decide which data visualizations and customization options to add next.
 
-If you have any feature ideas, open a GitHub issue to let me know. I'm sorting through ideas to decide which data visualizations and customization options to add next.
+Also consider supporting one of the **feature bounties**! Just mention one of the bounty numbers in a Ko-fi donation to have your donation counted towards the goal. Note that bounties are first and foremost a donation to me (@gabehf) in support of building Koito, and reaching a bounty does not
+necessarily mean the feature will be made, or made exactly in the way the bounty describes. This is just a way for me to see exactly what
+features people are most interested in having, as well as affording me more time to work on the project and get new features out for free for everybody because unfortunately, rent is due on the first.
+
+*Bounties are updated by me manually so it may take some time for your donation to be reflected here. Dollar values are in USD.*
+
+### Bounty #11 - Multi-User Support & OIDC - $120 out of $500 reached
+
+Multi-user support would allow for one Koito instance to track and display statistics for multiple users instead of just one.
+New features could include global rewinds, global home page statistics, per-user relays, user pages with artist overlap % with you, etc.
+
+**Why a bounty?** Enabling multi-user support will require very significant refactoring, testing, and restructuring of many parts of the code, in addition to adding the new features.
+All future features will also have to take into account user-scope, as well as user roles and priviledges.
+
+![](https://geps.dev/progress/24)
 
 ## Star History
 
