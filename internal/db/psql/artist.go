@@ -60,7 +60,7 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 		return nil, fmt.Errorf("GetAlbum: GetFirstListenFromArtist: %w", err)
 	}
 	rank, err := d.q.GetArtistAllTimeRank(ctx, opts.ID)
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, fmt.Errorf("GetArtist: GetArtistAllTimeRank: %w", err)
 	}
 	return &models.Artist{
