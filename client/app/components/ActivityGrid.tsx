@@ -68,14 +68,14 @@ export default function ActivityGrid({
 
   if (isPending) {
     return (
-      <div className="w-[500px]">
+      <div className="w-[350px]">
         <h3>Activity</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
-      <div className="w-[500px]">
+      <div className="w-[350px]">
         <h3>Activity</h3>
         <p className="error">Error: {error.message}</p>
       </div>

@@ -11,7 +11,7 @@ export default function AllTimeStats() {
 
   if (isPending) {
     return (
-      <div className="w-[200px]">
+      <div>
         <h3>{header}</h3>
         <p>Loading...</p>
       </div>

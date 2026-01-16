@@ -49,7 +49,7 @@ export function ThemeSwitcher() {
             <AsyncButton onClick={resetTheme}>Reset</AsyncButton>
           </div>
         </div>
-        <div className="grid grid-cols-2 items-center gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2">
           {Object.entries(themes).map(([name, themeData]) => (
             <ThemeOption
               setTheme={setTheme}
