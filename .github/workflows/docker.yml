@@ -17,6 +17,7 @@ on:
       - main
     paths-ignore:
       - "docs/**"
+      - "README.md"
 
   workflow_dispatch:
 
