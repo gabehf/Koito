@@ -269,18 +269,27 @@ func (q *Queries) GetReleaseArtists(ctx context.Context, releaseID int32) ([]Get
 
 const getTopArtistsPaginated = `-- name: GetTopArtistsPaginated :many
 SELECT
+  x.id,
+  x.name,
+  x.musicbrainz_id,
+  x.image,
+  x.listen_count,
+  RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+FROM (
+  SELECT
     a.id,
     a.name,
     a.musicbrainz_id,
     a.image,
     COUNT(*) AS listen_count
-FROM listens l
-JOIN tracks t ON l.track_id = t.id
-JOIN artist_tracks at ON at.track_id = t.id
-JOIN artists_with_name a ON a.id = at.artist_id
-WHERE l.listened_at BETWEEN $1 AND $2
-GROUP BY a.id, a.name, a.musicbrainz_id, a.image, a.image_source, a.name
-ORDER BY listen_count DESC, a.id
+  FROM listens l
+  JOIN tracks t ON l.track_id = t.id
+  JOIN artist_tracks at ON at.track_id = t.id
+  JOIN artists_with_name a ON a.id = at.artist_id
+  WHERE l.listened_at BETWEEN $1 AND $2
+  GROUP BY a.id, a.name, a.musicbrainz_id, a.image
+) x
+ORDER BY x.listen_count DESC, x.id
 LIMIT $3 OFFSET $4
 `
 
@@ -297,6 +306,7 @@ type GetTopArtistsPaginatedRow struct {
 	MusicBrainzID *uuid.UUID
 	Image         *uuid.UUID
 	ListenCount   int64
+	Rank          int64
 }
 
 func (q *Queries) GetTopArtistsPaginated(ctx context.Context, arg GetTopArtistsPaginatedParams) ([]GetTopArtistsPaginatedRow, error) {
@@ -319,6 +329,7 @@ func (q *Queries) GetTopArtistsPaginated(ctx context.Context, arg GetTopArtistsP
 			&i.MusicBrainzID,
 			&i.Image,
 			&i.ListenCount,
+			&i.Rank,
 		); err != nil {
 			return nil, err
 		}

@@ -9,20 +9,20 @@ import (
 )
 
 type Summary struct {
-	Title            string           `json:"title,omitempty"`
-	TopArtists       []*models.Artist `json:"top_artists"` // ListenCount and TimeListened are overriden with stats from timeframe
-	TopAlbums        []*models.Album  `json:"top_albums"`  // ListenCount and TimeListened are overriden with stats from timeframe
-	TopTracks        []*models.Track  `json:"top_tracks"`  // ListenCount and TimeListened are overriden with stats from timeframe
-	MinutesListened  int              `json:"minutes_listened"`
-	AvgMinutesPerDay int              `json:"avg_minutes_listened_per_day"`
-	Plays            int              `json:"plays"`
-	AvgPlaysPerDay   float32          `json:"avg_plays_per_day"`
-	UniqueTracks     int              `json:"unique_tracks"`
-	UniqueAlbums     int              `json:"unique_albums"`
-	UniqueArtists    int              `json:"unique_artists"`
-	NewTracks        int              `json:"new_tracks"`
-	NewAlbums        int              `json:"new_albums"`
-	NewArtists       int              `json:"new_artists"`
+	Title            string                          `json:"title,omitempty"`
+	TopArtists       []db.RankedItem[*models.Artist] `json:"top_artists"` // ListenCount and TimeListened are overriden with stats from timeframe
+	TopAlbums        []db.RankedItem[*models.Album]  `json:"top_albums"`  // ListenCount and TimeListened are overriden with stats from timeframe
+	TopTracks        []db.RankedItem[*models.Track]  `json:"top_tracks"`  // ListenCount and TimeListened are overriden with stats from timeframe
+	MinutesListened  int                             `json:"minutes_listened"`
+	AvgMinutesPerDay int                             `json:"avg_minutes_listened_per_day"`
+	Plays            int                             `json:"plays"`
+	AvgPlaysPerDay   float32                         `json:"avg_plays_per_day"`
+	UniqueTracks     int                             `json:"unique_tracks"`
+	UniqueAlbums     int                             `json:"unique_albums"`
+	UniqueArtists    int                             `json:"unique_artists"`
+	NewTracks        int                             `json:"new_tracks"`
+	NewAlbums        int                             `json:"new_albums"`
+	NewArtists       int                             `json:"new_artists"`
 }
 
 func GenerateSummary(ctx context.Context, store db.DB, userId int32, timeframe db.Timeframe, title string) (summary *Summary, err error) {
@@ -37,16 +37,16 @@ func GenerateSummary(ctx context.Context, store db.DB, userId int32, timeframe d
 	summary.TopArtists = topArtists.Items
 	// replace ListenCount and TimeListened with stats from timeframe
 	for i, artist := range summary.TopArtists {
-		timelistened, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{ArtistID: artist.ID, Timeframe: timeframe})
+		timelistened, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{ArtistID: artist.Item.ID, Timeframe: timeframe})
 		if err != nil {
 			return nil, fmt.Errorf("GenerateSummary: %w", err)
 		}
-		listens, err := store.CountListensToItem(ctx, db.TimeListenedOpts{ArtistID: artist.ID, Timeframe: timeframe})
+		listens, err := store.CountListensToItem(ctx, db.TimeListenedOpts{ArtistID: artist.Item.ID, Timeframe: timeframe})
 		if err != nil {
 			return nil, fmt.Errorf("GenerateSummary: %w", err)
 		}
-		summary.TopArtists[i].TimeListened = timelistened
-		summary.TopArtists[i].ListenCount = listens
+		summary.TopArtists[i].Item.TimeListened = timelistened
+		summary.TopArtists[i].Item.ListenCount = listens
 	}
 
 	topAlbums, err := store.GetTopAlbumsPaginated(ctx, db.GetItemsOpts{Page: 1, Limit: 5, Timeframe: timeframe})
@@ -56,16 +56,16 @@ func GenerateSummary(ctx context.Context, store db.DB, userId int32, timeframe d
 	summary.TopAlbums = topAlbums.Items
 	// replace ListenCount and TimeListened with stats from timeframe
 	for i, album := range summary.TopAlbums {
-		timelistened, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{AlbumID: album.ID, Timeframe: timeframe})
+		timelistened, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{AlbumID: album.Item.ID, Timeframe: timeframe})
 		if err != nil {
 			return nil, fmt.Errorf("GenerateSummary: %w", err)
 		}
-		listens, err := store.CountListensToItem(ctx, db.TimeListenedOpts{AlbumID: album.ID, Timeframe: timeframe})
+		listens, err := store.CountListensToItem(ctx, db.TimeListenedOpts{AlbumID: album.Item.ID, Timeframe: timeframe})
 		if err != nil {
 			return nil, fmt.Errorf("GenerateSummary: %w", err)
 		}
-		summary.TopAlbums[i].TimeListened = timelistened
-		summary.TopAlbums[i].ListenCount = listens
+		summary.TopAlbums[i].Item.TimeListened = timelistened
+		summary.TopAlbums[i].Item.ListenCount = listens
 	}
 
 	topTracks, err := store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Page: 1, Limit: 5, Timeframe: timeframe})
@@ -75,16 +75,16 @@ func GenerateSummary(ctx context.Context, store db.DB, userId int32, timeframe d
 	summary.TopTracks = topTracks.Items
 	// replace ListenCount and TimeListened with stats from timeframe
 	for i, track := range summary.TopTracks {
-		timelistened, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{TrackID: track.ID, Timeframe: timeframe})
+		timelistened, err := store.CountTimeListenedToItem(ctx, db.TimeListenedOpts{TrackID: track.Item.ID, Timeframe: timeframe})
 		if err != nil {
 			return nil, fmt.Errorf("GenerateSummary: %w", err)
 		}
-		listens, err := store.CountListensToItem(ctx, db.TimeListenedOpts{TrackID: track.ID, Timeframe: timeframe})
+		listens, err := store.CountListensToItem(ctx, db.TimeListenedOpts{TrackID: track.Item.ID, Timeframe: timeframe})
 		if err != nil {
 			return nil, fmt.Errorf("GenerateSummary: %w", err)
 		}
-		summary.TopTracks[i].TimeListened = timelistened
-		summary.TopTracks[i].ListenCount = listens
+		summary.TopTracks[i].Item.TimeListened = timelistened
+		summary.TopTracks[i].Item.ListenCount = listens
 	}
 
 	t1, t2 := db.TimeframeToTimeRange(timeframe)

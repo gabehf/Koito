@@ -6,11 +6,12 @@ import {
   type Artist,
   type Track,
   type PaginatedResponse,
+  type Ranked,
 } from "api/api";
 
 type Item = Album | Track | Artist;
 
-interface Props<T extends Item> {
+interface Props<T extends Ranked<Item>> {
   data: PaginatedResponse<T>;
   separators?: ConstrainBoolean;
   ranked?: boolean;
@@ -18,33 +19,17 @@ interface Props<T extends Item> {
   className?: string;
 }
 
-export default function TopItemList<T extends Item>({
+export default function TopItemList<T extends Ranked<Item>>({
   data,
   separators,
   type,
   className,
   ranked,
 }: Props<T>) {
-  const currentParams = new URLSearchParams(location.search);
-  const page = Math.max(parseInt(currentParams.get("page") || "1"), 1);
-
-  let lastRank = 0;
-
-  const calculateRank = (data: Item[], page: number, index: number): number => {
-    if (
-      index === 0 ||
-      data[index] == undefined ||
-      !(data[index].listen_count === data[index - 1].listen_count)
-    ) {
-      lastRank = index + 1 + (page - 1) * 100;
-    }
-    return lastRank;
-  };
-
   return (
     <div className={`flex flex-col gap-1 ${className} min-w-[200px]`}>
       {data.items.map((item, index) => {
-        const key = `${type}-${item.id}`;
+        const key = `${type}-${item.item.id}`;
         return (
           <div
             key={key}
@@ -57,10 +42,10 @@ export default function TopItemList<T extends Item>({
           >
             <ItemCard
               ranked={ranked}
-              rank={calculateRank(data.items, page, index)}
-              item={item}
+              rank={item.rank}
+              item={item.item}
               type={type}
-              key={type + item.id}
+              key={type + item.item.id}
             />
           </div>
         );

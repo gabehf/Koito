@@ -18,16 +18,16 @@ func TestGetTopArtistsPaginated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 4)
 	assert.Equal(t, int64(4), resp.TotalCount)
-	assert.Equal(t, "Artist One", resp.Items[0].Name)
-	assert.Equal(t, "Artist Two", resp.Items[1].Name)
-	assert.Equal(t, "Artist Three", resp.Items[2].Name)
-	assert.Equal(t, "Artist Four", resp.Items[3].Name)
+	assert.Equal(t, "Artist One", resp.Items[0].Item.Name)
+	assert.Equal(t, "Artist Two", resp.Items[1].Item.Name)
+	assert.Equal(t, "Artist Three", resp.Items[2].Item.Name)
+	assert.Equal(t, "Artist Four", resp.Items[3].Item.Name)
 
 	// Test pagination
 	resp, err = store.GetTopArtistsPaginated(ctx, db.GetItemsOpts{Limit: 1, Page: 2, Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
-	assert.Equal(t, "Artist Two", resp.Items[0].Name)
+	assert.Equal(t, "Artist Two", resp.Items[0].Item.Name)
 
 	// Test page out of range
 	resp, err = store.GetTopArtistsPaginated(ctx, db.GetItemsOpts{Limit: 1, Page: 10, Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
@@ -57,22 +57,22 @@ func TestGetTopArtistsPaginated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Artist Four", resp.Items[0].Name)
+	assert.Equal(t, "Artist Four", resp.Items[0].Item.Name)
 
 	resp, err = store.GetTopArtistsPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Period: db.PeriodMonth}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 2)
 	assert.Equal(t, int64(2), resp.TotalCount)
-	assert.Equal(t, "Artist Three", resp.Items[0].Name)
-	assert.Equal(t, "Artist Four", resp.Items[1].Name)
+	assert.Equal(t, "Artist Three", resp.Items[0].Item.Name)
+	assert.Equal(t, "Artist Four", resp.Items[1].Item.Name)
 
 	resp, err = store.GetTopArtistsPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Period: db.PeriodYear}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 3)
 	assert.Equal(t, int64(3), resp.TotalCount)
-	assert.Equal(t, "Artist Two", resp.Items[0].Name)
-	assert.Equal(t, "Artist Three", resp.Items[1].Name)
-	assert.Equal(t, "Artist Four", resp.Items[2].Name)
+	assert.Equal(t, "Artist Two", resp.Items[0].Item.Name)
+	assert.Equal(t, "Artist Three", resp.Items[1].Item.Name)
+	assert.Equal(t, "Artist Four", resp.Items[2].Item.Name)
 
 	// Test specify dates
 
@@ -82,11 +82,11 @@ func TestGetTopArtistsPaginated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Artist One", resp.Items[0].Name)
+	assert.Equal(t, "Artist One", resp.Items[0].Item.Name)
 
 	resp, err = store.GetTopArtistsPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Month: 6, Year: 2024}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Artist Two", resp.Items[0].Name)
+	assert.Equal(t, "Artist Two", resp.Items[0].Item.Name)
 }

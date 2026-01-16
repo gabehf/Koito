@@ -39,56 +39,89 @@ HAVING COUNT(DISTINCT at.artist_id) = cardinality($3::int[]);
 
 -- name: GetTopTracksPaginated :many
 SELECT
-    t.id,
-    t.title,
-    t.musicbrainz_id,
-    t.release_id,
-    r.image,
-    COUNT(*) AS listen_count,
-    get_artists_for_track(t.id) AS artists
-FROM listens l
-JOIN tracks_with_title t ON l.track_id = t.id
-JOIN releases r ON t.release_id = r.id
-WHERE l.listened_at BETWEEN $1 AND $2
-GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
-ORDER BY listen_count DESC, t.id
+    x.id,
+    x.title,
+    x.musicbrainz_id,
+    x.release_id,
+    x.image,
+    x.listen_count,
+    x.artists,
+    RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+FROM (
+    SELECT
+        t.id,
+        t.title,
+        t.musicbrainz_id,
+        t.release_id,
+        r.image,
+        COUNT(*) AS listen_count,
+        get_artists_for_track(t.id) AS artists
+    FROM listens l
+    JOIN tracks_with_title t ON l.track_id = t.id
+    JOIN releases r ON t.release_id = r.id
+    WHERE l.listened_at BETWEEN $1 AND $2
+    GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
+) x
+ORDER BY x.listen_count DESC, x.id
 LIMIT $3 OFFSET $4;
 
 -- name: GetTopTracksByArtistPaginated :many
 SELECT
-    t.id,
-    t.title,
-    t.musicbrainz_id,
-    t.release_id,
-    r.image,
-    COUNT(*) AS listen_count,
-    get_artists_for_track(t.id) AS artists
-FROM listens l
-JOIN tracks_with_title t ON l.track_id = t.id
-JOIN releases r ON t.release_id = r.id
-JOIN artist_tracks at ON at.track_id = t.id
-WHERE l.listened_at BETWEEN $1 AND $2
-  AND at.artist_id = $5
-GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
-ORDER BY listen_count DESC, t.id
+    x.id,
+    x.title,
+    x.musicbrainz_id,
+    x.release_id,
+    x.image,
+    x.listen_count,
+    x.artists,
+    RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+FROM (
+    SELECT
+        t.id,
+        t.title,
+        t.musicbrainz_id,
+        t.release_id,
+        r.image,
+        COUNT(*) AS listen_count,
+        get_artists_for_track(t.id) AS artists
+    FROM listens l
+    JOIN tracks_with_title t ON l.track_id = t.id
+    JOIN releases r ON t.release_id = r.id
+    JOIN artist_tracks at ON at.track_id = t.id
+    WHERE l.listened_at BETWEEN $1 AND $2
+      AND at.artist_id = $5
+    GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
+) x
+ORDER BY x.listen_count DESC, x.id
 LIMIT $3 OFFSET $4;
 
 -- name: GetTopTracksInReleasePaginated :many
 SELECT
-    t.id,
-    t.title,
-    t.musicbrainz_id,
-    t.release_id,
-    r.image,
-    COUNT(*) AS listen_count,
-    get_artists_for_track(t.id) AS artists
-FROM listens l
-JOIN tracks_with_title t ON l.track_id = t.id
-JOIN releases r ON t.release_id = r.id
-WHERE l.listened_at BETWEEN $1 AND $2
-  AND t.release_id = $5
-GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
-ORDER BY listen_count DESC, t.id
+    x.id,
+    x.title,
+    x.musicbrainz_id,
+    x.release_id,
+    x.image,
+    x.listen_count,
+    x.artists,
+    RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+FROM (
+    SELECT
+        t.id,
+        t.title,
+        t.musicbrainz_id,
+        t.release_id,
+        r.image,
+        COUNT(*) AS listen_count,
+        get_artists_for_track(t.id) AS artists
+    FROM listens l
+    JOIN tracks_with_title t ON l.track_id = t.id
+    JOIN releases r ON t.release_id = r.id
+    WHERE l.listened_at BETWEEN $1 AND $2
+      AND t.release_id = $5
+    GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
+) x
+ORDER BY x.listen_count DESC, x.id
 LIMIT $3 OFFSET $4;
 
 -- name: CountTopTracks :one
