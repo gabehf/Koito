@@ -8,11 +8,11 @@ interface Props {
   period: string;
 }
 
-export default function ArtistAlbums({ artistId, name, period }: Props) {
+export default function ArtistAlbums({ artistId, name }: Props) {
   const { isPending, isError, data, error } = useQuery({
     queryKey: [
       "top-albums",
-      { limit: 99, period: "all_time", artist_id: artistId, page: 0 },
+      { limit: 99, period: "all_time", artist_id: artistId },
     ],
     queryFn: ({ queryKey }) => getTopAlbums(queryKey[1] as getItemsArgs),
   });
@@ -39,16 +39,20 @@ export default function ArtistAlbums({ artistId, name, period }: Props) {
       <h3>Albums featuring {name}</h3>
       <div className="flex flex-wrap gap-8">
         {data.items.map((item) => (
-          <Link to={`/album/${item.id}`} className="flex gap-2 items-start">
+          <Link
+            to={`/album/${item.item.id}`}
+            className="flex gap-2 items-start"
+          >
             <img
-              src={imageUrl(item.image, "medium")}
-              alt={item.title}
+              src={imageUrl(item.item.image, "medium")}
+              alt={item.item.title}
               style={{ width: 130 }}
             />
             <div className="w-[180px] flex flex-col items-start gap-1">
-              <p>{item.title}</p>
+              <p>{item.item.title}</p>
               <p className="text-sm color-fg-secondary">
-                {item.listen_count} play{item.listen_count > 1 ? "s" : ""}
+                {item.item.listen_count} play
+                {item.item.listen_count > 1 ? "s" : ""}
               </p>
             </div>
           </Link>
