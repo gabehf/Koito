@@ -101,8 +101,8 @@ func TestListenActivity(t *testing.T) {
 				   (1, 1, NOW() - INTERVAL '2 months 1 day'),
 				   (1, 1, NOW() - INTERVAL '3 months 1 day'),
 				   (1, 2, NOW() - INTERVAL '1 month 1 day'),
-				   (1, 2, NOW() - INTERVAL '1 hour'),
-				   (1, 2, NOW() - INTERVAL '1 minute'),
+				   (1, 2, NOW() - INTERVAL '1 second'),
+				   (1, 2, NOW() - INTERVAL '2 seconds'),
 				   (1, 2, NOW() - INTERVAL '2 months 1 day')`)
 	require.NoError(t, err)
 
