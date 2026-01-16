@@ -18,19 +18,19 @@ func TestGetTopTracksPaginated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 4)
 	assert.Equal(t, int64(4), resp.TotalCount)
-	assert.Equal(t, "Track One", resp.Items[0].Title)
-	assert.Equal(t, "Track Two", resp.Items[1].Title)
-	assert.Equal(t, "Track Three", resp.Items[2].Title)
-	assert.Equal(t, "Track Four", resp.Items[3].Title)
+	assert.Equal(t, "Track One", resp.Items[0].Item.Title)
+	assert.Equal(t, "Track Two", resp.Items[1].Item.Title)
+	assert.Equal(t, "Track Three", resp.Items[2].Item.Title)
+	assert.Equal(t, "Track Four", resp.Items[3].Item.Title)
 	// ensure artists are included
-	require.Len(t, resp.Items[0].Artists, 1)
-	assert.Equal(t, "Artist One", resp.Items[0].Artists[0].Name)
+	require.Len(t, resp.Items[0].Item.Artists, 1)
+	assert.Equal(t, "Artist One", resp.Items[0].Item.Artists[0].Name)
 
 	// Test pagination
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Limit: 1, Page: 2, Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
-	assert.Equal(t, "Track Two", resp.Items[0].Title)
+	assert.Equal(t, "Track Two", resp.Items[0].Item.Title)
 
 	// Test page out of range
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Limit: 1, Page: 10, Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
@@ -60,41 +60,41 @@ func TestGetTopTracksPaginated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Track Four", resp.Items[0].Title)
+	assert.Equal(t, "Track Four", resp.Items[0].Item.Title)
 
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Period: db.PeriodMonth}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 2)
 	assert.Equal(t, int64(2), resp.TotalCount)
-	assert.Equal(t, "Track Three", resp.Items[0].Title)
-	assert.Equal(t, "Track Four", resp.Items[1].Title)
+	assert.Equal(t, "Track Three", resp.Items[0].Item.Title)
+	assert.Equal(t, "Track Four", resp.Items[1].Item.Title)
 
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Period: db.PeriodYear}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 3)
 	assert.Equal(t, int64(3), resp.TotalCount)
-	assert.Equal(t, "Track Two", resp.Items[0].Title)
-	assert.Equal(t, "Track Three", resp.Items[1].Title)
-	assert.Equal(t, "Track Four", resp.Items[2].Title)
+	assert.Equal(t, "Track Two", resp.Items[0].Item.Title)
+	assert.Equal(t, "Track Three", resp.Items[1].Item.Title)
+	assert.Equal(t, "Track Four", resp.Items[2].Item.Title)
 
 	// Test filter by artists and releases
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Period: db.PeriodAllTime}, ArtistID: 1})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Track One", resp.Items[0].Title)
+	assert.Equal(t, "Track One", resp.Items[0].Item.Title)
 
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Period: db.PeriodAllTime}, AlbumID: 2})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Track Two", resp.Items[0].Title)
+	assert.Equal(t, "Track Two", resp.Items[0].Item.Title)
 	// when both artistID and albumID are specified, artist id is ignored
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Period: db.PeriodAllTime}, AlbumID: 2, ArtistID: 1})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Track Two", resp.Items[0].Title)
+	assert.Equal(t, "Track Two", resp.Items[0].Item.Title)
 
 	// Test specify dates
 
@@ -104,11 +104,11 @@ func TestGetTopTracksPaginated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Track One", resp.Items[0].Title)
+	assert.Equal(t, "Track One", resp.Items[0].Item.Title)
 
 	resp, err = store.GetTopTracksPaginated(ctx, db.GetItemsOpts{Timeframe: db.Timeframe{Month: 6, Year: 2024}})
 	require.NoError(t, err)
 	require.Len(t, resp.Items, 1)
 	assert.Equal(t, int64(1), resp.TotalCount)
-	assert.Equal(t, "Track Two", resp.Items[0].Title)
+	assert.Equal(t, "Track Two", resp.Items[0].Item.Title)
 }

@@ -48,32 +48,32 @@ async function getLastListens(
 
 async function getTopTracks(
   args: getItemsArgs
-): Promise<PaginatedResponse<Track>> {
+): Promise<PaginatedResponse<Ranked<Track>>> {
   let url = `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&page=${args.page}`;
 
   if (args.artist_id) url += `&artist_id=${args.artist_id}`;
   else if (args.album_id) url += `&album_id=${args.album_id}`;
 
   const r = await fetch(url);
-  return handleJson<PaginatedResponse<Track>>(r);
+  return handleJson<PaginatedResponse<Ranked<Track>>>(r);
 }
 
 async function getTopAlbums(
   args: getItemsArgs
-): Promise<PaginatedResponse<Album>> {
+): Promise<PaginatedResponse<Ranked<Album>>> {
   let url = `/apis/web/v1/top-albums?period=${args.period}&limit=${args.limit}&page=${args.page}`;
   if (args.artist_id) url += `&artist_id=${args.artist_id}`;
 
   const r = await fetch(url);
-  return handleJson<PaginatedResponse<Album>>(r);
+  return handleJson<PaginatedResponse<Ranked<Album>>>(r);
 }
 
 async function getTopArtists(
   args: getItemsArgs
-): Promise<PaginatedResponse<Artist>> {
+): Promise<PaginatedResponse<Ranked<Artist>>> {
   const url = `/apis/web/v1/top-artists?period=${args.period}&limit=${args.limit}&page=${args.page}`;
   const r = await fetch(url);
-  return handleJson<PaginatedResponse<Artist>>(r);
+  return handleJson<PaginatedResponse<Ranked<Artist>>>(r);
 }
 
 async function getActivity(
@@ -407,6 +407,10 @@ type PaginatedResponse<T> = {
   current_page: number;
   items_per_page: number;
 };
+type Ranked<T> = {
+  item: T;
+  rank: number;
+};
 type ListenActivityItem = {
   start_time: Date;
   listens: number;
@@ -480,6 +484,7 @@ export type {
   Listen,
   SearchResponse,
   PaginatedResponse,
+  Ranked,
   ListenActivityItem,
   InterestBucket,
   User,

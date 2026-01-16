@@ -28,6 +28,11 @@ type PaginatedResponse[T any] struct {
 	CurrentPage  int32 `json:"current_page"`
 }
 
+type RankedItem[T any] struct {
+	Item T     `json:"item"`
+	Rank int64 `json:"rank"`
+}
+
 type ExportItem struct {
 	ListenedAt         time.Time
 	UserID             int32

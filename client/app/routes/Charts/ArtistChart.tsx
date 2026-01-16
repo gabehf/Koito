@@ -1,7 +1,7 @@
 import TopItemList from "~/components/TopItemList";
 import ChartLayout from "./ChartLayout";
 import { useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { type Album, type PaginatedResponse } from "api/api";
+import { type Album, type PaginatedResponse, type Ranked } from "api/api";
 
 export async function clientLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -21,7 +21,7 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
 
 export default function Artist() {
   const { top_artists: initialData } = useLoaderData<{
-    top_artists: PaginatedResponse<Album>;
+    top_artists: PaginatedResponse<Ranked<Album>>;
   }>();
 
   return (

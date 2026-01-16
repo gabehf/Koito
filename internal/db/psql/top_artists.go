@@ -10,7 +10,7 @@ import (
 	"github.com/gabehf/koito/internal/repository"
 )
 
-func (d *Psql) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpts) (*db.PaginatedResponse[*models.Artist], error) {
+func (d *Psql) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpts) (*db.PaginatedResponse[db.RankedItem[*models.Artist]], error) {
 	l := logger.FromContext(ctx)
 	offset := (opts.Page - 1) * opts.Limit
 	t1, t2 := db.TimeframeToTimeRange(opts.Timeframe)
@@ -28,7 +28,7 @@ func (d *Psql) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpts)
 	if err != nil {
 		return nil, fmt.Errorf("GetTopArtistsPaginated: GetTopArtistsPaginated: %w", err)
 	}
-	rgs := make([]*models.Artist, len(rows))
+	rgs := make([]db.RankedItem[*models.Artist], len(rows))
 	for i, row := range rows {
 		t := &models.Artist{
 			Name:        row.Name,
@@ -37,7 +37,8 @@ func (d *Psql) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpts)
 			Image:       row.Image,
 			ListenCount: row.ListenCount,
 		}
-		rgs[i] = t
+		rgs[i].Item = t
+		rgs[i].Rank = row.Rank
 	}
 	count, err := d.q.CountTopArtists(ctx, repository.CountTopArtistsParams{
 		ListenedAt:   t1,
@@ -48,7 +49,7 @@ func (d *Psql) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpts)
 	}
 	l.Debug().Msgf("Database responded with %d artists out of a total %d", len(rows), count)
 
-	return &db.PaginatedResponse[*models.Artist]{
+	return &db.PaginatedResponse[db.RankedItem[*models.Artist]]{
 		Items:        rgs,
 		TotalCount:   count,
 		ItemsPerPage: int32(opts.Limit),

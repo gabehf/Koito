@@ -11,7 +11,7 @@ import (
 	"github.com/gabehf/koito/internal/repository"
 )
 
-func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) (*db.PaginatedResponse[*models.Album], error) {
+func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) (*db.PaginatedResponse[db.RankedItem[*models.Album]], error) {
 	l := logger.FromContext(ctx)
 	offset := (opts.Page - 1) * opts.Limit
 	t1, t2 := db.TimeframeToTimeRange(opts.Timeframe)
@@ -19,7 +19,7 @@ func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		opts.Limit = DefaultItemsPerPage
 	}
 
-	var rgs []*models.Album
+	var rgs []db.RankedItem[*models.Album]
 	var count int64
 
 	if opts.ArtistID != 0 {
@@ -36,7 +36,7 @@ func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		if err != nil {
 			return nil, fmt.Errorf("GetTopAlbumsPaginated: GetTopReleasesFromArtist: %w", err)
 		}
-		rgs = make([]*models.Album, len(rows))
+		rgs = make([]db.RankedItem[*models.Album], len(rows))
 		l.Debug().Msgf("Database responded with %d items", len(rows))
 		for i, v := range rows {
 			artists := make([]models.SimpleArtist, 0)
@@ -45,7 +45,7 @@ func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) 
 				l.Err(err).Msgf("Error unmarshalling artists for release group with id %d", v.ID)
 				return nil, fmt.Errorf("GetTopAlbumsPaginated: Unmarshal: %w", err)
 			}
-			rgs[i] = &models.Album{
+			rgs[i].Item = &models.Album{
 				ID:             v.ID,
 				MbzID:          v.MusicBrainzID,
 				Title:          v.Title,
@@ -54,6 +54,7 @@ func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) 
 				VariousArtists: v.VariousArtists,
 				ListenCount:    v.ListenCount,
 			}
+			rgs[i].Rank = v.Rank
 		}
 		count, err = d.q.CountReleasesFromArtist(ctx, int32(opts.ArtistID))
 		if err != nil {
@@ -71,7 +72,7 @@ func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		if err != nil {
 			return nil, fmt.Errorf("GetTopAlbumsPaginated: GetTopReleasesPaginated: %w", err)
 		}
-		rgs = make([]*models.Album, len(rows))
+		rgs = make([]db.RankedItem[*models.Album], len(rows))
 		l.Debug().Msgf("Database responded with %d items", len(rows))
 		for i, row := range rows {
 			artists := make([]models.SimpleArtist, 0)
@@ -80,16 +81,16 @@ func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) 
 				l.Err(err).Msgf("Error unmarshalling artists for release group with id %d", row.ID)
 				return nil, fmt.Errorf("GetTopAlbumsPaginated: Unmarshal: %w", err)
 			}
-			t := &models.Album{
-				Title:          row.Title,
-				MbzID:          row.MusicBrainzID,
+			rgs[i].Item = &models.Album{
 				ID:             row.ID,
+				MbzID:          row.MusicBrainzID,
+				Title:          row.Title,
 				Image:          row.Image,
 				Artists:        artists,
 				VariousArtists: row.VariousArtists,
 				ListenCount:    row.ListenCount,
 			}
-			rgs[i] = t
+			rgs[i].Rank = row.Rank
 		}
 		count, err = d.q.CountTopReleases(ctx, repository.CountTopReleasesParams{
 			ListenedAt:   t1,
@@ -100,7 +101,7 @@ func (d *Psql) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		}
 		l.Debug().Msgf("Database responded with %d albums out of a total %d", len(rows), count)
 	}
-	return &db.PaginatedResponse[*models.Album]{
+	return &db.PaginatedResponse[db.RankedItem[*models.Album]]{
 		Items:        rgs,
 		TotalCount:   count,
 		ItemsPerPage: int32(opts.Limit),
