@@ -48,14 +48,14 @@ export default function InterestGraph({
 
   if (isPending) {
     return (
-      <div className="w-[500px]">
+      <div className="w-[350px] sm:w-[500px]">
         <h3>Interest over time</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
-      <div className="w-[500px]">
+      <div className="w-[350px] sm:w-[500px]">
         <h3>Interest over time</h3>
         <p className="error">Error: {error.message}</p>
       </div>
@@ -67,7 +67,7 @@ export default function InterestGraph({
   // so I think I just have to remove it for now.
 
   return (
-    <div className="flex flex-col items-start w-full max-w-[500px]">
+    <div className="flex flex-col items-start w-full max-w-[335px] sm:max-w-[500px]">
       <h3>Interest over time</h3>
       <AreaChart
         style={{
