@@ -57,11 +57,11 @@ const (
 // and end will be 23:59:59 on Saturday at the end of the current week.
 // If opts.Year (or opts.Year + opts.Month) is provided, start and end will simply by the start and end times of that year/month.
 func ListenActivityOptsToTimes(opts ListenActivityOpts) (start, end time.Time) {
-	now := time.Now()
 	loc := opts.Timezone
 	if loc == nil {
 		loc, _ = time.LoadLocation("UTC")
 	}
+	now := time.Now().In(loc)
 
 	// If Year (and optionally Month) are specified, use calendar boundaries
 	if opts.Year != 0 {
