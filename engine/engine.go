@@ -211,6 +211,8 @@ func Run(
 		}
 	}()
 
+	l.Info().Msg("Engine: Beginning startup tasks...")
+
 	l.Debug().Msg("Engine: Checking import configuration")
 	if !cfg.SkipImport() {
 		go func() {
@@ -218,18 +220,12 @@ func Run(
 		}()
 	}
 
-	// l.Info().Msg("Creating test export file")
-	// go func() {
-	// 	err := export.ExportData(ctx, "koito", store)
-	// 	if err != nil {
-	// 		l.Err(err).Msg("Failed to generate export file")
-	// 	}
-	// }()
-
 	l.Info().Msg("Engine: Pruning orphaned images")
 	go catalog.PruneOrphanedImages(logger.NewContext(l), store)
 	l.Info().Msg("Engine: Running duration backfill task")
 	go catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzC)
+	l.Info().Msg("Engine: Attempting to fetch missing artist images")
+	go catalog.FetchMissingArtistImages(ctx, store)
 
 	l.Info().Msg("Engine: Initialization finished")
 	quit := make(chan os.Signal, 1)

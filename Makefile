@@ -1,3 +1,8 @@
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 .PHONY: all test clean client
 
 postgres.schemadump:
@@ -28,10 +33,10 @@ postgres.remove-scratch:
 	docker stop koito-scratch && docker rm koito-scratch
 
 api.debug: postgres.start
-	KOITO_ALLOWED_HOSTS=* KOITO_LOG_LEVEL=debug KOITO_CONFIG_DIR=test_config_dir KOITO_DATABASE_URL=postgres://postgres:secret@localhost:5432?sslmode=disable go run cmd/api/main.go
+	go run cmd/api/main.go
 
 api.scratch: postgres.run-scratch
-	KOITO_ALLOWED_HOSTS=* KOITO_LOG_LEVEL=debug KOITO_CONFIG_DIR=test_config_dir/scratch KOITO_DATABASE_URL=postgres://postgres:secret@localhost:5433?sslmode=disable go run cmd/api/main.go
+	KOITO_DATABASE_URL=postgres://postgres:secret@localhost:5433?sslmode=disable go run cmd/api/main.go
 
 api.test:
 	go test ./... -timeout 60s

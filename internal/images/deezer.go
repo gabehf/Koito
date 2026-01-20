@@ -110,6 +110,9 @@ func (c *DeezerClient) getEntity(ctx context.Context, endpoint string, result an
 	return nil
 }
 
+// Deezer behavior is that it serves a default image when it can't find one for an artist, so
+// this function will just download the default image thinking that it is an actual artist image.
+// I don't know how to fix this yet.
 func (c *DeezerClient) GetArtistImages(ctx context.Context, aliases []string) (string, error) {
 	l := logger.FromContext(ctx)
 	resp := new(DeezerArtistResponse)

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gabehf/koito/internal/logger"
@@ -64,22 +65,28 @@ func Shutdown() {
 
 func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
-	if imgsrc.subsonicEnabled {
+	var imgurl string
+	// i know the imgurl check here is stupid but i'm stupider and i want to remind myself to do it
+	// in each check
+	if imgsrc.subsonicEnabled && imgurl == "" {
 		img, err := imgsrc.subsonicC.GetArtistImage(ctx, opts.Aliases[0])
 		if err != nil {
-			return "", err
-		}
-		if img != "" {
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Subsonic")
+		} else if img != "" {
 			return img, nil
 		}
-		l.Debug().Msg("Could not find artist image from Subsonic")
+	} else {
+		l.Debug().Msg("GetArtistImage: Subsonic image fetching is disabled")
 	}
-	if imgsrc.deezerC != nil {
+	if imgsrc.deezerEnabled && imgurl == "" {
 		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
 		if err != nil {
-			return "", err
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Subsonic")
+		} else if img != "" {
+			return img, nil
 		}
-		return img, nil
+	} else {
+		l.Debug().Msg("GetArtistImage: Deezer image fetching is disabled")
 	}
 	l.Warn().Msg("GetArtistImage: No image providers are enabled")
 	return "", nil
@@ -131,4 +138,24 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 	}
 	l.Warn().Msg("GetAlbumImage: No image providers are enabled")
 	return "", nil
+}
+
+// ValidateImageURL checks if the URL points to a valid image by performing a HEAD request.
+func ValidateImageURL(url string) error {
+	resp, err := http.Head(url)
+	if err != nil {
+		return fmt.Errorf("ValidateImageURL: http.Head: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("ValidateImageURL: HEAD request failed, status code: %d", resp.StatusCode)
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		return fmt.Errorf("ValidateImageURL: URL does not point to an image, content type: %s", contentType)
+	}
+
+	return nil
 }

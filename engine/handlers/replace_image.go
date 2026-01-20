@@ -9,6 +9,7 @@ import (
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
+	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/google/uuid"
@@ -75,7 +76,7 @@ func ReplaceImageHandler(store db.DB) http.HandlerFunc {
 		fileUrl := r.FormValue("image_url")
 		if fileUrl != "" {
 			l.Debug().Msg("ReplaceImageHandler: Image identified as remote file")
-			err = catalog.ValidateImageURL(fileUrl)
+			err = images.ValidateImageURL(fileUrl)
 			if err != nil {
 				l.Debug().AnErr("error", err).Msg("ReplaceImageHandler: Invalid image URL")
 				utils.WriteError(w, "url is invalid or not an image file", http.StatusBadRequest)
