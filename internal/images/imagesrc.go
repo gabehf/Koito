@@ -65,10 +65,7 @@ func Shutdown() {
 
 func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
-	var imgurl string
-	// i know the imgurl check here is stupid but i'm stupider and i want to remind myself to do it
-	// in each check
-	if imgsrc.subsonicEnabled && imgurl == "" {
+	if imgsrc.subsonicEnabled {
 		img, err := imgsrc.subsonicC.GetArtistImage(ctx, opts.Aliases[0])
 		if err != nil {
 			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Subsonic")
@@ -78,7 +75,7 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	} else {
 		l.Debug().Msg("GetArtistImage: Subsonic image fetching is disabled")
 	}
-	if imgsrc.deezerEnabled && imgurl == "" {
+	if imgsrc.deezerEnabled {
 		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
 		if err != nil {
 			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Deezer")
