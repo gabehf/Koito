@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gabehf/koito/internal/logger"
@@ -67,19 +68,23 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	if imgsrc.subsonicEnabled {
 		img, err := imgsrc.subsonicC.GetArtistImage(ctx, opts.Aliases[0])
 		if err != nil {
-			return "", err
-		}
-		if img != "" {
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Subsonic")
+		} else if img != "" {
 			return img, nil
 		}
-		l.Debug().Msg("Could not find artist image from Subsonic")
+	} else {
+		l.Debug().Msg("GetArtistImage: Subsonic image fetching is disabled")
 	}
-	if imgsrc.deezerC != nil {
+	if imgsrc.deezerEnabled {
 		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
 		if err != nil {
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Deezer")
 			return "", err
+		} else if img != "" {
+			return img, nil
 		}
-		return img, nil
+	} else {
+		l.Debug().Msg("GetArtistImage: Deezer image fetching is disabled")
 	}
 	l.Warn().Msg("GetArtistImage: No image providers are enabled")
 	return "", nil
@@ -89,7 +94,7 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 	if imgsrc.subsonicEnabled {
 		img, err := imgsrc.subsonicC.GetAlbumImage(ctx, opts.Artists[0], opts.Album)
 		if err != nil {
-			return "", err
+			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Subsonic")
 		}
 		if img != "" {
 			return img, nil
@@ -102,33 +107,52 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 			url := fmt.Sprintf(caaBaseUrl+"/release/%s/front", opts.ReleaseMbzID.String())
 			resp, err := http.DefaultClient.Head(url)
 			if err != nil {
-				return "", err
+				l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from CoverArtArchive with Release MBID")
 			}
 			if resp.StatusCode == 200 {
 				return url, nil
 			}
-			l.Debug().Str("url", url).Str("status", resp.Status).Msg("Could not find album cover from CoverArtArchive with MusicBrainz release ID")
 		}
 		if opts.ReleaseGroupMbzID != nil && *opts.ReleaseGroupMbzID != uuid.Nil {
 			url := fmt.Sprintf(caaBaseUrl+"/release-group/%s/front", opts.ReleaseGroupMbzID.String())
 			resp, err := http.DefaultClient.Head(url)
 			if err != nil {
-				return "", err
+				l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from CoverArtArchive with Release Group MBID")
 			}
 			if resp.StatusCode == 200 {
 				return url, nil
 			}
-			l.Debug().Str("url", url).Str("status", resp.Status).Msg("Could not find album cover from CoverArtArchive with MusicBrainz release group ID")
 		}
 	}
 	if imgsrc.deezerEnabled {
 		l.Debug().Msg("Attempting to find album image from Deezer")
 		img, err := imgsrc.deezerC.GetAlbumImages(ctx, opts.Artists, opts.Album)
 		if err != nil {
+			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Deezer")
 			return "", err
 		}
 		return img, nil
 	}
 	l.Warn().Msg("GetAlbumImage: No image providers are enabled")
 	return "", nil
+}
+
+// ValidateImageURL checks if the URL points to a valid image by performing a HEAD request.
+func ValidateImageURL(url string) error {
+	resp, err := http.Head(url)
+	if err != nil {
+		return fmt.Errorf("ValidateImageURL: http.Head: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("ValidateImageURL: HEAD request failed, status code: %d", resp.StatusCode)
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		return fmt.Errorf("ValidateImageURL: URL does not point to an image, content type: %s", contentType)
+	}
+
+	return nil
 }

@@ -56,6 +56,15 @@ LEFT JOIN artist_aliases aa ON a.id = aa.artist_id
 WHERE a.musicbrainz_id = $1
 GROUP BY a.id, a.musicbrainz_id, a.image, a.image_source, a.name;
 
+-- name: GetArtistsWithoutImages :many
+SELECT
+    *
+FROM artists_with_name
+WHERE image IS NULL
+  AND id > $2
+ORDER BY id ASC
+LIMIT $1;
+
 -- name: GetTopArtistsPaginated :many
 SELECT
   x.id,

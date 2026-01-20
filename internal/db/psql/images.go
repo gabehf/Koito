@@ -72,3 +72,26 @@ func (d *Psql) AlbumsWithoutImages(ctx context.Context, from int32) ([]*models.A
 	}
 	return albums, nil
 }
+
+// returns nil, nil on no results
+func (d *Psql) ArtistsWithoutImages(ctx context.Context, from int32) ([]*models.Artist, error) {
+	rows, err := d.q.GetArtistsWithoutImages(ctx, repository.GetArtistsWithoutImagesParams{
+		Limit: 20,
+		ID:    from,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("ArtistsWithoutImages: %w", err)
+	}
+
+	ret := make([]*models.Artist, len(rows))
+	for i, row := range rows {
+		ret[i] = &models.Artist{
+			ID:    row.ID,
+			Name:  row.Name,
+			MbzID: row.MusicBrainzID,
+		}
+	}
+	return ret, nil
+}

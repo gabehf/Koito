@@ -88,6 +88,7 @@ type DB interface {
 	// in seconds
 	CountTimeListenedToItem(ctx context.Context, opts TimeListenedOpts) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
+
 	// Search
 
 	SearchArtists(ctx context.Context, q string) ([]*models.Artist, error)
@@ -105,6 +106,7 @@ type DB interface {
 	ImageHasAssociation(ctx context.Context, image uuid.UUID) (bool, error)
 	GetImageSource(ctx context.Context, image uuid.UUID) (string, error)
 	AlbumsWithoutImages(ctx context.Context, from int32) ([]*models.Album, error)
+	ArtistsWithoutImages(ctx context.Context, from int32) ([]*models.Artist, error)
 	GetExportPage(ctx context.Context, opts GetExportPageOpts) ([]*ExportItem, error)
 	Ping(ctx context.Context) error
 	Close(ctx context.Context)

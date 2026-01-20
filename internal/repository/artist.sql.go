@@ -254,6 +254,47 @@ func (q *Queries) GetArtistByName(ctx context.Context, alias string) (GetArtistB
 	return i, err
 }
 
+const getArtistsWithoutImages = `-- name: GetArtistsWithoutImages :many
+SELECT
+    id, musicbrainz_id, image, image_source, name
+FROM artists_with_name
+WHERE image IS NULL
+  AND id > $2
+ORDER BY id ASC
+LIMIT $1
+`
+
+type GetArtistsWithoutImagesParams struct {
+	Limit int32
+	ID    int32
+}
+
+func (q *Queries) GetArtistsWithoutImages(ctx context.Context, arg GetArtistsWithoutImagesParams) ([]ArtistsWithName, error) {
+	rows, err := q.db.Query(ctx, getArtistsWithoutImages, arg.Limit, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ArtistsWithName
+	for rows.Next() {
+		var i ArtistsWithName
+		if err := rows.Scan(
+			&i.ID,
+			&i.MusicBrainzID,
+			&i.Image,
+			&i.ImageSource,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getReleaseArtists = `-- name: GetReleaseArtists :many
 SELECT
   a.id, a.musicbrainz_id, a.image, a.image_source, a.name,

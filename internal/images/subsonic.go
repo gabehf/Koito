@@ -129,9 +129,13 @@ func (c *SubsonicClient) GetArtistImage(ctx context.Context, artist string) (str
 	if err != nil {
 		return "", fmt.Errorf("GetArtistImage: %v", err)
 	}
-	l.Debug().Any("subsonic_response", resp).Send()
+	l.Debug().Any("subsonic_response", resp).Msg("")
 	if len(resp.SubsonicResponse.SearchResult3.Artist) < 1 || resp.SubsonicResponse.SearchResult3.Artist[0].ArtistImageUrl == "" {
 		return "", fmt.Errorf("GetArtistImage: failed to get artist art")
+	}
+	// Subsonic seems to have a tendency to return an artist image even though the url is a 404
+	if err = ValidateImageURL(resp.SubsonicResponse.SearchResult3.Artist[0].ArtistImageUrl); err != nil {
+		return "", fmt.Errorf("GetArtistImage: failed to get validate image url")
 	}
 	return resp.SubsonicResponse.SearchResult3.Artist[0].ArtistImageUrl, nil
 }
