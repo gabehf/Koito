@@ -81,7 +81,8 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	if imgsrc.deezerEnabled && imgurl == "" {
 		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
 		if err != nil {
-			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Subsonic")
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Deezer")
+			return "", err
 		} else if img != "" {
 			return img, nil
 		}
@@ -96,7 +97,7 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 	if imgsrc.subsonicEnabled {
 		img, err := imgsrc.subsonicC.GetAlbumImage(ctx, opts.Artists[0], opts.Album)
 		if err != nil {
-			return "", err
+			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Subsonic")
 		}
 		if img != "" {
 			return img, nil
@@ -109,29 +110,28 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 			url := fmt.Sprintf(caaBaseUrl+"/release/%s/front", opts.ReleaseMbzID.String())
 			resp, err := http.DefaultClient.Head(url)
 			if err != nil {
-				return "", err
+				l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from CoverArtArchive with Release MBID")
 			}
 			if resp.StatusCode == 200 {
 				return url, nil
 			}
-			l.Debug().Str("url", url).Str("status", resp.Status).Msg("Could not find album cover from CoverArtArchive with MusicBrainz release ID")
 		}
 		if opts.ReleaseGroupMbzID != nil && *opts.ReleaseGroupMbzID != uuid.Nil {
 			url := fmt.Sprintf(caaBaseUrl+"/release-group/%s/front", opts.ReleaseGroupMbzID.String())
 			resp, err := http.DefaultClient.Head(url)
 			if err != nil {
-				return "", err
+				l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from CoverArtArchive with Release Group MBID")
 			}
 			if resp.StatusCode == 200 {
 				return url, nil
 			}
-			l.Debug().Str("url", url).Str("status", resp.Status).Msg("Could not find album cover from CoverArtArchive with MusicBrainz release group ID")
 		}
 	}
 	if imgsrc.deezerEnabled {
 		l.Debug().Msg("Attempting to find album image from Deezer")
 		img, err := imgsrc.deezerC.GetAlbumImages(ctx, opts.Artists, opts.Album)
 		if err != nil {
+			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Deezer")
 			return "", err
 		}
 		return img, nil

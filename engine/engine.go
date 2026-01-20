@@ -226,6 +226,8 @@ func Run(
 	go catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzC)
 	l.Info().Msg("Engine: Attempting to fetch missing artist images")
 	go catalog.FetchMissingArtistImages(ctx, store)
+	l.Info().Msg("Engine: Attempting to fetch missing album images")
+	go catalog.FetchMissingAlbumImages(ctx, store)
 
 	l.Info().Msg("Engine: Initialization finished")
 	quit := make(chan os.Signal, 1)

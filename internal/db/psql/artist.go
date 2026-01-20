@@ -210,6 +210,9 @@ func (d *Psql) UpdateArtist(ctx context.Context, opts db.UpdateArtistOpts) error
 		}
 	}
 	if opts.Image != uuid.Nil {
+		if opts.ImageSrc == "" {
+			return fmt.Errorf("UpdateAlbum: image source must be provided when updating an image")
+		}
 		l.Debug().Msgf("Updating artist with id %d with image %s", opts.ID, opts.Image)
 		err = qtx.UpdateArtistImage(ctx, repository.UpdateArtistImageParams{
 			ID:          opts.ID,

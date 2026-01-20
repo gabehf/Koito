@@ -332,3 +332,61 @@ func FetchMissingArtistImages(ctx context.Context, store db.DB) error {
 		}
 	}
 }
+func FetchMissingAlbumImages(ctx context.Context, store db.DB) error {
+	l := logger.FromContext(ctx)
+	l.Info().Msg("FetchMissingAlbumImages: Starting backfill of missing album images")
+
+	var from int32 = 0
+
+	for {
+		l.Debug().Int32("ID", from).Msg("Fetching album images to backfill from ID")
+		albums, err := store.AlbumsWithoutImages(ctx, from)
+		if err != nil {
+			return fmt.Errorf("FetchMissingAlbumImages: failed to fetch albums for image backfill: %w", err)
+		}
+
+		if len(albums) == 0 {
+			if from == 0 {
+				l.Info().Msg("FetchMissingAlbumImages: No albums with missing images found")
+			} else {
+				l.Info().Msg("FetchMissingAlbumImages: Finished fetching missing album images")
+			}
+			return nil
+		}
+
+		for _, album := range albums {
+			from = album.ID
+
+			l.Debug().
+				Str("title", album.Title).
+				Msg("FetchMissingAlbumImages: Attempting to fetch missing album image")
+
+			var imgid uuid.UUID
+			imgUrl, imgErr := images.GetAlbumImage(ctx, images.AlbumImageOpts{
+				Artists: utils.FlattenSimpleArtistNames(album.Artists),
+				Album:   album.Title,
+			})
+			if imgErr == nil && imgUrl != "" {
+				imgid = uuid.New()
+				err = store.UpdateAlbum(ctx, db.UpdateAlbumOpts{
+					ID:       album.ID,
+					Image:    imgid,
+					ImageSrc: imgUrl,
+				})
+				if err != nil {
+					l.Err(err).
+						Str("title", album.Title).
+						Msg("FetchMissingAlbumImages: Failed to update album with image in database")
+					continue
+				}
+				l.Info().
+					Str("name", album.Title).
+					Msg("FetchMissingAlbumImages: Successfully fetched missing album image")
+			} else {
+				l.Err(err).
+					Str("name", album.Title).
+					Msg("FetchMissingAlbumImages: Failed to fetch album image")
+			}
+		}
+	}
+}
