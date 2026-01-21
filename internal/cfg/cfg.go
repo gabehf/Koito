@@ -38,6 +38,7 @@ const (
 	DISABLE_MUSICBRAINZ_ENV        = "KOITO_DISABLE_MUSICBRAINZ"
 	SUBSONIC_URL_ENV               = "KOITO_SUBSONIC_URL"
 	SUBSONIC_PARAMS_ENV            = "KOITO_SUBSONIC_PARAMS"
+	LASTFM_API_KEY_ENV             = "KOITO_LASTFM_API_KEY"
 	SKIP_IMPORT_ENV                = "KOITO_SKIP_IMPORT"
 	ALLOWED_HOSTS_ENV              = "KOITO_ALLOWED_HOSTS"
 	CORS_ORIGINS_ENV               = "KOITO_CORS_ALLOWED_ORIGINS"
@@ -72,6 +73,7 @@ type config struct {
 	disableMusicBrainz     bool
 	subsonicUrl            string
 	subsonicParams         string
+	lastfmApiKey           string
 	subsonicEnabled        bool
 	skipImport             bool
 	fetchImageDuringImport bool
@@ -165,6 +167,7 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	if cfg.subsonicEnabled && (cfg.subsonicUrl == "" || cfg.subsonicParams == "") {
 		return nil, fmt.Errorf("loadConfig: invalid configuration: both %s and %s must be set in order to use subsonic image fetching", SUBSONIC_URL_ENV, SUBSONIC_PARAMS_ENV)
 	}
+	cfg.lastfmApiKey = getenv(LASTFM_API_KEY_ENV)
 	cfg.skipImport = parseBool(getenv(SKIP_IMPORT_ENV))
 
 	cfg.userAgent = fmt.Sprintf("Koito %s (contact@koito.io)", version)
@@ -359,6 +362,12 @@ func SubsonicParams() string {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.subsonicParams
+}
+
+func LastFMApiKey() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.lastfmApiKey
 }
 
 func SkipImport() bool {

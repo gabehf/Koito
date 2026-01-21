@@ -17,6 +17,8 @@ type ImageSource struct {
 	deezerC         *DeezerClient
 	subsonicEnabled bool
 	subsonicC       *SubsonicClient
+	lastfmEnabled   bool
+	lastfmC         *LastFMClient
 	caaEnabled      bool
 }
 type ImageSourceOpts struct {
@@ -24,6 +26,7 @@ type ImageSourceOpts struct {
 	EnableCAA      bool
 	EnableDeezer   bool
 	EnableSubsonic bool
+	EnableLastFM   bool
 }
 
 var once sync.Once
@@ -57,6 +60,10 @@ func Initialize(opts ImageSourceOpts) {
 			imgsrc.subsonicEnabled = true
 			imgsrc.subsonicC = NewSubsonicClient()
 		}
+		if opts.EnableLastFM {
+			imgsrc.lastfmEnabled = true
+			imgsrc.lastfmC = NewLastFMClient()
+		}
 	})
 }
 
@@ -76,6 +83,16 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	} else {
 		l.Debug().Msg("GetArtistImage: Subsonic image fetching is disabled")
 	}
+	if imgsrc.lastfmEnabled {
+		img, err := imgsrc.lastfmC.GetArtistImage(ctx, opts.MBID, opts.Aliases[0])
+		if err != nil {
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from LastFM")
+		} else if img != "" {
+			return img, nil
+		}
+	} else {
+		l.Debug().Msg("GetArtistImage: LastFM image fetching is disabled")
+	}
 	if imgsrc.deezerEnabled {
 		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
 		if err != nil {
@@ -90,6 +107,7 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	l.Warn().Msg("GetArtistImage: No image providers are enabled")
 	return "", nil
 }
+
 func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
 	if imgsrc.subsonicEnabled {
@@ -109,9 +127,12 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 			resp, err := http.DefaultClient.Head(url)
 			if err != nil {
 				l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from CoverArtArchive with Release MBID")
-			}
-			if resp.StatusCode == 200 {
-				return url, nil
+			} else {
+				if resp.StatusCode == 200 {
+					return url, nil
+				} else {
+					l.Debug().Int("status", resp.StatusCode).Msg("GetAlbumImage: Got non-OK response from CoverArtArchive")
+				}
 			}
 		}
 		if opts.ReleaseGroupMbzID != nil && *opts.ReleaseGroupMbzID != uuid.Nil {
@@ -124,6 +145,16 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 				return url, nil
 			}
 		}
+	}
+	if imgsrc.lastfmEnabled {
+		img, err := imgsrc.lastfmC.GetAlbumImage(ctx, opts.ReleaseMbzID, opts.Artists[0], opts.Album)
+		if err != nil {
+			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Subsonic")
+		}
+		if img != "" {
+			return img, nil
+		}
+		l.Debug().Msg("Could not find album cover from Subsonic")
 	}
 	if imgsrc.deezerEnabled {
 		l.Debug().Msg("Attempting to find album image from Deezer")
