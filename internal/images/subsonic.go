@@ -11,6 +11,7 @@ import (
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/queue"
+	"github.com/google/uuid"
 )
 
 type SubsonicClient struct {
@@ -26,6 +27,8 @@ type SubsonicAlbumResponse struct {
 		SearchResult3 struct {
 			Album []struct {
 				CoverArt string `json:"coverArt"`
+				Artist   string `json:"artist"`
+				MBID     string `json:"musicBrainzId"`
 			} `json:"album"`
 		} `json:"searchResult3"`
 	} `json:"subsonic-response"`
@@ -43,7 +46,7 @@ type SubsonicArtistResponse struct {
 }
 
 const (
-	subsonicAlbumSearchFmtStr  = "/rest/search3?%s&f=json&query=%s&v=1.13.0&c=koito&artistCount=0&songCount=0&albumCount=1"
+	subsonicAlbumSearchFmtStr  = "/rest/search3?%s&f=json&query=%s&v=1.13.0&c=koito&artistCount=0&songCount=0&albumCount=10"
 	subsonicArtistSearchFmtStr = "/rest/search3?%s&f=json&query=%s&v=1.13.0&c=koito&artistCount=1&songCount=0&albumCount=0"
 	subsonicCoverArtFmtStr     = "/rest/getCoverArt?%s&id=%s&v=1.13.0&c=koito"
 )
@@ -106,25 +109,61 @@ func (c *SubsonicClient) getEntity(ctx context.Context, endpoint string, result 
 	return nil
 }
 
-func (c *SubsonicClient) GetAlbumImage(ctx context.Context, artist, album string) (string, error) {
+func (c *SubsonicClient) GetAlbumImage(ctx context.Context, mbid *uuid.UUID, artist, album string) (string, error) {
 	l := logger.FromContext(ctx)
 	resp := new(SubsonicAlbumResponse)
 	l.Debug().Msgf("Finding album image for %s from artist %s", album, artist)
-	err := c.getEntity(ctx, fmt.Sprintf(subsonicAlbumSearchFmtStr, c.authParams, url.QueryEscape(artist+" "+album)), resp)
+	// first try mbid search
+	if mbid != nil {
+		l.Debug().Str("mbid", mbid.String()).Msg("Searching album image by MBID")
+		err := c.getEntity(ctx, fmt.Sprintf(subsonicAlbumSearchFmtStr, c.authParams, url.QueryEscape(mbid.String())), resp)
+		if err != nil {
+			return "", fmt.Errorf("GetAlbumImage: %v", err)
+		}
+		l.Debug().Any("subsonic_response", resp).Msg("")
+		if len(resp.SubsonicResponse.SearchResult3.Album) >= 1 {
+			return cfg.SubsonicUrl() + fmt.Sprintf(subsonicCoverArtFmtStr, c.authParams, url.QueryEscape(resp.SubsonicResponse.SearchResult3.Album[0].CoverArt)), nil
+		}
+	}
+	// else do artist match
+	l.Debug().Str("title", album).Str("artist", artist).Msg("Searching album image by title and artist")
+	err := c.getEntity(ctx, fmt.Sprintf(subsonicAlbumSearchFmtStr, c.authParams, url.QueryEscape(album)), resp)
 	if err != nil {
 		return "", fmt.Errorf("GetAlbumImage: %v", err)
 	}
-	l.Debug().Any("subsonic_response", resp).Send()
-	if len(resp.SubsonicResponse.SearchResult3.Album) < 1 || resp.SubsonicResponse.SearchResult3.Album[0].CoverArt == "" {
-		return "", fmt.Errorf("GetAlbumImage: failed to get album art")
+	l.Debug().Any("subsonic_response", resp).Msg("")
+	if len(resp.SubsonicResponse.SearchResult3.Album) < 1 {
+		return "", fmt.Errorf("GetAlbumImage: failed to get album art from subsonic")
 	}
-	return cfg.SubsonicUrl() + fmt.Sprintf(subsonicCoverArtFmtStr, c.authParams, url.QueryEscape(resp.SubsonicResponse.SearchResult3.Album[0].CoverArt)), nil
+	for _, album := range resp.SubsonicResponse.SearchResult3.Album {
+		if album.Artist == artist {
+			return cfg.SubsonicUrl() + fmt.Sprintf(subsonicCoverArtFmtStr, c.authParams, url.QueryEscape(resp.SubsonicResponse.SearchResult3.Album[0].CoverArt)), nil
+		}
+	}
+	return "", fmt.Errorf("GetAlbumImage: failed to get album art from subsonic")
 }
 
-func (c *SubsonicClient) GetArtistImage(ctx context.Context, artist string) (string, error) {
+func (c *SubsonicClient) GetArtistImage(ctx context.Context, mbid *uuid.UUID, artist string) (string, error) {
 	l := logger.FromContext(ctx)
 	resp := new(SubsonicArtistResponse)
 	l.Debug().Msgf("Finding artist image for %s", artist)
+	// first try mbid search
+	if mbid != nil {
+		l.Debug().Str("mbid", mbid.String()).Msg("Searching artist image by MBID")
+		err := c.getEntity(ctx, fmt.Sprintf(subsonicArtistSearchFmtStr, c.authParams, url.QueryEscape(mbid.String())), resp)
+		if err != nil {
+			return "", fmt.Errorf("GetArtistImage: %v", err)
+		}
+		l.Debug().Any("subsonic_response", resp).Msg("")
+		if len(resp.SubsonicResponse.SearchResult3.Artist) < 1 || resp.SubsonicResponse.SearchResult3.Artist[0].ArtistImageUrl == "" {
+			return "", fmt.Errorf("GetArtistImage: failed to get artist art")
+		}
+		// Subsonic seems to have a tendency to return an artist image even though the url is a 404
+		if err = ValidateImageURL(resp.SubsonicResponse.SearchResult3.Artist[0].ArtistImageUrl); err != nil {
+			return "", fmt.Errorf("GetArtistImage: failed to get validate image url")
+		}
+	}
+	l.Debug().Str("artist", artist).Msg("Searching artist image by name")
 	err := c.getEntity(ctx, fmt.Sprintf(subsonicArtistSearchFmtStr, c.authParams, url.QueryEscape(artist)), resp)
 	if err != nil {
 		return "", fmt.Errorf("GetArtistImage: %v", err)

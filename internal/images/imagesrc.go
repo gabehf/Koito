@@ -31,6 +31,7 @@ var imgsrc ImageSource
 
 type ArtistImageOpts struct {
 	Aliases []string
+	MBID    *uuid.UUID
 }
 
 type AlbumImageOpts struct {
@@ -66,7 +67,7 @@ func Shutdown() {
 func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
 	if imgsrc.subsonicEnabled {
-		img, err := imgsrc.subsonicC.GetArtistImage(ctx, opts.Aliases[0])
+		img, err := imgsrc.subsonicC.GetArtistImage(ctx, opts.MBID, opts.Aliases[0])
 		if err != nil {
 			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Subsonic")
 		} else if img != "" {
@@ -92,7 +93,7 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
 	if imgsrc.subsonicEnabled {
-		img, err := imgsrc.subsonicC.GetAlbumImage(ctx, opts.Artists[0], opts.Album)
+		img, err := imgsrc.subsonicC.GetAlbumImage(ctx, opts.ReleaseMbzID, opts.Artists[0], opts.Album)
 		if err != nil {
 			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Subsonic")
 		}
