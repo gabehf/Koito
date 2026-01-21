@@ -155,33 +155,30 @@ func (q *Queries) GetAllTracksFromArtist(ctx context.Context, artistID int32) ([
 
 const getTopTracksByArtistPaginated = `-- name: GetTopTracksByArtistPaginated :many
 SELECT
-    x.id,
-    x.title,
-    x.musicbrainz_id,
-    x.release_id,
-    x.image,
+    x.track_id AS id,
+    t.title,
+    t.musicbrainz_id,
+    t.release_id,
+    r.image,
     x.listen_count,
-    x.artists,
-    RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    get_artists_for_track(x.track_id) AS artists,
+    x.rank
 FROM (
     SELECT
-        t.id,
-        t.title,
-        t.musicbrainz_id,
-        t.release_id,
-        r.image,
+        l.track_id,
         COUNT(*) AS listen_count,
-        get_artists_for_track(t.id) AS artists
+        RANK() OVER (ORDER BY COUNT(*) DESC) as rank
     FROM listens l
-    JOIN tracks_with_title t ON l.track_id = t.id
-    JOIN releases r ON t.release_id = r.id
-    JOIN artist_tracks at ON at.track_id = t.id
+    JOIN artist_tracks at ON l.track_id = at.track_id
     WHERE l.listened_at BETWEEN $1 AND $2
-      AND at.artist_id = $5
-    GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
+        AND at.artist_id = $5
+    GROUP BY l.track_id
+    ORDER BY listen_count DESC
+    LIMIT $3 OFFSET $4
 ) x
-ORDER BY x.listen_count DESC, x.id
-LIMIT $3 OFFSET $4
+JOIN tracks_with_title t ON x.track_id = t.id
+JOIN releases r ON t.release_id = r.id
+ORDER BY x.listen_count DESC, x.track_id
 `
 
 type GetTopTracksByArtistPaginatedParams struct {
@@ -240,32 +237,30 @@ func (q *Queries) GetTopTracksByArtistPaginated(ctx context.Context, arg GetTopT
 
 const getTopTracksInReleasePaginated = `-- name: GetTopTracksInReleasePaginated :many
 SELECT
-    x.id,
-    x.title,
-    x.musicbrainz_id,
-    x.release_id,
-    x.image,
+    x.track_id AS id,
+    t.title,
+    t.musicbrainz_id,
+    t.release_id,
+    r.image,
     x.listen_count,
-    x.artists,
-    RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    get_artists_for_track(x.track_id) AS artists,
+    x.rank
 FROM (
     SELECT
-        t.id,
-        t.title,
-        t.musicbrainz_id,
-        t.release_id,
-        r.image,
+        l.track_id,
         COUNT(*) AS listen_count,
-        get_artists_for_track(t.id) AS artists
+        RANK() OVER (ORDER BY COUNT(*) DESC) as rank
     FROM listens l
-    JOIN tracks_with_title t ON l.track_id = t.id
-    JOIN releases r ON t.release_id = r.id
+    JOIN tracks t ON l.track_id = t.id
     WHERE l.listened_at BETWEEN $1 AND $2
-      AND t.release_id = $5
-    GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
+        AND t.release_id = $5
+    GROUP BY l.track_id
+    ORDER BY listen_count DESC
+    LIMIT $3 OFFSET $4
 ) x
-ORDER BY x.listen_count DESC, x.id
-LIMIT $3 OFFSET $4
+JOIN tracks_with_title t ON x.track_id = t.id
+JOIN releases r ON t.release_id = r.id
+ORDER BY x.listen_count DESC, x.track_id
 `
 
 type GetTopTracksInReleasePaginatedParams struct {
@@ -324,31 +319,28 @@ func (q *Queries) GetTopTracksInReleasePaginated(ctx context.Context, arg GetTop
 
 const getTopTracksPaginated = `-- name: GetTopTracksPaginated :many
 SELECT
-    x.id,
-    x.title,
-    x.musicbrainz_id,
-    x.release_id,
-    x.image,
+    x.track_id AS id,
+    t.title,
+    t.musicbrainz_id,
+    t.release_id,
+    r.image,
     x.listen_count,
-    x.artists,
-    RANK() OVER (ORDER BY x.listen_count DESC) AS rank
+    get_artists_for_track(x.track_id) AS artists,
+    x.rank
 FROM (
     SELECT
-        t.id,
-        t.title,
-        t.musicbrainz_id,
-        t.release_id,
-        r.image,
+        track_id,
         COUNT(*) AS listen_count,
-        get_artists_for_track(t.id) AS artists
-    FROM listens l
-    JOIN tracks_with_title t ON l.track_id = t.id
-    JOIN releases r ON t.release_id = r.id
-    WHERE l.listened_at BETWEEN $1 AND $2
-    GROUP BY t.id, t.title, t.musicbrainz_id, t.release_id, r.image
+        RANK() OVER (ORDER BY COUNT(*) DESC) as rank
+    FROM listens
+    WHERE listened_at BETWEEN $1 AND $2
+    GROUP BY track_id
+    ORDER BY listen_count DESC
+    LIMIT $3 OFFSET $4
 ) x
-ORDER BY x.listen_count DESC, x.id
-LIMIT $3 OFFSET $4
+JOIN tracks_with_title t ON x.track_id = t.id
+JOIN releases r ON t.release_id = r.id
+ORDER BY x.listen_count DESC, x.track_id
 `
 
 type GetTopTracksPaginatedParams struct {

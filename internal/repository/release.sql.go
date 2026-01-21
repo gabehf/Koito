@@ -353,13 +353,13 @@ func (q *Queries) GetReleasesWithoutImages(ctx context.Context, arg GetReleasesW
 
 const getTopReleasesFromArtist = `-- name: GetTopReleasesFromArtist :many
 SELECT
-  x.id, x.musicbrainz_id, x.image, x.various_artists, x.image_source, x.title, x.listen_count, x.artists,
+  x.id, x.musicbrainz_id, x.image, x.various_artists, x.image_source, x.title, x.listen_count,
+  get_artists_for_release(x.id) AS artists,
   RANK() OVER (ORDER BY x.listen_count DESC) AS rank
 FROM (
     SELECT
         r.id, r.musicbrainz_id, r.image, r.various_artists, r.image_source, r.title,
-        COUNT(*) AS listen_count,
-        get_artists_for_release(r.id) AS artists
+        COUNT(*) AS listen_count
     FROM listens l
     JOIN tracks t ON l.track_id = t.id
     JOIN releases_with_title r ON t.release_id = r.id
@@ -430,13 +430,13 @@ func (q *Queries) GetTopReleasesFromArtist(ctx context.Context, arg GetTopReleas
 
 const getTopReleasesPaginated = `-- name: GetTopReleasesPaginated :many
 SELECT
-  x.id, x.musicbrainz_id, x.image, x.various_artists, x.image_source, x.title, x.listen_count, x.artists,
+  x.id, x.musicbrainz_id, x.image, x.various_artists, x.image_source, x.title, x.listen_count,
+  get_artists_for_release(x.id) AS artists,
   RANK() OVER (ORDER BY x.listen_count DESC) AS rank
 FROM (
     SELECT
         r.id, r.musicbrainz_id, r.image, r.various_artists, r.image_source, r.title,
-        COUNT(*) AS listen_count,
-        get_artists_for_release(r.id) AS artists
+        COUNT(*) AS listen_count
     FROM listens l
     JOIN tracks t ON l.track_id = t.id
     JOIN releases_with_title r ON t.release_id = r.id
