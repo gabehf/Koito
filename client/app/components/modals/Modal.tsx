@@ -32,10 +32,34 @@ export function Modal({
     }
   }, [isOpen, shouldRender]);
 
-  // Close on Escape key
+  // Handle keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      // Close on Escape key
+      if (e.key === 'Escape') {
+        onClose()
+      // Trap tab navigation to the modal
+      } else if (e.key === 'Tab') {
+        if (modalRef.current) {
+          const focusableEls = modalRef.current.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+          );
+          const firstEl = focusableEls[0];
+          const lastEl = focusableEls[focusableEls.length - 1];
+          const activeEl = document.activeElement
+
+          if (e.shiftKey && activeEl === firstEl) {
+            e.preventDefault();
+            lastEl.focus();
+          } else if (!e.shiftKey && activeEl === lastEl) {
+            e.preventDefault();
+            firstEl.focus();
+          } else if (!Array.from(focusableEls).find(node => node.isEqualNode(activeEl))) {
+            e.preventDefault();
+            firstEl.focus();
+          }
+        }
+      };
     };
     if (isOpen) document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -70,13 +94,13 @@ export function Modal({
         }`}
         style={{ maxWidth: maxW ?? 600, height: h ?? '' }}
       >
+        {children}
         <button
           onClick={onClose}
           className="absolute top-2 right-2 color-fg-tertiary hover:cursor-pointer"
         >
           🞪
         </button>
-        {children}
       </div>
     </div>,
     document.body

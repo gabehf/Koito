@@ -20,7 +20,7 @@ export default function DeleteModal({ open, setOpen, title, id, type }: Props) {
     setLoading(true);
     deleteItem(type.toLowerCase(), id).then((r) => {
       if (r.ok) {
-        navigate("/");
+        navigate(-1);
       } else {
         console.log(r);
       }
