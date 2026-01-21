@@ -47,6 +47,7 @@ const (
 	IMPORT_AFTER_UNIX_ENV          = "KOITO_IMPORT_AFTER_UNIX"
 	FETCH_IMAGES_DURING_IMPORT_ENV = "KOITO_FETCH_IMAGES_DURING_IMPORT"
 	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
+	ARTIST_SEPARATORS_TYPO_ENV     = "KOITO_ARTIST_SEPERATORS_REGEX" // common misspelling
 	LOGIN_GATE_ENV                 = "KOITO_LOGIN_GATE"
 )
 
@@ -194,8 +195,12 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	rawCors := getenv(CORS_ORIGINS_ENV)
 	cfg.allowedOrigins = strings.Split(rawCors, ",")
 
-	if getenv(ARTIST_SEPARATORS_ENV) != "" {
-		for pattern := range strings.SplitSeq(getenv(ARTIST_SEPARATORS_ENV), ";;") {
+	artistSepEnv := getenv(ARTIST_SEPARATORS_ENV)
+	if artistSepEnv == "" {
+		artistSepEnv = getenv(ARTIST_SEPARATORS_TYPO_ENV) // accept common misspelling
+	}
+	if artistSepEnv != "" {
+		for pattern := range strings.SplitSeq(artistSepEnv, ";;") {
 			regex, err := regexp.Compile(pattern)
 			if err != nil {
 				return nil, fmt.Errorf("failed to compile regex pattern %s", pattern)
