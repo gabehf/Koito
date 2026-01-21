@@ -82,6 +82,9 @@ If the environment variable is defined without **and** with the suffix at the sa
 If Koito is unable to validate your Subsonic configuration, it will fail to start. If you notice your container isn't running after
 changing these parameters, check the logs!
 :::
+##### KOITO_LASTFM_API_KEY
+- Required: `false`
+- Description: Your LastFM API key, which will be used for fetching images if provided. You can get an API key [here](https://www.last.fm/api/authentication),
 ##### KOITO_SKIP_IMPORT
 - Default: `false`
 - Description: Skips running the importer on startup.
