@@ -130,30 +130,21 @@ h4 {
   text-decoration: underline;
 }
 
-input[type="text"] {
-  border: 1px solid var(--color-bg);
-}
-input[type="text"]:focus {
-  outline: none;
-  border: 1px solid var(--color-fg-tertiary);
-}
+input[type="text"],
+input[type="password"],
 textarea {
   border: 1px solid var(--color-bg);
 }
+input[type="checkbox"] {
+  height: fit-content;
+}
+input:focus,
+button:focus,
+a:focus,
+select:focus,
 textarea:focus {
-  outline: none;
-  border: 1px solid var(--color-fg-tertiary);
-}
-input[type="password"] {
-  border: 1px solid var(--color-bg);
-}
-input[type="password"]:focus {
-  outline: none;
-  border: 1px solid var(--color-fg-tertiary);
-}
-input[type="checkbox"]:focus {
-  outline: none;
-  border: 1px solid var(--color-fg-tertiary);
+  border-color: transparent;
+  outline: 2px solid var(--color-fg-tertiary);
 }
 
 button:hover {
