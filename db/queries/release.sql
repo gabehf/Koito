@@ -48,12 +48,12 @@ WHERE r.title = ANY ($1::TEXT[])
 -- name: GetTopReleasesFromArtist :many
 SELECT
   x.*,
+  get_artists_for_release(x.id) AS artists,
   RANK() OVER (ORDER BY x.listen_count DESC) AS rank
 FROM (
     SELECT
         r.*,
-        COUNT(*) AS listen_count,
-        get_artists_for_release(r.id) AS artists
+        COUNT(*) AS listen_count
     FROM listens l
     JOIN tracks t ON l.track_id = t.id
     JOIN releases_with_title r ON t.release_id = r.id
@@ -68,12 +68,12 @@ LIMIT $3 OFFSET $4;
 -- name: GetTopReleasesPaginated :many
 SELECT
   x.*,
+  get_artists_for_release(x.id) AS artists,
   RANK() OVER (ORDER BY x.listen_count DESC) AS rank
 FROM (
     SELECT
         r.*,
-        COUNT(*) AS listen_count,
-        get_artists_for_release(r.id) AS artists
+        COUNT(*) AS listen_count
     FROM listens l
     JOIN tracks t ON l.track_id = t.id
     JOIN releases_with_title r ON t.release_id = r.id
