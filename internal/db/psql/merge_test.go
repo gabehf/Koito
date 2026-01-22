@@ -12,27 +12,27 @@ func setupTestDataForMerge(t *testing.T) {
 	truncateTestData(t)
 	// Insert artists
 	err := store.Exec(context.Background(),
-		`INSERT INTO artists (musicbrainz_id, image, image_source) 
+		`INSERT INTO artists (musicbrainz_id, image, image_source)
 			VALUES ('00000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000000', 'source.com'),
 				   ('00000000-0000-0000-0000-000000000002', NULL, NULL)`)
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary) 
+		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (1, 'Artist One', 'Testing', true),
 				   (2, 'Artist Two', 'Testing', true)`)
 	require.NoError(t, err)
 
 	// Insert albums
 	err = store.Exec(context.Background(),
-		`INSERT INTO releases (musicbrainz_id, image, image_source) 
+		`INSERT INTO releases (musicbrainz_id, image, image_source)
 			VALUES ('11111111-1111-1111-1111-111111111111', '20000000-0000-0000-0000-000000000000', 'source.com'),
 				   ('22222222-2222-2222-2222-222222222222', NULL, NULL),
 				   (NULL, NULL, NULL)`)
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO release_aliases (release_id, alias, source, is_primary) 
+		`INSERT INTO release_aliases (release_id, alias, source, is_primary)
 			VALUES (1, 'Album One', 'Testing', true),
 				   (2, 'Album Two', 'Testing', true),
 				   (3, 'Album Three', 'Testing', true)`)
@@ -40,7 +40,7 @@ func setupTestDataForMerge(t *testing.T) {
 
 	// Insert tracks
 	err = store.Exec(context.Background(),
-		`INSERT INTO tracks (musicbrainz_id, release_id) 
+		`INSERT INTO tracks (musicbrainz_id, release_id)
 			VALUES ('33333333-3333-3333-3333-333333333333', 1),
 				   ('44444444-4444-4444-4444-444444444444', 2),
 				   ('55555555-5555-5555-5555-555555555555', 1),
@@ -48,7 +48,7 @@ func setupTestDataForMerge(t *testing.T) {
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO track_aliases (track_id, alias, source, is_primary) 
+		`INSERT INTO track_aliases (track_id, alias, source, is_primary)
 			VALUES (1, 'Track One', 'Testing', true),
 				   (2, 'Track Two', 'Testing', true),
 				   (3, 'Track Three', 'Testing', true),
@@ -57,18 +57,18 @@ func setupTestDataForMerge(t *testing.T) {
 
 	// Associate artists with albums and tracks
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_releases (artist_id, release_id) 
+		`INSERT INTO artist_releases (artist_id, release_id)
 			VALUES (1, 1), (2, 2), (1, 3)`)
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_tracks (artist_id, track_id) 
+		`INSERT INTO artist_tracks (artist_id, track_id)
 			VALUES (1, 1), (2, 2), (1, 3), (1, 4)`)
 	require.NoError(t, err)
 
 	// Insert listens
 	err = store.Exec(context.Background(),
-		`INSERT INTO listens (user_id, track_id, listened_at) 
+		`INSERT INTO listens (user_id, track_id, listened_at)
 			VALUES (1, 1, NOW() - INTERVAL '1 day'),
 				   (1, 2, NOW() - INTERVAL '2 days'),
 				   (1, 3, NOW() - INTERVAL '3 days'),
@@ -90,14 +90,14 @@ func TestMergeTracks(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 2, count, "expected all listens to be merged into Track 2")
 
-	// Verify artist is associated with album
+	// Verify old artist is not associated with album
 	exists, err := store.RowExists(ctx, `
     SELECT EXISTS (
       SELECT 1 FROM artist_releases
       WHERE release_id = $1 AND artist_id = $2
     )`, 2, 1)
 	require.NoError(t, err)
-	assert.True(t, exists, "expected old artist to be associated with album")
+	assert.False(t, exists)
 
 	truncateTestData(t)
 }
