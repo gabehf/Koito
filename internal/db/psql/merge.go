@@ -52,7 +52,7 @@ func (d *Psql) MergeTracks(ctx context.Context, fromId, toId int32) error {
 	}
 	err = qtx.CleanOrphanedEntries(ctx)
 	if err != nil {
-		l.Err(err).Msg("Failed to clean orphaned entries")
+		l.Err(err).Msg("MergeTracks: Failed to clean orphaned entries")
 		return err
 	}
 	return tx.Commit(ctx)

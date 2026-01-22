@@ -62,7 +62,7 @@ func testDataForTracks(t *testing.T) {
 			VALUES (1, 1), (2, 2)`)
 	require.NoError(t, err)
 
-	// Associate tracks with artists
+	// Insert listens
 	err = store.Exec(context.Background(),
 		`INSERT INTO listens (user_id, track_id, listened_at)
 			VALUES (1, 1, NOW()), (1, 2, NOW())`)
@@ -227,4 +227,28 @@ func TestDeleteTrack(t *testing.T) {
 
 	_, err = store.Count(ctx, `SELECT * FROM tracks WHERE id = 2`)
 	require.ErrorIs(t, err, pgx.ErrNoRows) // no rows error
+}
+
+func TestReleaseAssociations(t *testing.T) {
+	testDataForTracks(t)
+	ctx := context.Background()
+
+	track, err := store.SaveTrack(ctx, db.SaveTrackOpts{
+		Title:     "Track Three",
+		AlbumID:   2,
+		ArtistIDs: []int32{2, 1}, // Artist Two feat. Artist One
+		Duration:  100,
+	})
+	require.NoError(t, err)
+	count, err := store.Count(ctx, `SELECT COUNT(*) FROM artist_releases WHERE release_id = 2`)
+	require.NoError(t, err)
+	require.Equal(t, 2, count, "expected release to be associated with artist from inserted track")
+
+	err = store.DeleteTrack(ctx, track.ID)
+	require.NoError(t, err)
+
+	count, err = store.Count(ctx, `SELECT COUNT(*) FROM artist_releases WHERE release_id = 2`)
+	require.NoError(t, err)
+	require.Equal(t, 1, count, "expected artist no longer on release to be disassociated from release")
+
 }
