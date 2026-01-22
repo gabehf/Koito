@@ -137,6 +137,13 @@ func (d *Psql) SaveTrack(ctx context.Context, opts db.SaveTrackOpts) (*models.Tr
 		if err != nil {
 			return nil, fmt.Errorf("SaveTrack: AssociateArtistToTrack: %w", err)
 		}
+		err = qtx.AssociateArtistToRelease(ctx, repository.AssociateArtistToReleaseParams{
+			ArtistID:  aid,
+			ReleaseID: trackRow.ReleaseID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("SaveTrack: AssociateArtistToTrack: %w", err)
+		}
 	}
 	// insert primary alias
 	err = qtx.InsertTrackAlias(ctx, repository.InsertTrackAliasParams{
@@ -233,7 +240,28 @@ func (d *Psql) SaveTrackAliases(ctx context.Context, id int32, aliases []string,
 }
 
 func (d *Psql) DeleteTrack(ctx context.Context, id int32) error {
-	return d.q.DeleteTrack(ctx, id)
+	l := logger.FromContext(ctx)
+	tx, err := d.conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		l.Err(err).Msg("Failed to begin transaction")
+		return fmt.Errorf("DeleteTrack: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := d.q.WithTx(tx)
+
+	err = qtx.DeleteTrack(ctx, id)
+	if err != nil {
+		return fmt.Errorf("DeleteTrack: DeleteTrack: %w", err)
+	}
+
+	// also clean orphaned entries to ensure artists are disassociated with releases where
+	// they no longer have any tracks on the release
+	err = qtx.CleanOrphanedEntries(ctx)
+	if err != nil {
+		return fmt.Errorf("DeleteTrack: CleanOrphanedEntries: %w", err)
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (d *Psql) DeleteTrackAlias(ctx context.Context, id int32, alias string) error {

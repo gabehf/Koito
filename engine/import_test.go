@@ -276,6 +276,7 @@ func TestImportKoito(t *testing.T) {
 	giriReleaseMBID := uuid.MustParse("ac1f8da0-21d7-426e-83b0-befff06f0871")
 	suzukiMBID := uuid.MustParse("30f851bb-dba3-4e9b-811c-5f27f595c86a")
 	nijinoTrackMBID := uuid.MustParse("a4f26836-3894-46c1-acac-227808308687")
+	lp3MBID := uuid.MustParse("d0ec30bd-7cdc-417c-979d-5a0631b8a161")
 
 	input, err := os.ReadFile(src)
 	require.NoError(t, err)
@@ -312,6 +313,12 @@ func TestImportKoito(t *testing.T) {
 	aliases, err := store.GetAllAlbumAliases(ctx, album.ID)
 	require.NoError(t, err)
 	assert.Contains(t, utils.FlattenAliases(aliases), "Nijinoiroyo Azayakadeare (NELKE ver.)")
+	// ensure album associations are saved
+	album, err = store.GetAlbum(ctx, db.GetAlbumOpts{MusicBrainzID: lp3MBID})
+	require.NoError(t, err)
+	assert.Contains(t, utils.FlattenSimpleArtistNames(album.Artists), "Elizabeth Powell")
+	assert.Contains(t, utils.FlattenSimpleArtistNames(album.Artists), "Rachel Goswell")
+	assert.Contains(t, utils.FlattenSimpleArtistNames(album.Artists), "American Football")
 
 	// ensure all tracks are saved
 	track, err := store.GetTrack(ctx, db.GetTrackOpts{MusicBrainzID: nijinoTrackMBID})
