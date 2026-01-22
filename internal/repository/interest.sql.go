@@ -11,64 +11,57 @@ import (
 )
 
 const getGroupedListensFromArtist = `-- name: GetGroupedListensFromArtist :many
-WITH artist_listens AS (
+WITH bounds AS (
     SELECT
-        l.listened_at
+        MIN(l.listened_at) AS start_time,
+        NOW() AS end_time
     FROM listens l
     JOIN tracks t ON t.id = l.track_id
     JOIN artist_tracks at ON at.track_id = t.id
     WHERE at.artist_id = $1
 ),
-bounds AS (
+stats AS (
     SELECT
-        MIN(listened_at) AS start_time,
-        MAX(listened_at) AS end_time
-    FROM artist_listens
+        start_time,
+        end_time,
+        EXTRACT(EPOCH FROM (end_time - start_time)) AS total_seconds,
+        ((end_time - start_time) / $2::int) AS bucket_interval
+    FROM bounds
 ),
-bucketed AS (
+bucket_series AS (
+    SELECT generate_series(0, $2::int - 1) AS idx
+),
+listen_indices AS (
     SELECT
         LEAST(
-            $2 - 1,
+            $2::int - 1,
             FLOOR(
-                (
-                    EXTRACT(EPOCH FROM (al.listened_at - b.start_time))
-                    /
-                    NULLIF(EXTRACT(EPOCH FROM (b.end_time - b.start_time)), 0)
-                ) * $2
+                (EXTRACT(EPOCH FROM (l.listened_at - s.start_time)) / NULLIF(s.total_seconds, 0))
+                * $2::int
             )::int
-        ) AS bucket_idx,
-        b.start_time,
-        b.end_time
-    FROM artist_listens al
-    CROSS JOIN bounds b
-),
-aggregated AS (
-    SELECT
-        start_time
-            + (
-                bucket_idx * (end_time - start_time)
-                / $2
-              ) AS bucket_start,
-        start_time
-            + (
-                (bucket_idx + 1) * (end_time - start_time)
-                / $2
-              ) AS bucket_end,
-        COUNT(*) AS listen_count
-    FROM bucketed
-    GROUP BY bucket_idx, start_time, end_time
+        ) AS bucket_idx
+    FROM listens l
+    JOIN tracks t ON t.id = l.track_id
+    JOIN artist_tracks at ON at.track_id = t.id
+    CROSS JOIN stats s
+    WHERE at.artist_id = $1
+      AND s.start_time IS NOT NULL
 )
 SELECT
-    bucket_start::timestamptz,
-    bucket_end::timestamptz,
-    listen_count
-FROM aggregated
-ORDER BY bucket_start
+    (s.start_time + (s.bucket_interval * bs.idx))::timestamptz AS bucket_start,
+    (s.start_time + (s.bucket_interval * (bs.idx + 1)))::timestamptz AS bucket_end,
+    COUNT(li.bucket_idx) AS listen_count
+FROM bucket_series bs
+CROSS JOIN stats s
+LEFT JOIN listen_indices li ON bs.idx = li.bucket_idx
+WHERE s.start_time IS NOT NULL
+GROUP BY bs.idx, s.start_time, s.bucket_interval
+ORDER BY bs.idx
 `
 
 type GetGroupedListensFromArtistParams struct {
 	ArtistID    int32
-	BucketCount interface{}
+	BucketCount int32
 }
 
 type GetGroupedListensFromArtistRow struct {
@@ -98,63 +91,55 @@ func (q *Queries) GetGroupedListensFromArtist(ctx context.Context, arg GetGroupe
 }
 
 const getGroupedListensFromRelease = `-- name: GetGroupedListensFromRelease :many
-WITH artist_listens AS (
+WITH bounds AS (
     SELECT
-        l.listened_at
+        MIN(l.listened_at) AS start_time,
+        NOW() AS end_time
     FROM listens l
     JOIN tracks t ON t.id = l.track_id
     WHERE t.release_id = $1
 ),
-bounds AS (
+stats AS (
     SELECT
-        MIN(listened_at) AS start_time,
-        MAX(listened_at) AS end_time
-    FROM artist_listens
+        start_time,
+        end_time,
+        EXTRACT(EPOCH FROM (end_time - start_time)) AS total_seconds,
+        ((end_time - start_time) / $2::int) AS bucket_interval
+    FROM bounds
 ),
-bucketed AS (
+bucket_series AS (
+    SELECT generate_series(0, $2::int - 1) AS idx
+),
+listen_indices AS (
     SELECT
         LEAST(
-            $2 - 1,
+            $2::int - 1,
             FLOOR(
-                (
-                    EXTRACT(EPOCH FROM (al.listened_at - b.start_time))
-                    /
-                    NULLIF(EXTRACT(EPOCH FROM (b.end_time - b.start_time)), 0)
-                ) * $2
+                (EXTRACT(EPOCH FROM (l.listened_at - s.start_time)) / NULLIF(s.total_seconds, 0))
+                * $2::int
             )::int
-        ) AS bucket_idx,
-        b.start_time,
-        b.end_time
-    FROM artist_listens al
-    CROSS JOIN bounds b
-),
-aggregated AS (
-    SELECT
-        start_time
-            + (
-                bucket_idx * (end_time - start_time)
-                / $2
-              ) AS bucket_start,
-        start_time
-            + (
-                (bucket_idx + 1) * (end_time - start_time)
-                / $2
-              ) AS bucket_end,
-        COUNT(*) AS listen_count
-    FROM bucketed
-    GROUP BY bucket_idx, start_time, end_time
+        ) AS bucket_idx
+    FROM listens l
+    JOIN tracks t ON t.id = l.track_id
+    CROSS JOIN stats s
+    WHERE t.release_id = $1
+      AND s.start_time IS NOT NULL
 )
 SELECT
-    bucket_start::timestamptz,
-    bucket_end::timestamptz,
-    listen_count
-FROM aggregated
-ORDER BY bucket_start
+    (s.start_time + (s.bucket_interval * bs.idx))::timestamptz AS bucket_start,
+    (s.start_time + (s.bucket_interval * (bs.idx + 1)))::timestamptz AS bucket_end,
+    COUNT(li.bucket_idx) AS listen_count
+FROM bucket_series bs
+CROSS JOIN stats s
+LEFT JOIN listen_indices li ON bs.idx = li.bucket_idx
+WHERE s.start_time IS NOT NULL
+GROUP BY bs.idx, s.start_time, s.bucket_interval
+ORDER BY bs.idx
 `
 
 type GetGroupedListensFromReleaseParams struct {
 	ReleaseID   int32
-	BucketCount interface{}
+	BucketCount int32
 }
 
 type GetGroupedListensFromReleaseRow struct {
@@ -184,63 +169,55 @@ func (q *Queries) GetGroupedListensFromRelease(ctx context.Context, arg GetGroup
 }
 
 const getGroupedListensFromTrack = `-- name: GetGroupedListensFromTrack :many
-WITH artist_listens AS (
+WITH bounds AS (
     SELECT
-        l.listened_at
+        MIN(l.listened_at) AS start_time,
+        NOW() AS end_time
     FROM listens l
     JOIN tracks t ON t.id = l.track_id
     WHERE t.id = $1
 ),
-bounds AS (
+stats AS (
     SELECT
-        MIN(listened_at) AS start_time,
-        MAX(listened_at) AS end_time
-    FROM artist_listens
+        start_time,
+        end_time,
+        EXTRACT(EPOCH FROM (end_time - start_time)) AS total_seconds,
+        ((end_time - start_time) / $2::int) AS bucket_interval
+    FROM bounds
 ),
-bucketed AS (
+bucket_series AS (
+    SELECT generate_series(0, $2::int - 1) AS idx
+),
+listen_indices AS (
     SELECT
         LEAST(
-            $2 - 1,
+            $2::int - 1,
             FLOOR(
-                (
-                    EXTRACT(EPOCH FROM (al.listened_at - b.start_time))
-                    /
-                    NULLIF(EXTRACT(EPOCH FROM (b.end_time - b.start_time)), 0)
-                ) * $2
+                (EXTRACT(EPOCH FROM (l.listened_at - s.start_time)) / NULLIF(s.total_seconds, 0))
+                * $2::int
             )::int
-        ) AS bucket_idx,
-        b.start_time,
-        b.end_time
-    FROM artist_listens al
-    CROSS JOIN bounds b
-),
-aggregated AS (
-    SELECT
-        start_time
-            + (
-                bucket_idx * (end_time - start_time)
-                / $2
-              ) AS bucket_start,
-        start_time
-            + (
-                (bucket_idx + 1) * (end_time - start_time)
-                / $2
-              ) AS bucket_end,
-        COUNT(*) AS listen_count
-    FROM bucketed
-    GROUP BY bucket_idx, start_time, end_time
+        ) AS bucket_idx
+    FROM listens l
+    JOIN tracks t ON t.id = l.track_id
+    CROSS JOIN stats s
+    WHERE t.id = $1
+      AND s.start_time IS NOT NULL
 )
 SELECT
-    bucket_start::timestamptz,
-    bucket_end::timestamptz,
-    listen_count
-FROM aggregated
-ORDER BY bucket_start
+    (s.start_time + (s.bucket_interval * bs.idx))::timestamptz AS bucket_start,
+    (s.start_time + (s.bucket_interval * (bs.idx + 1)))::timestamptz AS bucket_end,
+    COUNT(li.bucket_idx) AS listen_count
+FROM bucket_series bs
+CROSS JOIN stats s
+LEFT JOIN listen_indices li ON bs.idx = li.bucket_idx
+WHERE s.start_time IS NOT NULL
+GROUP BY bs.idx, s.start_time, s.bucket_interval
+ORDER BY bs.idx
 `
 
 type GetGroupedListensFromTrackParams struct {
 	ID          int32
-	BucketCount interface{}
+	BucketCount int32
 }
 
 type GetGroupedListensFromTrackRow struct {
