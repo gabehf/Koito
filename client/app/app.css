@@ -138,11 +138,11 @@ textarea {
 input[type="checkbox"] {
   height: fit-content;
 }
-input:focus,
-button:focus,
-a:focus,
-select:focus,
-textarea:focus {
+input:focus-visible,
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
   border-color: transparent;
   outline: 2px solid var(--color-fg-tertiary);
 }

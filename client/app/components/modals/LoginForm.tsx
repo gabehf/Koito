@@ -54,7 +54,7 @@ export default function LoginForm() {
             className="w-full mx-auto fg bg rounded p-2"
             onChange={(e) => setPassword(e.target.value)}
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <input
               type="checkbox"
               name="koito-remember"
