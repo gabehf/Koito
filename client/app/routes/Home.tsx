@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <main className="flex flex-grow justify-center pb-4 w-full bg-linear-to-b to-(--color-bg) from-(--color-bg-secondary) to-60%">
-      <div className="flex-1 flex flex-col items-center gap-16 min-h-0 mt-20">
+      <div className="flex-1 flex flex-col items-center gap-16 min-h-0 sm:mt-20 mt-10">
         <div className="flex flex-col md:flex-row gap-10 md:gap-20">
           <AllTimeStats />
           <ActivityGrid configurable />
