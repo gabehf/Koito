@@ -92,7 +92,7 @@ export const themes: Record<string, Theme> = {
     fg: "#fef9f3",
     fgSecondary: "#dbc6b0",
     fgTertiary: "#a3917a",
-    primary: "#d97706",
+    primary: "#F0850A",
     primaryDim: "#b45309",
     accent: "#8c4c28",
     accentDim: "#6b3b1f",
