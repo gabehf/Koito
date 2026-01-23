@@ -59,7 +59,7 @@ export default function RewindPage() {
   useEffect(() => {
     if (!stats.top_artists[0]) return;
 
-    const img = (stats.top_artists[0] as any)?.image;
+    const img = (stats.top_artists[0] as any)?.item.image;
     if (!img) return;
 
     average(imageUrl(img, "small"), { amount: 1 }).then((color) => {
