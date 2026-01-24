@@ -49,6 +49,7 @@ const (
 	FETCH_IMAGES_DURING_IMPORT_ENV = "KOITO_FETCH_IMAGES_DURING_IMPORT"
 	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
 	LOGIN_GATE_ENV                 = "KOITO_LOGIN_GATE"
+	FORCE_TZ                       = "KOITO_FORCE_TZ"
 )
 
 type config struct {
@@ -87,6 +88,7 @@ type config struct {
 	importAfter            time.Time
 	artistSeparators       []*regexp.Regexp
 	loginGate              bool
+	forceTZ                *time.Location
 }
 
 var (
@@ -211,6 +213,13 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 
 	if strings.ToLower(getenv(LOGIN_GATE_ENV)) == "true" {
 		cfg.loginGate = true
+	}
+
+	if getenv(FORCE_TZ) != "" {
+		cfg.forceTZ, err = time.LoadLocation(getenv(FORCE_TZ))
+		if err != nil {
+			return nil, fmt.Errorf("forced timezone '%s' is not a valid timezone", getenv(FORCE_TZ))
+		}
 	}
 
 	switch strings.ToLower(getenv(LOG_LEVEL_ENV)) {
@@ -429,4 +438,10 @@ func LoginGate() bool {
 	lock.RLock()
 	defer lock.RUnlock()
 	return globalConfig.loginGate
+}
+
+func ForceTZ() *time.Location {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.forceTZ
 }
