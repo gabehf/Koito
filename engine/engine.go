@@ -96,6 +96,10 @@ func Run(
 	defer store.Close(ctx)
 	l.Info().Msg("Engine: Database connection established")
 
+	if cfg.ForceTZ() != nil {
+		l.Debug().Msgf("Engine: Forcing the use of timezone '%s'", cfg.ForceTZ().String())
+	}
+
 	l.Debug().Msg("Engine: Initializing MusicBrainz client")
 	var mbzC mbz.MusicBrainzCaller
 	if !cfg.MusicBrainzDisabled() {
