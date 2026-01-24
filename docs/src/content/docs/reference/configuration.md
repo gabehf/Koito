@@ -65,8 +65,7 @@ If the environment variable is defined without **and** with the suffix at the sa
 - Default: `/etc/koito`
 - Description: The location where import folders and image caches are stored.
 ##### KOITO_FORCE_TZ
-- Description: A canonical IANA database time zone name that Koito will use to serve all clients. Overrides
-any timezones requested via a `tz` cookie or `tz` query parameter. Koito will fail to start if this value is invalid.
+- Description: A canonical IANA database time zone name (https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) that Koito will use to serve all clients. Overrides any timezones requested via a `tz` cookie or `tz` query parameter. Koito will fail to start if this value is invalid.
 ##### KOITO_DISABLE_DEEZER
 - Default: `false`
 - Description: Disables Deezer as a source for finding artist and album images.
