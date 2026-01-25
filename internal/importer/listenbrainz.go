@@ -85,7 +85,14 @@ func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrai
 		}
 		artistMbzIDs, err := utils.ParseUUIDSlice(payload.TrackMeta.AdditionalInfo.ArtistMBIDs)
 		if err != nil {
-			l.Debug().Err(err).Msg("Failed to parse one or more uuids")
+			l.Debug().AnErr("error", err).Msg("ImportListenBrainzFile: Failed to parse one or more UUIDs")
+		}
+		if len(artistMbzIDs) < 1 {
+			l.Debug().AnErr("error", err).Msg("ImportListenBrainzFile: Attempting to parse artist UUIDs from mbid_mapping")
+			utils.ParseUUIDSlice(payload.TrackMeta.MBIDMapping.ArtistMBIDs)
+			if err != nil {
+				l.Debug().AnErr("error", err).Msg("ImportListenBrainzFile: Failed to parse one or more UUIDs")
+			}
 		}
 		rgMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.ReleaseGroupMBID)
 		if err != nil {
@@ -93,11 +100,17 @@ func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrai
 		}
 		releaseMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.ReleaseMBID)
 		if err != nil {
-			releaseMbzID = uuid.Nil
+			releaseMbzID, err = uuid.Parse(payload.TrackMeta.MBIDMapping.ReleaseMBID)
+			if err != nil {
+				releaseMbzID = uuid.Nil
+			}
 		}
 		recordingMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.RecordingMBID)
 		if err != nil {
-			recordingMbzID = uuid.Nil
+			recordingMbzID, err = uuid.Parse(payload.TrackMeta.MBIDMapping.RecordingMBID)
+			if err != nil {
+				recordingMbzID = uuid.Nil
+			}
 		}
 
 		var client string

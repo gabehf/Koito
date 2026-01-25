@@ -264,6 +264,34 @@ func TestImportListenBrainz_MbzDisabled(t *testing.T) {
 	truncateTestData(t)
 }
 
+func TestImportListenBrainz_MBIDMapping(t *testing.T) {
+
+	src := path.Join("..", "test_assets", "listenbrainz_shoko1_123456789.zip")
+	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	dest := filepath.Join(destDir, "listenbrainz_shoko1_123456789.zip")
+
+	// not going to make the dest dir because engine should make it already
+
+	input, err := os.ReadFile(src)
+	require.NoError(t, err)
+
+	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
+
+	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
+
+	album, err := store.GetAlbum(context.Background(), db.GetAlbumOpts{MusicBrainzID: uuid.MustParse("177ebc28-0115-3897-8eb3-ebf74ce23790")})
+	require.NoError(t, err)
+	assert.Equal(t, "Zombie", album.Title)
+	artist, err := store.GetArtist(context.Background(), db.GetArtistOpts{MusicBrainzID: uuid.MustParse("c98d40fd-f6cf-4b26-883e-eaa515ee2851")})
+	require.NoError(t, err)
+	assert.Equal(t, "The Cranberries", artist.Name)
+	track, err := store.GetTrack(context.Background(), db.GetTrackOpts{MusicBrainzID: uuid.MustParse("3bbeb4e3-ab6d-460d-bfc5-de49e4251061")})
+	require.NoError(t, err)
+	assert.Equal(t, "Zombie", track.Title)
+
+	truncateTestData(t)
+}
+
 func TestImportKoito(t *testing.T) {
 
 	src := path.Join("..", "test_assets", "koito_export_test.json")
