@@ -38,9 +38,7 @@ func bindRoutes(
 		r.Get("/config", handlers.GetCfgHandler())
 
 		r.Group(func(r chi.Router) {
-			if cfg.LoginGate() {
-				r.Use(middleware.ValidateSession(db))
-			}
+			r.Use(middleware.Authenticate(db, middleware.AuthModeLoginGate))
 			r.Get("/artist", handlers.GetArtistHandler(db))
 			r.Get("/artists", handlers.GetArtistsForItemHandler(db))
 			r.Get("/album", handlers.GetAlbumHandler(db))
@@ -79,7 +77,7 @@ func bindRoutes(
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.ValidateSession(db))
+			r.Use(middleware.Authenticate(db, middleware.AuthModeSessionOrAPIKey))
 			r.Get("/export", handlers.ExportHandler(db))
 			r.Post("/replace-image", handlers.ReplaceImageHandler(db))
 			r.Patch("/album", handlers.UpdateAlbumHandler(db))
@@ -111,8 +109,10 @@ func bindRoutes(
 			AllowedHeaders: []string{"Content-Type", "Authorization"},
 		}))
 
-		r.With(middleware.ValidateApiKey(db)).Post("/submit-listens", handlers.LbzSubmitListenHandler(db, mbz))
-		r.With(middleware.ValidateApiKey(db)).Get("/validate-token", handlers.LbzValidateTokenHandler(db))
+		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
+			Post("/submit-listens", handlers.LbzSubmitListenHandler(db, mbz))
+		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
+			Get("/validate-token", handlers.LbzValidateTokenHandler(db))
 	})
 
 	// serve react client

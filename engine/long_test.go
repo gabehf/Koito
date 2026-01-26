@@ -356,6 +356,38 @@ func TestDelete(t *testing.T) {
 	truncateTestData(t)
 }
 
+func TestLoginGate(t *testing.T) {
+
+	t.Run("Submit Listens", doSubmitListens)
+
+	req, err := http.NewRequest("DELETE", host()+"/apis/web/v1/artist?id=1", nil)
+	require.NoError(t, err)
+	req.Header.Add("Authorization", "Token "+apikey)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+
+	cfg.SetLoginGate(true)
+
+	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist?id=3", nil)
+	require.NoError(t, err)
+	// req.Header.Add("Authorization", "Token "+apikey)
+	resp, err = http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 401, resp.StatusCode)
+
+	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist?id=3", nil)
+	require.NoError(t, err)
+	req.Header.Add("Authorization", "Token "+apikey)
+	resp, err = http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	cfg.SetLoginGate(false)
+
+	truncateTestData(t)
+}
+
 func TestAliasesAndSearch(t *testing.T) {
 
 	t.Run("Submit Listens", doSubmitListens)
