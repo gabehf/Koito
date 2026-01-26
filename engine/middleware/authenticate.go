@@ -62,6 +62,7 @@ func Authenticate(store db.DB, mode AuthMode) func(http.Handler) http.Handler {
 					}
 				} else {
 					next.ServeHTTP(w, r)
+					return
 				}
 			}
 
@@ -76,10 +77,8 @@ func Authenticate(store db.DB, mode AuthMode) func(http.Handler) http.Handler {
 				return
 			}
 
-			if user != nil {
-				ctx = context.WithValue(ctx, UserContextKey, user)
-				r = r.WithContext(ctx)
-			}
+			ctx = context.WithValue(ctx, UserContextKey, user)
+			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
 		})

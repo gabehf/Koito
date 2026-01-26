@@ -367,6 +367,16 @@ func TestLoginGate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 204, resp.StatusCode)
 
+	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist?id=3", nil)
+	require.NoError(t, err)
+	resp, err = http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	var artist models.Artist
+	err = json.NewDecoder(resp.Body).Decode(&artist)
+	require.NoError(t, err)
+	assert.Equal(t, "ネクライトーキー", artist.Name)
+
 	cfg.SetLoginGate(true)
 
 	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist?id=3", nil)
@@ -382,6 +392,9 @@ func TestLoginGate(t *testing.T) {
 	resp, err = http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
+	err = json.NewDecoder(resp.Body).Decode(&artist)
+	require.NoError(t, err)
+	assert.Equal(t, "ネクライトーキー", artist.Name)
 
 	cfg.SetLoginGate(false)
 
