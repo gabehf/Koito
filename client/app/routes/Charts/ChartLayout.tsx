@@ -40,7 +40,7 @@ export default function ChartLayout<T>({
   useEffect(() => {
     if ((data?.items?.length ?? 0) === 0) return;
 
-    const img = (data.items[0] as any)?.image;
+    const img = (data.items[0] as any)?.item.image;
     if (!img) return;
 
     average(imageUrl(img, "small"), { amount: 1 }).then((color) => {
