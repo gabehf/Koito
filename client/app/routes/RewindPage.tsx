@@ -29,10 +29,12 @@ const months = [
 
 export async function clientLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const year =
-    parseInt(url.searchParams.get("year") || "0") || getRewindParams().year;
-  const month =
-    parseInt(url.searchParams.get("month") || "0") || getRewindParams().month;
+  const year = parseInt(
+    url.searchParams.get("year") || getRewindParams().year.toString()
+  );
+  const month = parseInt(
+    url.searchParams.get("month") || getRewindParams().month.toString()
+  );
 
   const res = await fetch(`/apis/web/v1/summary?year=${year}&month=${month}`);
   if (!res.ok) {
@@ -46,10 +48,12 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
 
 export default function RewindPage() {
   const currentParams = new URLSearchParams(location.search);
-  let year =
-    parseInt(currentParams.get("year") || "0") || getRewindParams().year;
-  let month =
-    parseInt(currentParams.get("month") || "0") || getRewindParams().month;
+  let year = parseInt(
+    currentParams.get("year") || getRewindParams().year.toString()
+  );
+  let month = parseInt(
+    currentParams.get("month") || getRewindParams().month.toString()
+  );
   const navigate = useNavigate();
   const [showTime, setShowTime] = useState(false);
   const { stats: stats } = useLoaderData<{ stats: RewindStats }>();
@@ -73,10 +77,8 @@ export default function RewindPage() {
     for (const key in params) {
       const val = params[key];
 
-      if (val !== null && val !== "0") {
+      if (val !== null) {
         nextParams.set(key, val);
-      } else {
-        nextParams.delete(key);
       }
     }
 
@@ -99,6 +101,7 @@ export default function RewindPage() {
         month -= 1;
       }
     }
+    console.log(`Month: ${month}`);
 
     updateParams({
       year: year.toString(),
@@ -154,7 +157,12 @@ export default function RewindPage() {
                 <button
                   onClick={() => navigateMonth("next")}
                   className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={new Date(year, month) > new Date()}
+                  disabled={
+                    // next month is current or future month and
+                    month >= new Date().getMonth() &&
+                    // we are looking at current (or future) year
+                    year >= new Date().getFullYear()
+                  }
                 >
                   <ChevronRight size={20} />
                 </button>
