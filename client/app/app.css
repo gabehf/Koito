@@ -58,6 +58,7 @@
   --header-sm: 16px;
   --header-xl-weight: 600;
   --header-weight: 600;
+  --header-line-height: 3rem;
 }
 
 @media (min-width: 60rem) {
@@ -68,6 +69,7 @@
     --header-sm: 16px;
     --header-xl-weight: 600;
     --header-weight: 600;
+    --header-line-height: 1.3em;
   }
 }
 
@@ -98,6 +100,7 @@ h1 {
   font-family: "League Spartan";
   font-weight: var(--header-weight);
   font-size: var(--header-xl);
+  line-height: var(--header-line-height);
 }
 h2 {
   font-family: "League Spartan";
