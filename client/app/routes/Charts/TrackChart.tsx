@@ -30,7 +30,7 @@ export default function TrackChart() {
       initialData={initialData}
       endpoint="chart/top-tracks"
       render={({ data, page, onNext, onPrev }) => (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 w-full">
           <div className="flex gap-15 mx-auto">
             <button className="default" onClick={onPrev} disabled={page <= 1}>
               Prev
@@ -47,7 +47,7 @@ export default function TrackChart() {
             ranked
             separators
             data={data}
-            className="w-[400px] sm:w-[600px]"
+            className="w-11/12 sm:w-[600px]"
             type="track"
           />
           <div className="flex gap-15 mx-auto">
