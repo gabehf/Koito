@@ -116,12 +116,12 @@ export function ErrorBoundary() {
     <AppProvider>
       <ThemeProvider>
         <title>{title}</title>
+        <Sidebar />
         <div className="flex">
-          <Sidebar />
           <div className="w-full flex flex-col">
-            <main className="pt-16 p-4 container mx-auto flex-grow">
-              <div className="flex gap-4 items-end">
-                <img className="w-[200px] rounded" src="../yuu.jpg" />
+            <main className="pt-16 p-4 mx-auto flex-grow">
+              <div className="md:flex gap-4">
+                <img className="w-[200px] rounded mb-3" src="../yuu.jpg" />
                 <div>
                   <h1>{message}</h1>
                   <p>{details}</p>
