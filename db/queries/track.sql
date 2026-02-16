@@ -8,6 +8,12 @@ INSERT INTO artist_tracks (artist_id, track_id, is_primary)
 VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
 
+-- name: UnssociateArtistFromTrack :exec
+DELETE FROM artist_tracks
+WHERE artist_id = $1
+  AND track_id = $2
+  AND is_primary = false;
+
 -- name: GetTrack :one
 SELECT
   t.*,

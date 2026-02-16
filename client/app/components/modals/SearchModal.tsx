@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { search, type SearchResponse } from "api/api";
 import SearchResults from "../SearchResults";
@@ -11,7 +11,7 @@ interface Props {
 export default function SearchModal({ open, setOpen }: Props) {
   const [query, setQuery] = useState("");
   const [data, setData] = useState<SearchResponse>();
-  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const deferredQuery = useDeferredValue(query);
 
   const closeSearchModal = () => {
     setOpen(false);
@@ -20,25 +20,12 @@ export default function SearchModal({ open, setOpen }: Props) {
   };
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(query);
-      if (query === "") {
-        setData(undefined);
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [query]);
-
-  useEffect(() => {
-    if (debouncedQuery) {
-      search(debouncedQuery).then((r) => {
+    if (deferredQuery) {
+      search(deferredQuery).then((r) => {
         setData(r);
       });
     }
-  }, [debouncedQuery]);
+  }, [deferredQuery]);
 
   return (
     <Modal isOpen={open} onClose={closeSearchModal}>

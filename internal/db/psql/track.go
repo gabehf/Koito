@@ -199,6 +199,44 @@ func (d *Psql) UpdateTrack(ctx context.Context, opts db.UpdateTrackOpts) error {
 			return fmt.Errorf("UpdateTrack: UpdateTrackDuration: %w", err)
 		}
 	}
+	if len(opts.AddArtists) > 0 {
+		var releaseID int32
+		if t, err := d.q.GetTrack(ctx, opts.ID); err != nil {
+			return fmt.Errorf("UpdateTrack: GetTrack By ID: %w", err)
+		} else {
+			releaseID = t.ReleaseID
+		}
+
+		for _, aid := range opts.AddArtists {
+			if err = qtx.AssociateArtistToTrack(ctx, repository.AssociateArtistToTrackParams{
+				ArtistID:  aid,
+				TrackID:   opts.ID,
+				IsPrimary: false,
+			}); err != nil {
+				return fmt.Errorf("UpdateTrack: AssociateArtistToTrack: %w", err)
+			}
+			if err = qtx.AssociateArtistToRelease(ctx, repository.AssociateArtistToReleaseParams{
+				ArtistID:  aid,
+				ReleaseID: releaseID,
+			}); err != nil {
+				return fmt.Errorf("UpdateTrack: AssociateArtistToRelease: %w", err)
+			}
+		}
+	}
+
+	if len(opts.RemoveArtists) > 0 {
+		for _, aid := range opts.RemoveArtists {
+			if err = qtx.UnssociateArtistFromTrack(ctx, repository.UnssociateArtistFromTrackParams{
+				ArtistID: aid,
+				TrackID:  opts.ID,
+			}); err != nil {
+				return fmt.Errorf("UpdateTrack: UnssociateArtistFromTrack: %w", err)
+			}
+		}
+		if err = qtx.CleanOrphanedEntries(ctx); err != nil {
+			return fmt.Errorf("UpdateTrack: CleanOrphanedEntries: %w", err)
+		}
+	}
 	return tx.Commit(ctx)
 }
 
