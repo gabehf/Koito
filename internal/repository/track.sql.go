@@ -575,6 +575,23 @@ func (q *Queries) InsertTrack(ctx context.Context, arg InsertTrackParams) (Track
 	return i, err
 }
 
+const unssociateArtistFromTrack = `-- name: UnssociateArtistFromTrack :exec
+DELETE FROM artist_tracks
+WHERE artist_id = $1
+  AND track_id = $2
+  AND is_primary = false
+`
+
+type UnssociateArtistFromTrackParams struct {
+	ArtistID int32
+	TrackID  int32
+}
+
+func (q *Queries) UnssociateArtistFromTrack(ctx context.Context, arg UnssociateArtistFromTrackParams) error {
+	_, err := q.db.Exec(ctx, unssociateArtistFromTrack, arg.ArtistID, arg.TrackID)
+	return err
+}
+
 const updateReleaseForAll = `-- name: UpdateReleaseForAll :exec
 UPDATE tracks SET release_id = $2
 WHERE release_id = $1

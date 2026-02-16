@@ -23,7 +23,8 @@
     "react-dom": "^19.1.0",
     "react-is": "^19.2.3",
     "react-router": "^7.5.3",
-    "recharts": "^3.6.0"
+    "recharts": "^3.6.0",
+    "downshift": "^9.3.1"
   },
   "devDependencies": {
     "@react-router/dev": "^7.5.3",
