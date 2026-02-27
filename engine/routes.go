@@ -81,13 +81,19 @@ func bindRoutes(
 			r.Get("/export", handlers.ExportHandler(db))
 			r.Post("/replace-image", handlers.ReplaceImageHandler(db))
 			r.Patch("/album", handlers.UpdateAlbumHandler(db))
-			r.Post("/merge/tracks", handlers.MergeTracksHandler(db))
-			r.Post("/merge/albums", handlers.MergeReleaseGroupsHandler(db))
-			r.Post("/merge/artists", handlers.MergeArtistsHandler(db))
-			r.Delete("/artist", handlers.DeleteArtistHandler(db))
-			r.Post("/artists/primary", handlers.SetPrimaryArtistHandler(db))
-			r.Delete("/album", handlers.DeleteAlbumHandler(db))
-			r.Delete("/track", handlers.DeleteTrackHandler(db))
+
+			// Admin-only routes
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireAdmin)
+				r.Post("/merge/tracks", handlers.MergeTracksHandler(db))
+				r.Post("/merge/albums", handlers.MergeReleaseGroupsHandler(db))
+				r.Post("/merge/artists", handlers.MergeArtistsHandler(db))
+				r.Delete("/artist", handlers.DeleteArtistHandler(db))
+				r.Post("/artists/primary", handlers.SetPrimaryArtistHandler(db))
+				r.Delete("/album", handlers.DeleteAlbumHandler(db))
+				r.Delete("/track", handlers.DeleteTrackHandler(db))
+			})
+
 			r.Post("/listen", handlers.SubmitListenWithIDHandler(db))
 			r.Delete("/listen", handlers.DeleteListenHandler(db))
 			r.Post("/aliases", handlers.CreateAliasHandler(db))
