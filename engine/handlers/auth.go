@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func LoginHandler(store db.DB) http.HandlerFunc {
+func LoginHandler(store LoginStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -78,7 +78,7 @@ func LoginHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func LogoutHandler(store db.DB) http.HandlerFunc {
+func LogoutHandler(store SessionStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -108,7 +108,7 @@ func LogoutHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func MeHandler(store db.DB) http.HandlerFunc {
+func MeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -127,7 +127,7 @@ func MeHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func UpdateUserHandler(store db.DB) http.HandlerFunc {
+func UpdateUserHandler(store UserUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

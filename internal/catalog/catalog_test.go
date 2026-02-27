@@ -256,6 +256,12 @@ func setupTestDataSansMbzIDs(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
+	// Allow skipping Docker-based integration setup for local unit test runs.
+	if os.Getenv("KOITO_SKIP_DOCKER") == "1" {
+		log.Println("KOITO_SKIP_DOCKER=1 set; skipping Docker-based tests in catalog_test")
+		os.Exit(m.Run())
+	}
+
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not construct pool: %s", err)

@@ -98,7 +98,7 @@ func bindRoutes(
 			r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
 			r.Patch("/user/apikeys", handlers.UpdateApiKeyLabelHandler(db))
 			r.Delete("/user/apikeys", handlers.DeleteApiKeyHandler(db))
-			r.Get("/user/me", handlers.MeHandler(db))
+			r.Get("/user/me", handlers.MeHandler())
 			r.Patch("/user", handlers.UpdateUserHandler(db))
 		})
 	})

@@ -61,6 +61,11 @@ func getTestGetenv(resource *dockertest.Resource) func(string) string {
 }
 
 func TestMain(m *testing.M) {
+	// Allow skipping Docker-based integration setup for local unit test runs.
+	if os.Getenv("KOITO_SKIP_DOCKER") == "1" {
+		log.Println("KOITO_SKIP_DOCKER=1 set; skipping Docker-based tests in engine_test")
+		os.Exit(m.Run())
+	}
 	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
 	pool, err := dockertest.NewPool("")
 	if err != nil {
