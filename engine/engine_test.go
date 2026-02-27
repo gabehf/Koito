@@ -16,6 +16,8 @@ import (
 	"github.com/gabehf/koito/internal/db/psql"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/ory/dockertest/v3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var store *psql.Psql
@@ -141,4 +143,17 @@ func TestMain(m *testing.M) {
 
 func host() string {
 	return fmt.Sprintf("http://%s", cfg.ListenAddr())
+}
+func TestHealthEndpointNoAuth(t *testing.T) {
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	url := fmt.Sprintf("%s/apis/web/v1/health", host())
+	resp, err := client.Get(url)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
