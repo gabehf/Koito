@@ -150,6 +150,10 @@ func host() string {
 	return fmt.Sprintf("http://%s", cfg.ListenAddr())
 }
 func TestHealthEndpointNoAuth(t *testing.T) {
+	if os.Getenv("KOITO_SKIP_DOCKER") == "1" {
+		t.Skip("skipping Docker-based integration test")
+	}
+
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -164,6 +168,10 @@ func TestHealthEndpointNoAuth(t *testing.T) {
 }
 
 func TestHealthEndpointMethodNotAllowed(t *testing.T) {
+	if os.Getenv("KOITO_SKIP_DOCKER") == "1" {
+		t.Skip("skipping Docker-based integration test")
+	}
+
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
