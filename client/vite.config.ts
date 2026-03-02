@@ -1,3 +1,4 @@
+import path from "node:path";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
@@ -7,7 +8,12 @@ import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin'
 const isDocker = process.env.BUILD_TARGET === 'docker';
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), vanillaExtractPlugin()],
+  plugins: [
+  tailwindcss(),
+  reactRouter(),
+  tsconfigPaths({ projects: ["./tsconfig.json"] }),
+  vanillaExtractPlugin(),
+],
   server: {
     proxy: {
       '/apis': {
@@ -24,7 +30,8 @@ export default defineConfig({
 		alias: {
 			...(isDocker
         ? { 'react-dom/server': 'react-dom/server.node' }
-        : {}),
-		},
-	},
+      : {}),
+    api: path.resolve(__dirname, "api"), 
+  },
+},
 });

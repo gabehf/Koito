@@ -1,5 +1,6 @@
 import { getCfg, type User } from "api/api";
 import { createContext, useContext, useEffect, useState } from "react";
+import LoadingIndicator from "~/components/LoadingIndicator";
 
 interface AppContextType {
   user: User | null | undefined;
@@ -26,8 +27,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [defaultTheme, setDefaultTheme] = useState<string | undefined>(
     undefined
   );
-  const [configurableHomeActivity, setConfigurableHomeActivity] =
-    useState<boolean>(false);
+  const [configurableHomeActivity, setConfigurableHomeActivity] = useState<boolean>(false);
   const [homeItems, setHomeItems] = useState<number>(0);
 
   const setUsername = (value: string) => {
@@ -53,14 +53,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       if (cfg.default_theme !== "") {
         setDefaultTheme(cfg.default_theme);
       } else {
-        setDefaultTheme("yuu");
+        setDefaultTheme("Testing");
       }
     });
   }, []);
 
-  // Block rendering the app until config is loaded
-  if (user === undefined || defaultTheme === undefined) {
-    return null;
+  const isLoading = user === undefined || defaultTheme === undefined;
+
+  if (isLoading) {
+    return <LoadingIndicator label="Loading app" />;
   }
 
   const contextValue: AppContextType = {
