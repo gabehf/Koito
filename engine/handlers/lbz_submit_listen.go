@@ -220,7 +220,7 @@ func LbzSubmitListenHandler(store db.DB, mbzc mbz.MusicBrainzCaller) func(w http
 				SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
 			}
 
-			_, err, shared := sfGroup.Do(buildCaolescingKey(payload), func() (interface{}, error) {
+			_, err, shared := sfGroup.Do(buildCaolescingKey(payload, req.ListenType), func() (interface{}, error) {
 				return 0, catalog.SubmitListen(r.Context(), store, opts)
 			})
 			if shared {
@@ -308,13 +308,6 @@ func doLbzRelay(requestBytes []byte, l *zerolog.Logger) {
 	}
 }
 
-func buildCaolescingKey(p LbzSubmitListenPayload) string {
-	// the key not including the listen_type introduces the very rare possibility of a playing_now
-	// request taking precedence over a single, meaning that a listen will not be logged when it
-	// should, however that would require a playing_now request to fire a few seconds before a 'single'
-	// of the same track, which should never happen outside of misbehaving clients
-	//
-	// this could be fixed by restructuring the database inserts for idempotency, which would
-	// eliminate the need to coalesce responses, however i'm not gonna do that right now
-	return fmt.Sprintf("%s:%s:%s", p.TrackMeta.ArtistName, p.TrackMeta.TrackName, p.TrackMeta.ReleaseName)
+func buildCaolescingKey(p LbzSubmitListenPayload, listenType LbzListenType) string {
+	return fmt.Sprintf("%s:%s:%s:%s", listenType, p.TrackMeta.ArtistName, p.TrackMeta.TrackName, p.TrackMeta.ReleaseName)
 }
