@@ -227,7 +227,7 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 				SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
 			}
 
-			_, err, shared := sfGroup.Do(buildCaolescingKey(payload, req.ListenType), func() (interface{}, error) {
+			_, err, shared := sfGroup.Do(buildCoalescingKey(payload, req.ListenType), func() (interface{}, error) {
 				return 0, catalog.SubmitListen(r.Context(), store, opts)
 			})
 			if shared {
@@ -315,6 +315,6 @@ func doLbzRelay(requestBytes []byte, l *zerolog.Logger) {
 	}
 }
 
-func buildCaolescingKey(p LbzSubmitListenPayload, listenType LbzListenType) string {
+func buildCoalescingKey(p LbzSubmitListenPayload, listenType LbzListenType) string {
 	return fmt.Sprintf("%s:%s:%s:%s", listenType, p.TrackMeta.ArtistName, p.TrackMeta.TrackName, p.TrackMeta.ReleaseName)
 }
