@@ -101,8 +101,6 @@ export default function RewindPage() {
         month -= 1;
       }
     }
-    console.log(`Month: ${month}`);
-
     updateParams({
       year: year.toString(),
       month: month.toString(),
