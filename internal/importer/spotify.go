@@ -33,48 +33,44 @@ func ImportSpotifyFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCal
 		return fmt.Errorf("ImportSpotifyFile: %w", err)
 	}
 	defer file.Close()
-	var throttleFunc = func() {}
-	if ms := cfg.ThrottleImportMs(); ms > 0 {
-		throttleFunc = func() {
-			time.Sleep(time.Duration(ms) * time.Millisecond)
-		}
-	}
 	export := make([]SpotifyExportItem, 0)
 	err = json.NewDecoder(file).Decode(&export)
 	if err != nil {
 		return fmt.Errorf("ImportSpotifyFile: %w", err)
 	}
 
+	bs := NewBulkSubmitter(ctx, BulkSubmitterOpts{
+		Store: store,
+		Mbzc:  mbzc,
+	})
+
 	for _, item := range export {
 		if item.ReasonEnd != "trackdone" {
 			continue
 		}
 		if !inImportTimeWindow(item.Timestamp) {
-			l.Debug().Msgf("Skipping import due to import time rules")
 			continue
 		}
-		dur := item.MsPlayed
 		if item.TrackName == "" || item.ArtistName == "" {
 			l.Debug().Msg("Skipping non-track item")
 			continue
 		}
-		opts := catalog.SubmitListenOpts{
+		bs.Accept(catalog.SubmitListenOpts{
 			MbzCaller:      mbzc,
 			Artist:         item.ArtistName,
 			TrackTitle:     item.TrackName,
 			ReleaseTitle:   item.AlbumName,
-			Duration:       dur / 1000,
+			Duration:       item.MsPlayed / 1000,
 			Time:           item.Timestamp,
 			Client:         "spotify",
 			UserID:         1,
-			SkipCacheImage: !cfg.FetchImagesDuringImport(),
-		}
-		err = catalog.SubmitListen(ctx, store, opts)
-		if err != nil {
-			l.Err(err).Msg("Failed to import spotify playback item")
-			return fmt.Errorf("ImportSpotifyFile: %w", err)
-		}
-		throttleFunc()
+			SkipCacheImage: true,
+		})
 	}
-	return finishImport(ctx, filename, len(export))
+
+	count, err := bs.Flush()
+	if err != nil {
+		return fmt.Errorf("ImportSpotifyFile: %w", err)
+	}
+	return finishImport(ctx, filename, count)
 }

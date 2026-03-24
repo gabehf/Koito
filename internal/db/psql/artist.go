@@ -119,6 +119,7 @@ func (d *Psql) SaveArtistAliases(ctx context.Context, id int32, aliases []string
 }
 
 func (d *Psql) DeleteArtist(ctx context.Context, id int32) error {
+	d.q.DeleteTrackLookupByArtist(ctx, id)
 	return d.q.DeleteArtist(ctx, id)
 }
 

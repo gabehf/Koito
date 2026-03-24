@@ -44,12 +44,6 @@ func ImportMalojaFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 		return fmt.Errorf("ImportMalojaFile: %w", err)
 	}
 	defer file.Close()
-	var throttleFunc = func() {}
-	if ms := cfg.ThrottleImportMs(); ms > 0 {
-		throttleFunc = func() {
-			time.Sleep(time.Duration(ms) * time.Millisecond)
-		}
-	}
 	export := new(MalojaFile)
 	err = json.NewDecoder(file).Decode(&export)
 	if err != nil {
@@ -59,12 +53,14 @@ func ImportMalojaFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 	if len(items) == 0 {
 		items = export.List
 	}
-	count := 0
-	total := len(items)
-	for i, item := range items {
+
+	bs := NewBulkSubmitter(ctx, BulkSubmitterOpts{
+		Store: store,
+		Mbzc:  mbzc,
+	})
+
+	for _, item := range items {
 		martists := make([]string, 0)
-		// Maloja has a tendency to have the the artist order ['feature', 'main ● feature'], so
-		// here we try to turn that artist array into ['main', 'feature']
 		item.Track.Artists = utils.MoveFirstMatchToFront(item.Track.Artists, " \u2022 ")
 		for _, an := range item.Track.Artists {
 			ans := strings.Split(an, " \u2022 ")
@@ -77,14 +73,13 @@ func ImportMalojaFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 		}
 		ts := time.Unix(item.Time, 0)
 		if !inImportTimeWindow(ts) {
-			l.Debug().Msgf("Skipping import due to import time rules")
 			continue
 		}
 		releaseTitle := ""
 		if item.Track.Album != nil {
 			releaseTitle = item.Track.Album.Title
 		}
-		opts := catalog.SubmitListenOpts{
+		bs.Accept(catalog.SubmitListenOpts{
 			MbzCaller:      mbzc,
 			Artist:         item.Track.Artists[0],
 			ArtistNames:    artists,
@@ -93,18 +88,13 @@ func ImportMalojaFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 			Time:           ts.Local(),
 			Client:         "maloja",
 			UserID:         1,
-			SkipCacheImage: !cfg.FetchImagesDuringImport(),
-		}
-		err = catalog.SubmitListen(ctx, store, opts)
-		if err != nil {
-			l.Err(err).Msgf("Failed to import maloja item %d/%d", i+1, total)
-			continue
-		}
-		count++
-		if count%500 == 0 {
-			l.Info().Msgf("Maloja import progress: %d/%d", count, total)
-		}
-		throttleFunc()
+			SkipCacheImage: true,
+		})
+	}
+
+	count, err := bs.Flush()
+	if err != nil {
+		return fmt.Errorf("ImportMalojaFile: %w", err)
 	}
 	return finishImport(ctx, filename, count)
 }

@@ -241,6 +241,9 @@ func (d *Psql) SaveTrackAliases(ctx context.Context, id int32, aliases []string,
 
 func (d *Psql) DeleteTrack(ctx context.Context, id int32) error {
 	l := logger.FromContext(ctx)
+
+	d.q.DeleteTrackLookupByTrack(ctx, id)
+
 	tx, err := d.conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		l.Err(err).Msg("Failed to begin transaction")
