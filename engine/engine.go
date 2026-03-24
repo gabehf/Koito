@@ -263,47 +263,51 @@ func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
 	} else {
 		return
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			l.Error().Interface("recover", r).Msg("Importer: Panic when importing files")
-		}
-	}()
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
-		if strings.Contains(file.Name(), "Streaming_History_Audio") {
-			l.Info().Msgf("Importer: Import file %s detecting as being Spotify export", file.Name())
-			err := importer.ImportSpotifyFile(logger.NewContext(l), store, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else if strings.Contains(file.Name(), "maloja") {
-			l.Info().Msgf("Importer: Import file %s detecting as being Maloja export", file.Name())
-			err := importer.ImportMalojaFile(logger.NewContext(l), store, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else if strings.Contains(file.Name(), "recenttracks") {
-			l.Info().Msgf("Importer: Import file %s detecting as being ghan.nl LastFM export", file.Name())
-			err := importer.ImportLastFMFile(logger.NewContext(l), store, mbzc, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else if strings.Contains(file.Name(), "listenbrainz") {
-			l.Info().Msgf("Importer: Import file %s detecting as being ListenBrainz export", file.Name())
-			err := importer.ImportListenBrainzExport(logger.NewContext(l), store, mbzc, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else if strings.Contains(file.Name(), "koito") {
-			l.Info().Msgf("Importer: Import file %s detecting as being Koito export", file.Name())
-			err := importer.ImportKoitoFile(logger.NewContext(l), store, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else {
-			l.Warn().Msgf("Importer: File %s not recognized as a valid import file; make sure it is valid and named correctly", file.Name())
+		importFile(l, store, mbzc, file.Name())
+	}
+}
+
+func importFile(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller, filename string) {
+	defer func() {
+		if r := recover(); r != nil {
+			l.Error().Interface("recover", r).Msgf("Importer: Panic when importing file: %s", filename)
 		}
+	}()
+	if strings.Contains(filename, "Streaming_History_Audio") {
+		l.Info().Msgf("Importer: Import file %s detecting as being Spotify export", filename)
+		err := importer.ImportSpotifyFile(logger.NewContext(l), store, mbzc, filename)
+		if err != nil {
+			l.Err(err).Msgf("Importer: Failed to import file: %s", filename)
+		}
+	} else if strings.Contains(filename, "maloja") {
+		l.Info().Msgf("Importer: Import file %s detecting as being Maloja export", filename)
+		err := importer.ImportMalojaFile(logger.NewContext(l), store, mbzc, filename)
+		if err != nil {
+			l.Err(err).Msgf("Importer: Failed to import file: %s", filename)
+		}
+	} else if strings.Contains(filename, "recenttracks") {
+		l.Info().Msgf("Importer: Import file %s detecting as being ghan.nl LastFM export", filename)
+		err := importer.ImportLastFMFile(logger.NewContext(l), store, mbzc, filename)
+		if err != nil {
+			l.Err(err).Msgf("Importer: Failed to import file: %s", filename)
+		}
+	} else if strings.Contains(filename, "listenbrainz") {
+		l.Info().Msgf("Importer: Import file %s detecting as being ListenBrainz export", filename)
+		err := importer.ImportListenBrainzExport(logger.NewContext(l), store, mbzc, filename)
+		if err != nil {
+			l.Err(err).Msgf("Importer: Failed to import file: %s", filename)
+		}
+	} else if strings.Contains(filename, "koito") {
+		l.Info().Msgf("Importer: Import file %s detecting as being Koito export", filename)
+		err := importer.ImportKoitoFile(logger.NewContext(l), store, filename)
+		if err != nil {
+			l.Err(err).Msgf("Importer: Failed to import file: %s", filename)
+		}
+	} else {
+		l.Warn().Msgf("Importer: File %s not recognized as a valid import file; make sure it is valid and named correctly", filename)
 	}
 }

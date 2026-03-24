@@ -1,0 +1,41 @@
+{
+    "status": "ok",
+    "list": [
+      {
+        "time": 1746434410,
+        "track": {
+          "artists": [
+            "API Format Artist"
+          ],
+          "title": "API Format Track",
+          "album": {
+            "artists": [
+              "API Format Artist"
+            ],
+            "albumtitle": "API Format Album"
+          },
+          "length": null
+        },
+        "duration": null,
+        "origin": "client:default"
+      },
+      {
+        "time": 1746434682,
+        "track": {
+          "artists": [
+            "API Format Artist"
+          ],
+          "title": "API Format Track 2",
+          "album": {
+            "artists": [
+              "API Format Artist"
+            ],
+            "albumtitle": "API Format Album"
+          },
+          "length": null
+        },
+        "duration": null,
+        "origin": "client:default"
+      }
+    ]
+}

@@ -17,22 +17,25 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-type MalojaExport struct {
+type MalojaAlbum struct {
+	Title string `json:"albumtitle"`
+}
+
+type MalojaFile struct {
 	Scrobbles []MalojaExportItem `json:"scrobbles"`
+	List      []MalojaExportItem `json:"list"`
 }
 type MalojaExportItem struct {
 	Time  int64       `json:"time"`
 	Track MalojaTrack `json:"track"`
 }
 type MalojaTrack struct {
-	Artists []string `json:"artists"`
-	Title   string   `json:"title"`
-	Album   struct {
-		Title string `json:"albumtitle"`
-	} `json:"album"`
+	Artists []string     `json:"artists"`
+	Title   string       `json:"title"`
+	Album   *MalojaAlbum `json:"album"`
 }
 
-func ImportMalojaFile(ctx context.Context, store db.DB, filename string) error {
+func ImportMalojaFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCaller, filename string) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning maloja import on file: %s", filename)
 	file, err := os.Open(path.Join(cfg.ConfigDir(), "import", filename))
@@ -47,14 +50,20 @@ func ImportMalojaFile(ctx context.Context, store db.DB, filename string) error {
 			time.Sleep(time.Duration(ms) * time.Millisecond)
 		}
 	}
-	export := new(MalojaExport)
+	export := new(MalojaFile)
 	err = json.NewDecoder(file).Decode(&export)
 	if err != nil {
 		return fmt.Errorf("ImportMalojaFile: %w", err)
 	}
-	for _, item := range export.Scrobbles {
+	items := export.Scrobbles
+	if len(items) == 0 {
+		items = export.List
+	}
+	count := 0
+	total := len(items)
+	for i, item := range items {
 		martists := make([]string, 0)
-		// Maloja has a tendency to have the the artist order ['feature', 'main \u2022 feature'], so
+		// Maloja has a tendency to have the the artist order ['feature', 'main ● feature'], so
 		// here we try to turn that artist array into ['main', 'feature']
 		item.Track.Artists = utils.MoveFirstMatchToFront(item.Track.Artists, " \u2022 ")
 		for _, an := range item.Track.Artists {
@@ -71,12 +80,16 @@ func ImportMalojaFile(ctx context.Context, store db.DB, filename string) error {
 			l.Debug().Msgf("Skipping import due to import time rules")
 			continue
 		}
+		releaseTitle := ""
+		if item.Track.Album != nil {
+			releaseTitle = item.Track.Album.Title
+		}
 		opts := catalog.SubmitListenOpts{
-			MbzCaller:      &mbz.MusicBrainzClient{},
+			MbzCaller:      mbzc,
 			Artist:         item.Track.Artists[0],
 			ArtistNames:    artists,
 			TrackTitle:     item.Track.Title,
-			ReleaseTitle:   item.Track.Album.Title,
+			ReleaseTitle:   releaseTitle,
 			Time:           ts.Local(),
 			Client:         "maloja",
 			UserID:         1,
@@ -84,10 +97,14 @@ func ImportMalojaFile(ctx context.Context, store db.DB, filename string) error {
 		}
 		err = catalog.SubmitListen(ctx, store, opts)
 		if err != nil {
-			l.Err(err).Msg("Failed to import maloja playback item")
-			return fmt.Errorf("ImportMalojaFile: %w", err)
+			l.Err(err).Msgf("Failed to import maloja item %d/%d", i+1, total)
+			continue
+		}
+		count++
+		if count%500 == 0 {
+			l.Info().Msgf("Maloja import progress: %d/%d", count, total)
 		}
 		throttleFunc()
 	}
-	return finishImport(ctx, filename, len(export.Scrobbles))
+	return finishImport(ctx, filename, count)
 }

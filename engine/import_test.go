@@ -44,6 +44,61 @@ func TestImportMaloja(t *testing.T) {
 	truncateTestData(t)
 }
 
+func TestImportMaloja_NullAlbum(t *testing.T) {
+
+	src := path.Join("..", "test_assets", "maloja_import_null_album_test.json")
+	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	dest := filepath.Join(destDir, "maloja_import_null_album_test.json")
+
+	input, err := os.ReadFile(src)
+	require.NoError(t, err)
+
+	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
+
+	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
+
+	// The null-album track should be imported with album falling back to track name
+	a, err := store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Null Album Artist"})
+	require.NoError(t, err)
+	assert.Equal(t, "Null Album Artist", a.Name)
+	assert.EqualValues(t, 1, a.ListenCount)
+
+	// The valid-album track should also be imported
+	a, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Valid Album Artist"})
+	require.NoError(t, err)
+	assert.Equal(t, "Valid Album Artist", a.Name)
+	assert.EqualValues(t, 1, a.ListenCount)
+
+	// The empty artists item should be skipped
+	count, err := store.CountArtists(context.Background(), db.Timeframe{Period: db.PeriodAllTime})
+	require.NoError(t, err)
+	assert.EqualValues(t, 2, count)
+
+	truncateTestData(t)
+}
+
+func TestImportMaloja_ApiFormat(t *testing.T) {
+
+	src := path.Join("..", "test_assets", "maloja_api_format_test.json")
+	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	dest := filepath.Join(destDir, "maloja_api_format_test.json")
+
+	input, err := os.ReadFile(src)
+	require.NoError(t, err)
+
+	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
+
+	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
+
+	// API format uses "list" key instead of "scrobbles"
+	a, err := store.GetArtist(context.Background(), db.GetArtistOpts{Name: "API Format Artist"})
+	require.NoError(t, err)
+	assert.Equal(t, "API Format Artist", a.Name)
+	assert.EqualValues(t, 2, a.ListenCount)
+
+	truncateTestData(t)
+}
+
 func TestImportSpotify(t *testing.T) {
 
 	src := path.Join("..", "test_assets", "Streaming_History_Audio_spotify_import_test.json")
