@@ -1,0 +1,52 @@
+{
+    "maloja": {
+      "export_time": 1748738994
+    },
+    "scrobbles": [
+      {
+        "time": 1746434410,
+        "track": {
+          "artists": [
+            "Null Album Artist"
+          ],
+          "title": "Track With Null Album",
+          "album": null,
+          "length": null
+        },
+        "duration": null,
+        "origin": "client:default"
+      },
+      {
+        "time": 1746434682,
+        "track": {
+          "artists": [
+            "Valid Album Artist"
+          ],
+          "title": "Track With Valid Album",
+          "album": {
+            "artists": [
+              "Valid Album Artist"
+            ],
+            "albumtitle": "My Great Album"
+          },
+          "length": null
+        },
+        "duration": null,
+        "origin": "client:default"
+      },
+      {
+        "time": 1746434900,
+        "track": {
+          "artists": [],
+          "title": "Track With Empty Artists",
+          "album": {
+            "artists": [],
+            "albumtitle": "Some Album"
+          },
+          "length": null
+        },
+        "duration": null,
+        "origin": "client:default"
+      }
+    ]
+}
