@@ -15,6 +15,7 @@ type MbzMockCaller struct {
 	ReleaseGroups map[uuid.UUID]*MusicBrainzReleaseGroup
 	Releases      map[uuid.UUID]*MusicBrainzRelease
 	Tracks        map[uuid.UUID]*MusicBrainzTrack
+	SearchResults map[string]*MusicBrainzSearchResult
 }
 
 func (m *MbzMockCaller) GetReleaseGroup(ctx context.Context, id uuid.UUID) (*MusicBrainzReleaseGroup, error) {
@@ -70,6 +71,14 @@ func (m *MbzMockCaller) GetArtistPrimaryAliases(ctx context.Context, id uuid.UUI
 	return ss, nil
 }
 
+func (m *MbzMockCaller) SearchRecording(ctx context.Context, artist string, track string) (*MusicBrainzSearchResult, error) {
+	key := artist + "\x00" + track
+	if result, exists := m.SearchResults[key]; exists {
+		return result, nil
+	}
+	return nil, nil
+}
+
 func (m *MbzMockCaller) Shutdown() {}
 
 type MbzErrorCaller struct{}
@@ -92,6 +101,10 @@ func (m *MbzErrorCaller) GetTrack(ctx context.Context, id uuid.UUID) (*MusicBrai
 
 func (m *MbzErrorCaller) GetArtistPrimaryAliases(ctx context.Context, id uuid.UUID) ([]string, error) {
 	return nil, fmt.Errorf("error: GetArtistPrimaryAliases not implemented")
+}
+
+func (m *MbzErrorCaller) SearchRecording(ctx context.Context, artist string, track string) (*MusicBrainzSearchResult, error) {
+	return nil, fmt.Errorf("error: SearchRecording not implemented")
 }
 
 func (m *MbzErrorCaller) Shutdown() {}

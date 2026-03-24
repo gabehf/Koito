@@ -1037,3 +1037,95 @@ func TestSubmitListen_MusicBrainzUnreachableMBIDMappings(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, exists, "expected artist to have correct musicbrainz id")
 }
+
+func TestSubmitListen_SearchByName(t *testing.T) {
+	truncateTestData(t)
+
+	// When no MBZ IDs and no release title are provided,
+	// SearchRecording should be called to resolve them
+
+	ctx := context.Background()
+	recordingID := uuid.MustParse("aaaaaaaa-0000-0000-0000-000000000001")
+	releaseID := uuid.MustParse("aaaaaaaa-0000-0000-0000-000000000002")
+	releaseGroupID := uuid.MustParse("aaaaaaaa-0000-0000-0000-000000000003")
+
+	mbzc := &mbz.MbzMockCaller{
+		SearchResults: map[string]*mbz.MusicBrainzSearchResult{
+			"Some Artist\x00Some Track": {
+				RecordingID:    recordingID,
+				ReleaseID:      releaseID,
+				ReleaseGroupID: releaseGroupID,
+				ReleaseTitle:   "Resolved Album",
+				DurationMs:     240000,
+			},
+		},
+		Releases: map[uuid.UUID]*mbz.MusicBrainzRelease{
+			releaseID: {
+				Title:  "Resolved Album",
+				ID:     releaseID.String(),
+				Status: "Official",
+			},
+		},
+	}
+
+	opts := catalog.SubmitListenOpts{
+		MbzCaller:   mbzc,
+		ArtistNames: []string{"Some Artist"},
+		Artist:      "Some Artist",
+		TrackTitle:   "Some Track",
+		Time:         time.Now(),
+		UserID:       1,
+	}
+
+	err := catalog.SubmitListen(ctx, store, opts)
+	require.NoError(t, err)
+
+	// Verify that the album was resolved from search
+	album, err := store.GetAlbum(ctx, db.GetAlbumOpts{MusicBrainzID: releaseID})
+	require.NoError(t, err)
+	assert.Equal(t, "Resolved Album", album.Title)
+
+	// Verify the track was created with duration from search
+	track, err := store.GetTrack(ctx, db.GetTrackOpts{MusicBrainzID: recordingID})
+	require.NoError(t, err)
+	assert.Equal(t, "Some Track", track.Title)
+	assert.EqualValues(t, 240, track.Duration)
+}
+
+func TestSubmitListen_SearchByNameNoMatch(t *testing.T) {
+	truncateTestData(t)
+
+	// When search returns no match, the listen should still be created
+	// with a fallback album title
+
+	ctx := context.Background()
+	mbzc := &mbz.MbzMockCaller{
+		SearchResults: map[string]*mbz.MusicBrainzSearchResult{},
+	}
+
+	opts := catalog.SubmitListenOpts{
+		MbzCaller:   mbzc,
+		ArtistNames: []string{"Unknown Artist"},
+		Artist:      "Unknown Artist",
+		TrackTitle:  "Unknown Track",
+		Time:        time.Now(),
+		UserID:      1,
+	}
+
+	err := catalog.SubmitListen(ctx, store, opts)
+	require.NoError(t, err)
+
+	// Verify the listen was saved even without search results
+	exists, err := store.RowExists(ctx, `
+    SELECT EXISTS (
+      SELECT 1 FROM listens
+      WHERE track_id = $1
+    )`, 1)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected listen row to exist")
+
+	// Artist should still be created
+	artist, err := store.GetArtist(ctx, db.GetArtistOpts{Name: "Unknown Artist"})
+	require.NoError(t, err)
+	assert.Equal(t, "Unknown Artist", artist.Name)
+}
