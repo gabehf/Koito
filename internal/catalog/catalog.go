@@ -102,6 +102,21 @@ func SubmitListen(ctx context.Context, store db.DB, opts SubmitListenOpts) error
 		artistIDs[i] = artist.ID
 		l.Debug().Any("artist", artist).Msg("Matched listen to artist")
 	}
+
+	// Search MusicBrainz by name when no MBZ IDs or album title are available
+	if opts.RecordingMbzID == uuid.Nil && opts.ReleaseMbzID == uuid.Nil && opts.ReleaseTitle == "" {
+		result, err := opts.MbzCaller.SearchRecording(ctx, opts.Artist, opts.TrackTitle)
+		if err == nil && result != nil {
+			opts.RecordingMbzID = result.RecordingID
+			opts.ReleaseMbzID = result.ReleaseID
+			opts.ReleaseGroupMbzID = result.ReleaseGroupID
+			opts.ReleaseTitle = result.ReleaseTitle
+			if opts.Duration == 0 && result.DurationMs > 0 {
+				opts.Duration = int32(result.DurationMs / 1000)
+			}
+		}
+	}
+
 	rg, err := AssociateAlbum(ctx, store, AssociateAlbumOpts{
 		ReleaseMbzID:      opts.ReleaseMbzID,
 		ReleaseGroupMbzID: opts.ReleaseGroupMbzID,
