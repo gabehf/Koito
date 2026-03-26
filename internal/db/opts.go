@@ -160,3 +160,22 @@ type GetInterestOpts struct {
 	ArtistID int32
 	TrackID  int32
 }
+
+type TrackLookupResult struct {
+	ArtistID int32
+	AlbumID  int32
+	TrackID  int32
+}
+
+type SaveTrackLookupOpts struct {
+	Key      string
+	ArtistID int32
+	AlbumID  int32
+	TrackID  int32
+}
+
+type InvalidateTrackLookupOpts struct {
+	ArtistID int32
+	AlbumID  int32
+	TrackID  int32
+}

@@ -338,6 +338,7 @@ func (d *Psql) SaveAlbumAliases(ctx context.Context, id int32, aliases []string,
 }
 
 func (d *Psql) DeleteAlbum(ctx context.Context, id int32) error {
+	d.q.DeleteTrackLookupByAlbum(ctx, id)
 	return d.q.DeleteRelease(ctx, id)
 }
 func (d *Psql) DeleteAlbumAlias(ctx context.Context, id int32, alias string) error {

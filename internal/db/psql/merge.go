@@ -12,6 +12,8 @@ import (
 func (d *Psql) MergeTracks(ctx context.Context, fromId, toId int32) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Merging track %d into track %d", fromId, toId)
+	d.q.DeleteTrackLookupByTrack(ctx, fromId)
+	d.q.DeleteTrackLookupByTrack(ctx, toId)
 	tx, err := d.conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		l.Err(err).Msg("Failed to begin transaction")
@@ -61,6 +63,8 @@ func (d *Psql) MergeTracks(ctx context.Context, fromId, toId int32) error {
 func (d *Psql) MergeAlbums(ctx context.Context, fromId, toId int32, replaceImage bool) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Merging album %d into album %d", fromId, toId)
+	d.q.DeleteTrackLookupByAlbum(ctx, fromId)
+	d.q.DeleteTrackLookupByAlbum(ctx, toId)
 	tx, err := d.conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		l.Err(err).Msg("Failed to begin transaction")
@@ -117,6 +121,8 @@ func (d *Psql) MergeAlbums(ctx context.Context, fromId, toId int32, replaceImage
 func (d *Psql) MergeArtists(ctx context.Context, fromId, toId int32, replaceImage bool) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Merging artist %d into artist %d", fromId, toId)
+	d.q.DeleteTrackLookupByArtist(ctx, fromId)
+	d.q.DeleteTrackLookupByArtist(ctx, toId)
 	tx, err := d.conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		l.Err(err).Msg("Failed to begin transaction")

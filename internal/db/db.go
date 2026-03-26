@@ -101,6 +101,16 @@ type DB interface {
 	MergeAlbums(ctx context.Context, fromId, toId int32, replaceImage bool) error
 	MergeArtists(ctx context.Context, fromId, toId int32, replaceImage bool) error
 
+	// Track Lookup Cache
+
+	GetTrackLookup(ctx context.Context, key string) (*TrackLookupResult, error)
+	SaveTrackLookup(ctx context.Context, opts SaveTrackLookupOpts) error
+	InvalidateTrackLookup(ctx context.Context, opts InvalidateTrackLookupOpts) error
+
+	// Batch
+
+	SaveListensBatch(ctx context.Context, opts []SaveListenOpts) (int64, error)
+
 	// Etc
 
 	ImageHasAssociation(ctx context.Context, image uuid.UUID) (bool, error)

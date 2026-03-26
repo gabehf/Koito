@@ -41,21 +41,19 @@ func ImportMalojaFile(ctx context.Context, store db.DB, filename string) error {
 		return fmt.Errorf("ImportMalojaFile: %w", err)
 	}
 	defer file.Close()
-	var throttleFunc = func() {}
-	if ms := cfg.ThrottleImportMs(); ms > 0 {
-		throttleFunc = func() {
-			time.Sleep(time.Duration(ms) * time.Millisecond)
-		}
-	}
 	export := new(MalojaExport)
 	err = json.NewDecoder(file).Decode(&export)
 	if err != nil {
 		return fmt.Errorf("ImportMalojaFile: %w", err)
 	}
+
+	bs := NewBulkSubmitter(ctx, BulkSubmitterOpts{
+		Store: store,
+		Mbzc:  &mbz.MbzErrorCaller{},
+	})
+
 	for _, item := range export.Scrobbles {
 		martists := make([]string, 0)
-		// Maloja has a tendency to have the the artist order ['feature', 'main \u2022 feature'], so
-		// here we try to turn that artist array into ['main', 'feature']
 		item.Track.Artists = utils.MoveFirstMatchToFront(item.Track.Artists, " \u2022 ")
 		for _, an := range item.Track.Artists {
 			ans := strings.Split(an, " \u2022 ")
@@ -68,11 +66,10 @@ func ImportMalojaFile(ctx context.Context, store db.DB, filename string) error {
 		}
 		ts := time.Unix(item.Time, 0)
 		if !inImportTimeWindow(ts) {
-			l.Debug().Msgf("Skipping import due to import time rules")
 			continue
 		}
-		opts := catalog.SubmitListenOpts{
-			MbzCaller:      &mbz.MusicBrainzClient{},
+		bs.Accept(catalog.SubmitListenOpts{
+			MbzCaller:      &mbz.MbzErrorCaller{},
 			Artist:         item.Track.Artists[0],
 			ArtistNames:    artists,
 			TrackTitle:     item.Track.Title,
@@ -80,14 +77,13 @@ func ImportMalojaFile(ctx context.Context, store db.DB, filename string) error {
 			Time:           ts.Local(),
 			Client:         "maloja",
 			UserID:         1,
-			SkipCacheImage: !cfg.FetchImagesDuringImport(),
-		}
-		err = catalog.SubmitListen(ctx, store, opts)
-		if err != nil {
-			l.Err(err).Msg("Failed to import maloja playback item")
-			return fmt.Errorf("ImportMalojaFile: %w", err)
-		}
-		throttleFunc()
+			SkipCacheImage: true,
+		})
 	}
-	return finishImport(ctx, filename, len(export.Scrobbles))
+
+	count, err := bs.Flush()
+	if err != nil {
+		return fmt.Errorf("ImportMalojaFile: %w", err)
+	}
+	return finishImport(ctx, filename, count)
 }

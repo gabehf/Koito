@@ -77,6 +77,21 @@ func SubmitListen(ctx context.Context, store db.DB, opts SubmitListenOpts) error
 	// bandaid to ensure new activity does not have sub-second precision
 	opts.Time = opts.Time.Truncate(time.Second)
 
+	// Fast path: check lookup cache for known entity combo
+	if !opts.SkipSaveListen {
+		key := TrackLookupKey(opts.Artist, opts.TrackTitle, opts.ReleaseTitle)
+		cached, err := store.GetTrackLookup(ctx, key)
+		if err == nil && cached != nil {
+			l.Debug().Msg("Track lookup cache hit — skipping entity resolution")
+			return store.SaveListen(ctx, db.SaveListenOpts{
+				TrackID: cached.TrackID,
+				Time:    opts.Time,
+				UserID:  opts.UserID,
+				Client:  opts.Client,
+			})
+		}
+	}
+
 	artists, err := AssociateArtists(
 		ctx,
 		store,
@@ -166,6 +181,16 @@ func SubmitListen(ctx context.Context, store db.DB, opts SubmitListenOpts) error
 				}
 			}
 		}
+	}
+
+	// Populate lookup cache for future fast-path hits
+	if len(artists) > 0 {
+		store.SaveTrackLookup(ctx, db.SaveTrackLookupOpts{
+			Key:      TrackLookupKey(opts.Artist, opts.TrackTitle, opts.ReleaseTitle),
+			ArtistID: artists[0].ID,
+			AlbumID:  rg.ID,
+			TrackID:  track.ID,
+		})
 	}
 
 	if opts.IsNowPlaying {

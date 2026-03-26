@@ -122,17 +122,18 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.DB, opts Asso
 			}
 		}
 
-		l.Debug().Msg("Searching for album images...")
 		var imgid uuid.UUID
-		imgUrl, err := images.GetAlbumImage(ctx, images.AlbumImageOpts{
-			Artists:      utils.UniqueIgnoringCase(slices.Concat(utils.FlattenMbzArtistCreditNames(release.ArtistCredit), utils.FlattenArtistNames(opts.Artists))),
-			Album:        release.Title,
-			ReleaseMbzID: &opts.ReleaseMbzID,
-		})
+		var imgUrl string
+		if !opts.SkipCacheImage {
+			l.Debug().Msg("Searching for album images...")
+			imgUrl, err = images.GetAlbumImage(ctx, images.AlbumImageOpts{
+				Artists:      utils.UniqueIgnoringCase(slices.Concat(utils.FlattenMbzArtistCreditNames(release.ArtistCredit), utils.FlattenArtistNames(opts.Artists))),
+				Album:        release.Title,
+				ReleaseMbzID: &opts.ReleaseMbzID,
+			})
 
-		if err == nil && imgUrl != "" {
-			imgid = uuid.New()
-			if !opts.SkipCacheImage {
+			if err == nil && imgUrl != "" {
+				imgid = uuid.New()
 				var size ImageSize
 				if cfg.FullImageCacheEnabled() {
 					size = ImageSizeFull
@@ -144,11 +145,9 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.DB, opts Asso
 				if err != nil {
 					l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
 				}
+			} else if err != nil {
+				l.Debug().Msgf("createOrUpdateAlbumWithMbzReleaseID: failed to get album images for %s: %s", release.Title, err.Error())
 			}
-		}
-
-		if err != nil {
-			l.Debug().Msgf("createOrUpdateAlbumWithMbzReleaseID: failed to get album images for %s: %s", release.Title, err.Error())
 		}
 
 		album, err = d.SaveAlbum(ctx, db.SaveAlbumOpts{
@@ -217,14 +216,15 @@ func matchAlbumByTitle(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*
 		return nil, fmt.Errorf("matchAlbumByTitle: %w", err)
 	} else {
 		var imgid uuid.UUID
-		imgUrl, err := images.GetAlbumImage(ctx, images.AlbumImageOpts{
-			Artists:      utils.FlattenArtistNames(opts.Artists),
-			Album:        opts.ReleaseName,
-			ReleaseMbzID: &opts.ReleaseMbzID,
-		})
-		if err == nil && imgUrl != "" {
-			imgid = uuid.New()
-			if !opts.SkipCacheImage {
+		var imgUrl string
+		if !opts.SkipCacheImage {
+			imgUrl, err = images.GetAlbumImage(ctx, images.AlbumImageOpts{
+				Artists:      utils.FlattenArtistNames(opts.Artists),
+				Album:        opts.ReleaseName,
+				ReleaseMbzID: &opts.ReleaseMbzID,
+			})
+			if err == nil && imgUrl != "" {
+				imgid = uuid.New()
 				var size ImageSize
 				if cfg.FullImageCacheEnabled() {
 					size = ImageSizeFull
@@ -234,12 +234,11 @@ func matchAlbumByTitle(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*
 				l.Debug().Msg("Downloading album image from source...")
 				err = DownloadAndCacheImage(ctx, imgid, imgUrl, size)
 				if err != nil {
-					l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
+					l.Err(err).Msg("matchAlbumByTitle: failed to cache image")
 				}
+			} else if err != nil {
+				l.Debug().AnErr("error", err).Msgf("matchAlbumByTitle: failed to get album images for %s", opts.ReleaseName)
 			}
-		}
-		if err != nil {
-			l.Debug().AnErr("error", err).Msgf("matchAlbumByTitle: failed to get album images for %s", opts.ReleaseName)
 		}
 
 		a, err = d.SaveAlbum(ctx, db.SaveAlbumOpts{

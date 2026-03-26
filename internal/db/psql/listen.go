@@ -11,6 +11,7 @@ import (
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/repository"
+	"github.com/jackc/pgx/v5"
 )
 
 func (d *Psql) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) (*db.PaginatedResponse[*models.Listen], error) {
@@ -195,6 +196,67 @@ func (d *Psql) SaveListen(ctx context.Context, opts db.SaveListenOpts) error {
 		UserID:     opts.UserID,
 		Client:     client,
 	})
+}
+
+func (d *Psql) SaveListensBatch(ctx context.Context, opts []db.SaveListenOpts) (int64, error) {
+	if len(opts) == 0 {
+		return 0, nil
+	}
+
+	tx, err := d.conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("SaveListensBatch: BeginTx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, `
+		CREATE TEMP TABLE tmp_listens (
+			track_id INT,
+			listened_at TIMESTAMPTZ,
+			user_id INT,
+			client TEXT
+		) ON COMMIT DROP
+	`)
+	if err != nil {
+		return 0, fmt.Errorf("SaveListensBatch: create temp table: %w", err)
+	}
+
+	rows := make([][]interface{}, len(opts))
+	for i, o := range opts {
+		var client interface{}
+		if o.Client != "" {
+			client = o.Client
+		}
+		t := o.Time
+		if t.IsZero() {
+			t = time.Now()
+		}
+		rows[i] = []interface{}{o.TrackID, t, o.UserID, client}
+	}
+
+	_, err = tx.CopyFrom(ctx,
+		pgx.Identifier{"tmp_listens"},
+		[]string{"track_id", "listened_at", "user_id", "client"},
+		pgx.CopyFromRows(rows),
+	)
+	if err != nil {
+		return 0, fmt.Errorf("SaveListensBatch: CopyFrom: %w", err)
+	}
+
+	tag, err := tx.Exec(ctx, `
+		INSERT INTO listens (track_id, listened_at, user_id, client)
+		SELECT track_id, listened_at, user_id, client FROM tmp_listens
+		ON CONFLICT DO NOTHING
+	`)
+	if err != nil {
+		return 0, fmt.Errorf("SaveListensBatch: insert: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("SaveListensBatch: Commit: %w", err)
+	}
+
+	return tag.RowsAffected(), nil
 }
 
 func (d *Psql) DeleteListen(ctx context.Context, trackId int32, listenedAt time.Time) error {

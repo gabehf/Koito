@@ -63,13 +63,11 @@ func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrai
 
 	scanner := bufio.NewScanner(r)
 
-	var throttleFunc = func() {}
-	if ms := cfg.ThrottleImportMs(); ms > 0 {
-		throttleFunc = func() {
-			time.Sleep(time.Duration(ms) * time.Millisecond)
-		}
-	}
-	count := 0
+	bs := NewBulkSubmitter(ctx, BulkSubmitterOpts{
+		Store: store,
+		Mbzc:  mbzc,
+	})
+
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		payload := new(handlers.LbzSubmitListenPayload)
@@ -80,7 +78,6 @@ func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrai
 		}
 		ts := time.Unix(payload.ListenedAt, 0)
 		if !inImportTimeWindow(ts) {
-			l.Debug().Msgf("Skipping import due to import time rules")
 			continue
 		}
 		artistMbzIDs, err := utils.ParseUUIDSlice(payload.TrackMeta.AdditionalInfo.ArtistMBIDs)
@@ -139,7 +136,7 @@ func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrai
 			artistMbidMap = append(artistMbidMap, catalog.ArtistMbidMap{Artist: a.ArtistName, Mbid: mbid})
 		}
 
-		opts := catalog.SubmitListenOpts{
+		bs.Accept(catalog.SubmitListenOpts{
 			MbzCaller:          mbzc,
 			ArtistNames:        payload.TrackMeta.AdditionalInfo.ArtistNames,
 			Artist:             payload.TrackMeta.ArtistName,
@@ -154,15 +151,13 @@ func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrai
 			Time:               ts,
 			UserID:             1,
 			Client:             client,
-			SkipCacheImage:     !cfg.FetchImagesDuringImport(),
-		}
-		err = catalog.SubmitListen(ctx, store, opts)
-		if err != nil {
-			l.Err(err).Msg("Failed to import LastFM playback item")
-			return fmt.Errorf("ImportListenBrainzFile: %w", err)
-		}
-		count++
-		throttleFunc()
+			SkipCacheImage:     true,
+		})
+	}
+
+	count, err := bs.Flush()
+	if err != nil {
+		return fmt.Errorf("ImportListenBrainzFile: %w", err)
 	}
 	l.Info().Msgf("Finished importing %s; imported %d items", filename, count)
 	return nil

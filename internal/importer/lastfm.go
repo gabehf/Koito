@@ -50,18 +50,17 @@ func ImportLastFMFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 		return fmt.Errorf("ImportLastFMFile: %w", err)
 	}
 	defer file.Close()
-	var throttleFunc = func() {}
-	if ms := cfg.ThrottleImportMs(); ms > 0 {
-		throttleFunc = func() {
-			time.Sleep(time.Duration(ms) * time.Millisecond)
-		}
-	}
 	export := make([]LastFMExportPage, 0)
 	err = json.NewDecoder(file).Decode(&export)
 	if err != nil {
 		return fmt.Errorf("ImportLastFMFile: %w", err)
 	}
-	count := 0
+
+	bs := NewBulkSubmitter(ctx, BulkSubmitterOpts{
+		Store: store,
+		Mbzc:  mbzc,
+	})
+
 	for _, item := range export {
 		for _, track := range item.Track {
 			album := track.Album.Text
@@ -96,7 +95,6 @@ func ImportLastFMFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 				ts = time.Unix(unix, 0).UTC()
 			}
 			if !inImportTimeWindow(ts) {
-				l.Debug().Msgf("Skipping import due to import time rules")
 				continue
 			}
 
@@ -105,7 +103,7 @@ func ImportLastFMFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 				artistMbidMap = append(artistMbidMap, catalog.ArtistMbidMap{Artist: track.Artist.Text, Mbid: artistMbzID})
 			}
 
-			opts := catalog.SubmitListenOpts{
+			bs.Accept(catalog.SubmitListenOpts{
 				MbzCaller:          mbzc,
 				Artist:             track.Artist.Text,
 				ArtistNames:        []string{track.Artist.Text},
@@ -118,16 +116,14 @@ func ImportLastFMFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 				Client:             "lastfm",
 				Time:               ts,
 				UserID:             1,
-				SkipCacheImage:     !cfg.FetchImagesDuringImport(),
-			}
-			err = catalog.SubmitListen(ctx, store, opts)
-			if err != nil {
-				l.Err(err).Msg("Failed to import LastFM playback item")
-				return fmt.Errorf("ImportLastFMFile: %w", err)
-			}
-			count++
-			throttleFunc()
+				SkipCacheImage:     true,
+			})
 		}
+	}
+
+	count, err := bs.Flush()
+	if err != nil {
+		return fmt.Errorf("ImportLastFMFile: %w", err)
 	}
 	return finishImport(ctx, filename, count)
 }
