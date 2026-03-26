@@ -298,7 +298,7 @@ func FetchMissingArtistImages(ctx context.Context, store db.DB) error {
 				Msg("FetchMissingArtistImages: Attempting to fetch missing artist image")
 
 			var aliases []string
-			if aliasrow, err := store.GetAllArtistAliases(ctx, artist.ID); err != nil {
+			if aliasrow, err := store.GetAllArtistAliases(ctx, artist.ID); err == nil {
 				aliases = utils.FlattenAliases(aliasrow)
 			} else {
 				aliases = []string{artist.Name}
