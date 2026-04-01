@@ -274,7 +274,7 @@ func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
 		}
 		if strings.Contains(file.Name(), "Streaming_History_Audio") {
 			l.Info().Msgf("Importer: Import file %s detecting as being Spotify export", file.Name())
-			err := importer.ImportSpotifyFile(logger.NewContext(l), store, file.Name())
+			err := importer.ImportSpotifyFile(logger.NewContext(l), store, mbzc, file.Name())
 			if err != nil {
 				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
