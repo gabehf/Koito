@@ -59,7 +59,7 @@ func ImportSpotifyFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCal
 			continue
 		}
 		opts := catalog.SubmitListenOpts{
-			MbzCaller:      &mbz.MusicBrainzClient{},
+			MbzCaller:      mbzc,
 			Artist:         item.ArtistName,
 			TrackTitle:     item.TrackName,
 			ReleaseTitle:   item.AlbumName,
