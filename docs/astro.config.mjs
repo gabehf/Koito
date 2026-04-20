@@ -51,6 +51,7 @@ export default defineConfig({
           label: "Reference",
           items: [
             { label: "Configuration Options", slug: "reference/configuration" },
+	    { label: "Web API", slug: "reference/api" },
           ],
         },
       ],
