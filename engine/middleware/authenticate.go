@@ -133,6 +133,10 @@ func validateAPIKey(ctx context.Context, store db.DB, r *http.Request) (*models.
 	l.Debug().Msg("ValidateApiKey: Checking if user is already authenticated")
 
 	authH := r.Header.Get("Authorization")
+	if authH == "" {
+		return nil, nil // no header present, not an error
+	}
+
 	var token string
 	if strings.HasPrefix(strings.ToLower(authH), "token ") {
 		token = strings.TrimSpace(authH[6:]) // strip "Token "
