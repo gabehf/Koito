@@ -15,6 +15,7 @@ interface AppContextType {
   currentVersion: string;
   updateAvailable: boolean;
   firstActivity: Date | undefined;
+  dateFormat: string;
   setConfigurableHomeActivity: (value: boolean) => void;
   setHomeItems: (value: number) => void;
   setUsername: (value: string) => void;
@@ -35,6 +36,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [defaultTheme, setDefaultTheme] = useState<string | undefined>(
     undefined,
   );
+  const [dateFormat, setDateFormat] = useState<string>("");
   const [configurableHomeActivity, setConfigurableHomeActivity] =
     useState<boolean>(false);
   const [homeItems, setHomeItems] = useState<number>(0);
@@ -69,6 +71,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setDefaultTheme("yuu");
       }
+      setDateFormat(cfg.date_format ?? "");
     });
 
     fetch("/apis/web/v1/first-activity")
@@ -103,6 +106,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     currentVersion,
     updateAvailable,
     firstActivity,
+    dateFormat,
     setConfigurableHomeActivity,
     setHomeItems,
     setUsername,
@@ -112,3 +116,4 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
   );
 };
+

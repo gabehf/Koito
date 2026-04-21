@@ -33,6 +33,7 @@ const (
 	DEFAULT_USERNAME_ENV           = "KOITO_DEFAULT_USERNAME"
 	DEFAULT_PASSWORD_ENV           = "KOITO_DEFAULT_PASSWORD"
 	DEFAULT_THEME_ENV              = "KOITO_DEFAULT_THEME"
+	DATE_FORMAT_ENV                = "KOITO_DATE_FORMAT"
 	DISABLE_DEEZER_ENV             = "KOITO_DISABLE_DEEZER"
 	DISABLE_COVER_ART_ARCHIVE_ENV  = "KOITO_DISABLE_COVER_ART_ARCHIVE"
 	DISABLE_MUSICBRAINZ_ENV        = "KOITO_DISABLE_MUSICBRAINZ"
@@ -69,6 +70,7 @@ type config struct {
 	defaultPw              string
 	defaultUsername        string
 	defaultTheme           string
+	dateFormat             string
 	disableDeezer          bool
 	disableCAA             bool
 	disableMusicBrainz     bool
@@ -191,6 +193,7 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	}
 
 	cfg.defaultTheme = getenv(DEFAULT_THEME_ENV)
+	cfg.dateFormat = getenv(DATE_FORMAT_ENV)
 
 	cfg.configDir = getenv(CONFIG_DIR_ENV)
 	if cfg.configDir == "" {
@@ -249,3 +252,4 @@ func parseBool(s string) bool {
 		return false
 	}
 }
+

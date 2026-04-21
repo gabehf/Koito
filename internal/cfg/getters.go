@@ -96,6 +96,18 @@ func DefaultTheme() string {
 	return globalConfig.defaultTheme
 }
 
+func DateFormat() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.dateFormat
+}
+
+func FullImageCacheEnabled() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.enableFullImageCache
+}
+
 func DeezerDisabled() bool {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -204,3 +216,4 @@ func ForceTZ() *time.Location {
 	defer lock.RUnlock()
 	return globalConfig.forceTZ
 }
+

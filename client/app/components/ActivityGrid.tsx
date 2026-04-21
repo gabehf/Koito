@@ -7,6 +7,8 @@ import {
 } from "api/api";
 import CardHeader from "./primitives/CardHeader";
 import useWindowWidth from "~/hooks/useWindowWidth";
+import { useAppContext } from "~/providers/AppProvider";
+import { formatDate } from "~/utils/utils";
 
 interface Props {
   step?: string;
@@ -56,6 +58,7 @@ export default function ActivityGrid({
   });
 
   const width = useWindowWidth();
+  const { dateFormat } = useAppContext();
 
   if (isPending) {
     return <ActivityGridSkeleton />;
@@ -165,7 +168,7 @@ export default function ActivityGrid({
                     position="top"
                     space={12}
                     extraClasses="left-2"
-                    inner={`${cell.date.toLocaleDateString()} ${
+                    inner={`${formatDate(cell.date, dateFormat)} ${
                       cell.listens
                     } plays`}
                   >
@@ -279,3 +282,4 @@ function ActivityGridSkeleton() {
     </div>
   );
 }
+

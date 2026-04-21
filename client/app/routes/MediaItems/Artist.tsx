@@ -5,9 +5,10 @@ import LastPlayed from "~/components/LastPlayed";
 import MediaLayout from "./MediaLayout";
 import ArtistAlbums from "~/components/ArtistAlbums";
 import ActivityGrid from "~/components/ActivityGrid";
-import { timeListenedString } from "~/utils/utils";
+import { timeListenedString, formatDate } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
 import MediaItemNote from "~/components/MediaItemNote";
+import { useAppContext } from "~/providers/AppProvider";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const res = await fetch(`/apis/web/v1/artist/${params.id}`);
@@ -21,6 +22,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function Artist() {
   const artist = useLoaderData() as Artist;
   const period = "all_time";
+  const { dateFormat } = useAppContext();
 
   let index = artist.aliases.indexOf(artist.name);
   if (index !== -1) {
@@ -50,7 +52,26 @@ export default function Artist() {
         }
         return r;
       }}
-      subContent={<></>}
+      subContent={
+        <div className="flex flex-col gap-2 items-start">
+          {artist.listen_count > 0 && (
+            <p>
+              {artist.listen_count} play{artist.listen_count > 1 ? "s" : ""}
+            </p>
+          )}
+          {artist.time_listened !== 0 && (
+            <p title={Math.floor(artist.time_listened / 60 / 60) + " hours"}>
+              {timeListenedString(artist.time_listened)}
+            </p>
+          )}
+          {artist.first_listen > 0 && (
+            <p title={new Date(artist.first_listen * 1000).toLocaleString()}>
+              Listening since{" "}
+              {formatDate(new Date(artist.first_listen * 1000), dateFormat)}
+            </p>
+          )}
+        </div>
+      }
     >
       <div className="flex flex-col gap-14">
         <div className="flex flex-col gap-10 md:gap-12 mt-8 max-w-[1400px]">
@@ -85,3 +106,4 @@ export default function Artist() {
     </MediaLayout>
   );
 }
+
