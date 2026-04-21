@@ -50,6 +50,18 @@ export default function Track() {
       }}
       subContent={
         <div className="flex flex-col gap-2 items-start">
+          {track.artists.length > 0 && (
+            <p>
+              {track.artists.map((artist, i) => (
+                <span key={artist.id}>
+                  {i > 0 && ", "}
+                  <Link className="hover:underline" to={`/artist/${artist.id}`}>
+                    {artist.name}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
           <p>
             Appears on{" "}
             <Link className="hover:underline" to={`/album/${track.album_id}`}>
@@ -88,3 +100,4 @@ export default function Track() {
     </MediaLayout>
   );
 }
+
