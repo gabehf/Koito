@@ -5,8 +5,9 @@ import LastPlays from "~/components/LastPlays";
 import PeriodSelector from "~/components/PeriodSelector";
 import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
-import { timeListenedString } from "~/utils/utils";
+import { timeListenedString, formatDate } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
+import { useAppContext } from "~/providers/AppProvider";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   let res = await fetch(`/apis/web/v1/track?id=${params.id}`);
@@ -27,6 +28,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function Track() {
   const { track, album } = useLoaderData();
   const [period, setPeriod] = useState("week");
+  const { dateFormat } = useAppContext();
 
   return (
     <MediaLayout
@@ -81,7 +83,7 @@ export default function Track() {
           {track.first_listen > 0 && (
             <p title={new Date(track.first_listen * 1000).toLocaleString()}>
               Listening since{" "}
-              {new Date(track.first_listen * 1000).toLocaleDateString()}
+              {formatDate(new Date(track.first_listen * 1000), dateFormat)}
             </p>
           )}
         </div>

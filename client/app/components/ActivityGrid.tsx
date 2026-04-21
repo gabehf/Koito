@@ -9,6 +9,8 @@ import { useState } from "react";
 import { useTheme } from "~/hooks/useTheme";
 import ActivityOptsSelector from "./ActivityOptsSelector";
 import type { Theme } from "~/styles/themes.css";
+import { useAppContext } from "~/providers/AppProvider";
+import { formatDate } from "~/utils/utils";
 
 function getPrimaryColor(theme: Theme): string {
   const value = theme.primary;
@@ -65,6 +67,7 @@ export default function ActivityGrid({
 
   const { theme } = useTheme();
   const color = getPrimaryColor(theme);
+  const { dateFormat } = useAppContext();
 
   if (isPending) {
     return (
@@ -165,7 +168,7 @@ export default function ActivityGrid({
                 position="top"
                 space={12}
                 extraClasses="left-2"
-                inner={`${new Date(item.start_time).toLocaleDateString()} ${
+                inner={`${formatDate(new Date(item.start_time), dateFormat)} ${
                   item.listens
                 } plays`}
               >
@@ -194,3 +197,4 @@ export default function ActivityGrid({
     </div>
   );
 }
+

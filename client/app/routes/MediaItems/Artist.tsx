@@ -7,8 +7,9 @@ import PeriodSelector from "~/components/PeriodSelector";
 import MediaLayout from "./MediaLayout";
 import ArtistAlbums from "~/components/ArtistAlbums";
 import ActivityGrid from "~/components/ActivityGrid";
-import { timeListenedString } from "~/utils/utils";
+import { timeListenedString, formatDate } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
+import { useAppContext } from "~/providers/AppProvider";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const res = await fetch(`/apis/web/v1/artist?id=${params.id}`);
@@ -22,6 +23,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function Artist() {
   const artist = useLoaderData() as Artist;
   const [period, setPeriod] = useState("week");
+  const { dateFormat } = useAppContext();
 
   // remove canonical name from alias list
   console.log(artist.aliases);
@@ -65,7 +67,7 @@ export default function Artist() {
           {artist.first_listen > 0 && (
             <p title={new Date(artist.first_listen * 1000).toLocaleString()}>
               Listening since{" "}
-              {new Date(artist.first_listen * 1000).toLocaleDateString()}
+              {formatDate(new Date(artist.first_listen * 1000), dateFormat)}
             </p>
           )}
         </div>
@@ -88,3 +90,4 @@ export default function Artist() {
     </MediaLayout>
   );
 }
+
