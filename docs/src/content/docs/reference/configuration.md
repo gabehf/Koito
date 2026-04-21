@@ -33,7 +33,7 @@ If the environment variable is defined without **and** with the suffix at the sa
 - Description: The lowercase name of the default theme to be used by the client. Overridden if a user picks a theme in the theme switcher.
 ##### KOITO_DATE_FORMAT
 - Default: `Browser locale`
-- Description: The format to use for dates in the client. Supports the tokens `DD`, `MM`, and `YYYY` with any separator. For example, `DD/MM/YYYY` produces `21/04/2026`. When not set, dates are formatted using the browser's locale.
+- Description: The format to use for dates in the client. Supports the tokens `DD`, `MM`, and `YYYY` with `/`, `-`, and `.`as separators. For example, `DD/MM/YYYY` produces `21/04/2026`. When not set, dates are formatted using the browser's locale.
 ##### KOITO_LOGIN_GATE
 - Default: `false`
 - Description: When `true`, Koito will not show any statistics unless the user is logged in.
