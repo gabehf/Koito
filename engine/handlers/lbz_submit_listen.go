@@ -77,7 +77,14 @@ const (
 
 var sfGroup singleflight.Group
 
-func LbzSubmitListenHandler(store db.DB, mbzc mbz.MusicBrainzCaller) func(w http.ResponseWriter, r *http.Request) {
+type submitListenHandlerStore interface {
+	db.ArtistStore
+	db.AlbumStore
+	db.TrackStore
+	db.ListenStore
+}
+
+func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainzCaller) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := logger.FromContext(r.Context())
 

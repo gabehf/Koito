@@ -16,7 +16,14 @@ type StatsResponse struct {
 	MinutesListened int64 `json:"minutes_listened"`
 }
 
-func StatsHandler(store db.DB) http.HandlerFunc {
+type statsStore interface {
+	db.ListenStore
+	db.TrackStore
+	db.AlbumStore
+	db.ArtistStore
+}
+
+func StatsHandler(store statsStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := logger.FromContext(r.Context())
 

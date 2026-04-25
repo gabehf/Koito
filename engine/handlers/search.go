@@ -17,7 +17,13 @@ type SearchResults struct {
 	Tracks  []*models.Track  `json:"tracks"`
 }
 
-func SearchHandler(store db.DB) http.HandlerFunc {
+type searchStore interface {
+	db.ArtistStore
+	db.AlbumStore
+	db.TrackStore
+}
+
+func SearchHandler(store searchStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

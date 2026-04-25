@@ -10,8 +10,14 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
+type aliasStore interface {
+	db.ArtistStore
+	db.AlbumStore
+	db.TrackStore
+}
+
 // GetAliasesHandler retrieves all aliases for a given artist or album ID.
-func GetAliasesHandler(store db.DB) http.HandlerFunc {
+func GetAliasesHandler(store aliasStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -81,7 +87,7 @@ func GetAliasesHandler(store db.DB) http.HandlerFunc {
 }
 
 // DeleteAliasHandler deletes an alias for a given artist or album ID.
-func DeleteAliasHandler(store db.DB) http.HandlerFunc {
+func DeleteAliasHandler(store aliasStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -161,7 +167,7 @@ func DeleteAliasHandler(store db.DB) http.HandlerFunc {
 }
 
 // CreateAliasHandler creates new aliases for a given artist, album, or track.
-func CreateAliasHandler(store db.DB) http.HandlerFunc {
+func CreateAliasHandler(store aliasStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -244,7 +250,7 @@ func CreateAliasHandler(store db.DB) http.HandlerFunc {
 }
 
 // sets the primary alias for albums, artists, and tracks
-func SetPrimaryAliasHandler(store db.DB) http.HandlerFunc {
+func SetPrimaryAliasHandler(store aliasStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
