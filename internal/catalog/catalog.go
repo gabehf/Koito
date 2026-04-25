@@ -67,7 +67,14 @@ const (
 	ImageSourceUserUpload = "User Upload"
 )
 
-func SubmitListen(ctx context.Context, store db.DB, opts SubmitListenOpts) error {
+type submitListenStore interface {
+	db.ArtistStore
+	db.AlbumStore
+	db.TrackStore
+	db.ListenStore
+}
+
+func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListenOpts) error {
 	l := logger.FromContext(ctx)
 
 	if opts.Artist == "" || opts.TrackTitle == "" {

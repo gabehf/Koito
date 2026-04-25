@@ -8,7 +8,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func GetTopAlbumsHandler(store db.DB) func(w http.ResponseWriter, r *http.Request) {
+func GetTopAlbumsHandler(store db.AlbumStore) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

@@ -10,7 +10,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func ExportHandler(store db.DB) http.HandlerFunc {
+func ExportHandler(store db.ExportStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Disposition", `attachment; filename="koito_export.json"`)

@@ -19,7 +19,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func ImportKoitoFile(ctx context.Context, store db.DB, filename string) error {
+func ImportKoitoFile(ctx context.Context, store importStore, filename string) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning Koito import on file: %s", filename)
 	data := new(export.KoitoExport)

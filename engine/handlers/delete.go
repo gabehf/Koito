@@ -10,7 +10,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func DeleteTrackHandler(store db.DB) http.HandlerFunc {
+func DeleteTrackHandler(store db.TrackStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -45,7 +45,7 @@ func DeleteTrackHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func DeleteListenHandler(store db.DB) http.HandlerFunc {
+func DeleteListenHandler(store db.ListenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -94,7 +94,7 @@ func DeleteListenHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func DeleteArtistHandler(store db.DB) http.HandlerFunc {
+func DeleteArtistHandler(store db.ArtistStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -129,7 +129,7 @@ func DeleteArtistHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func DeleteAlbumHandler(store db.DB) http.HandlerFunc {
+func DeleteAlbumHandler(store db.AlbumStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

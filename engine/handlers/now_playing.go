@@ -15,7 +15,7 @@ type NowPlayingResponse struct {
 	Track            models.Track `json:"track"`
 }
 
-func NowPlayingHandler(store db.DB) http.HandlerFunc {
+func NowPlayingHandler(store db.TrackStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

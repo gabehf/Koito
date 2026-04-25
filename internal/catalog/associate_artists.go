@@ -28,7 +28,7 @@ type AssociateArtistsOpts struct {
 	SkipCacheImage bool
 }
 
-func AssociateArtists(ctx context.Context, d db.DB, opts AssociateArtistsOpts) ([]*models.Artist, error) {
+func AssociateArtists(ctx context.Context, d db.ArtistStore, opts AssociateArtistsOpts) ([]*models.Artist, error) {
 	l := logger.FromContext(ctx)
 
 	var result []*models.Artist
@@ -74,7 +74,7 @@ func AssociateArtists(ctx context.Context, d db.DB, opts AssociateArtistsOpts) (
 	return result, nil
 }
 
-func matchArtistsByMBIDMappings(ctx context.Context, d db.DB, opts AssociateArtistsOpts) ([]*models.Artist, error) {
+func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts AssociateArtistsOpts) ([]*models.Artist, error) {
 	l := logger.FromContext(ctx)
 	var result []*models.Artist
 
@@ -167,7 +167,7 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.DB, opts AssociateArti
 	return result, nil
 }
 
-func matchArtistsByMBID(ctx context.Context, d db.DB, opts AssociateArtistsOpts, existing []*models.Artist) ([]*models.Artist, error) {
+func matchArtistsByMBID(ctx context.Context, d db.ArtistStore, opts AssociateArtistsOpts, existing []*models.Artist) ([]*models.Artist, error) {
 	l := logger.FromContext(ctx)
 	var result []*models.Artist
 
@@ -208,7 +208,7 @@ func matchArtistsByMBID(ctx context.Context, d db.DB, opts AssociateArtistsOpts,
 	return result, nil
 }
 
-func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []string, d db.DB, opts AssociateArtistsOpts) (*models.Artist, error) {
+func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []string, d db.ArtistStore, opts AssociateArtistsOpts) (*models.Artist, error) {
 	l := logger.FromContext(ctx)
 
 	aliases, err := opts.Mbzc.GetArtistPrimaryAliases(ctx, mbzID)
@@ -282,7 +282,7 @@ func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []st
 	return u, nil
 }
 
-func matchArtistsByNames(ctx context.Context, names []string, existing []*models.Artist, d db.DB, opts AssociateArtistsOpts) ([]*models.Artist, error) {
+func matchArtistsByNames(ctx context.Context, names []string, existing []*models.Artist, d db.ArtistStore, opts AssociateArtistsOpts) ([]*models.Artist, error) {
 	l := logger.FromContext(ctx)
 	var result []*models.Artist
 

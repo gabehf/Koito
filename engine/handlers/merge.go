@@ -10,7 +10,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func MergeTracksHandler(store db.DB) http.HandlerFunc {
+func MergeTracksHandler(store db.TrackStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := logger.FromContext(r.Context())
 
@@ -46,7 +46,7 @@ func MergeTracksHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func MergeReleaseGroupsHandler(store db.DB) http.HandlerFunc {
+func MergeReleaseGroupsHandler(store db.AlbumStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := logger.FromContext(r.Context())
 
@@ -89,7 +89,7 @@ func MergeReleaseGroupsHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func MergeArtistsHandler(store db.DB) http.HandlerFunc {
+func MergeArtistsHandler(store db.ArtistStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := logger.FromContext(r.Context())
 
@@ -132,7 +132,7 @@ func MergeArtistsHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func UpdateAlbumHandler(store db.DB) http.HandlerFunc {
+func UpdateAlbumHandler(store db.AlbumStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

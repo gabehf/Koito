@@ -22,7 +22,7 @@ type AssociateTrackOpts struct {
 	Mbzc       mbz.MusicBrainzCaller
 }
 
-func AssociateTrack(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*models.Track, error) {
+func AssociateTrack(ctx context.Context, d db.TrackStore, opts AssociateTrackOpts) (*models.Track, error) {
 	l := logger.FromContext(ctx)
 	if opts.TrackName == "" {
 		return nil, errors.New("AssociateTrack: missing required parameter 'opts.TrackName'")
@@ -44,7 +44,7 @@ func AssociateTrack(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*mod
 }
 
 // If no match is found, will call matchTrackByTitleAndArtist and associate the Mbz ID with the result
-func matchTrackByMbzID(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*models.Track, error) {
+func matchTrackByMbzID(ctx context.Context, d db.TrackStore, opts AssociateTrackOpts) (*models.Track, error) {
 	l := logger.FromContext(ctx)
 	track, err := d.GetTrack(ctx, db.GetTrackOpts{
 		MusicBrainzID: opts.TrackMbzID,
@@ -79,7 +79,7 @@ func matchTrackByMbzID(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*
 	}
 }
 
-func matchTrackByTrackInfo(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*models.Track, error) {
+func matchTrackByTrackInfo(ctx context.Context, d db.TrackStore, opts AssociateTrackOpts) (*models.Track, error) {
 	l := logger.FromContext(ctx)
 	// try provided track title
 	track, err := d.GetTrack(ctx, db.GetTrackOpts{

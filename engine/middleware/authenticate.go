@@ -32,7 +32,7 @@ const (
 	AuthModeLoginGate
 )
 
-func Authenticate(store db.DB, mode AuthMode) func(http.Handler) http.Handler {
+func Authenticate(store db.UserStore, mode AuthMode) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -85,7 +85,7 @@ func Authenticate(store db.DB, mode AuthMode) func(http.Handler) http.Handler {
 	}
 }
 
-func validateSession(ctx context.Context, store db.DB, r *http.Request) (*models.User, error) {
+func validateSession(ctx context.Context, store db.UserStore, r *http.Request) (*models.User, error) {
 	l := logger.FromContext(r.Context())
 
 	l.Debug().Msgf("ValidateSession: Checking user authentication via session cookie")
@@ -127,7 +127,7 @@ func validateSession(ctx context.Context, store db.DB, r *http.Request) (*models
 	return u, nil
 }
 
-func validateAPIKey(ctx context.Context, store db.DB, r *http.Request) (*models.User, error) {
+func validateAPIKey(ctx context.Context, store db.UserStore, r *http.Request) (*models.User, error) {
 	l := logger.FromContext(ctx)
 
 	l.Debug().Msg("ValidateApiKey: Checking if user is already authenticated")

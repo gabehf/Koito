@@ -10,7 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func UpdateMbzIdHandler(store db.DB) func(w http.ResponseWriter, r *http.Request) {
+type mbzidStore interface {
+	db.ArtistStore
+	db.AlbumStore
+	db.TrackStore
+}
+
+func UpdateMbzIdHandler(store mbzidStore) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

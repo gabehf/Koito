@@ -12,7 +12,7 @@ import (
 
 func BackfillTrackDurationsFromMusicBrainz(
 	ctx context.Context,
-	store db.DB,
+	store db.TrackStore,
 	mbzCaller mbz.MusicBrainzCaller,
 ) error {
 	l := logger.FromContext(ctx)
