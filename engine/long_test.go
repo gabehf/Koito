@@ -20,6 +20,7 @@ import (
 	"github.com/gabehf/koito/engine/handlers"
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
+	"github.com/gabehf/koito/internal/db/sqlite"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -72,25 +73,37 @@ func getApiKey(t *testing.T, session string) {
 	})
 }
 
+// truncateTestData removes all music data from the server's database, leaving
+// users, sessions, and api_keys intact. Deleting artists cascades to
+// artist_aliases, artist_tracks, and artist_releases; the orphan trigger then
+// deletes releases, which cascade to release_aliases, tracks, and track_aliases.
 func truncateTestData(t *testing.T) {
-	err := store.Exec(context.Background(),
-		`TRUNCATE
-		artists,
-		artist_aliases,
-		tracks,
-		artist_tracks,
-		releases,
-		artist_releases,
-		release_aliases,
-		listens
-		RESTART IDENTITY CASCADE`)
-	require.NoError(t, err)
+	t.Helper()
+	require.NoError(t, store.Exec("DELETE FROM listens"))
+	require.NoError(t, store.Exec("DELETE FROM artists"))
+	// Belt-and-suspenders: delete any releases the trigger may have missed
+	// (e.g. releases that were never associated with an artist).
+	require.NoError(t, store.Exec("DELETE FROM releases"))
+}
+
+func newTestDB() *sqlite.Sqlite {
+	s, err := sqlite.NewInMemory()
+	if err != nil {
+		panic(err)
+	}
+
+	// insert a user into the db with id 1 to use for tests
+	err = s.Exec(`INSERT INTO users (username, password) VALUES ('test', 0x123)`)
+	if err != nil {
+		panic(err)
+	}
+
+	return s
 }
 
 func doSubmitListens(t *testing.T) {
 	login(t)
 	getApiKey(t, session)
-	truncateTestData(t)
 	bodies := []string{fmt.Sprintf(`{
 		"listen_type": "single",
 		"payload": [
@@ -185,6 +198,7 @@ func doSubmitListens(t *testing.T) {
 }
 
 func TestGetters(t *testing.T) {
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 	// Artist was saved
 	resp, err := http.DefaultClient.Get(host() + "/apis/web/v1/artist?id=1")
@@ -245,7 +259,7 @@ func TestGetters(t *testing.T) {
 }
 
 func TestMerge(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
 	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/merge/tracks?from_id=1&to_id=2", nil)
@@ -326,7 +340,7 @@ func TestValidateToken(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
 	resp, err := makeAuthRequest(t, session, "DELETE", "/apis/web/v1/artist?id=1", nil)
@@ -357,7 +371,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestLoginGate(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
 	req, err := http.NewRequest("DELETE", host()+"/apis/web/v1/artist?id=1", nil)
@@ -402,7 +416,7 @@ func TestLoginGate(t *testing.T) {
 }
 
 func TestAliasesAndSearch(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
 	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases?artist_id=1&alias=Sayuri", nil)
@@ -415,10 +429,10 @@ func TestAliasesAndSearch(t *testing.T) {
 	var actual []models.Alias
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&actual))
 	require.Len(t, actual, 2)
-	assert.Equal(t, actual[0].Alias, "さユり")
-	assert.Equal(t, actual[0].Source, "Canonical")
-	assert.Equal(t, actual[1].Alias, "Sayuri")
-	assert.Equal(t, actual[1].Source, "Manual")
+	assert.ElementsMatch(t, []models.Alias{
+		{ID: 1, Alias: "さユり", Source: "Canonical", Primary: true},
+		{ID: 1, Alias: "Sayuri", Source: "Manual", Primary: false},
+	}, actual)
 
 	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases?album_id=1&alias=Sanketsu+Girl", nil)
 	require.NoError(t, err)
@@ -430,10 +444,10 @@ func TestAliasesAndSearch(t *testing.T) {
 	actual = nil
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&actual))
 	require.Len(t, actual, 2)
-	assert.Equal(t, actual[0].Alias, "酸欠少女")
-	assert.Equal(t, actual[0].Source, "Canonical")
-	assert.Equal(t, actual[1].Alias, "Sanketsu Girl")
-	assert.Equal(t, actual[1].Source, "Manual")
+	assert.ElementsMatch(t, []models.Alias{
+		{ID: 1, Alias: "酸欠少女", Source: "Canonical", Primary: true},
+		{ID: 1, Alias: "Sanketsu Girl", Source: "Manual", Primary: false},
+	}, actual)
 
 	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases?track_id=1&alias=Tower+of+Flower", nil)
 	require.NoError(t, err)
@@ -477,6 +491,7 @@ func TestAliasesAndSearch(t *testing.T) {
 }
 
 func TestStats(t *testing.T) {
+	truncateTestData(t)
 	// zeroes
 	resp, err := http.DefaultClient.Get(host() + "/apis/web/v1/stats")
 	t.Log(resp)
@@ -705,7 +720,7 @@ func TestDeleteListen(t *testing.T) {
 }
 
 func TestArtistReplaceImage(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
 	buf := &bytes.Buffer{}
@@ -743,7 +758,7 @@ func TestArtistReplaceImage(t *testing.T) {
 }
 
 func TestAlbumReplaceImage(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
 	buf := &bytes.Buffer{}
@@ -781,10 +796,8 @@ func TestAlbumReplaceImage(t *testing.T) {
 }
 
 func TestSetPrimaryArtist(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
-
-	ctx := context.Background()
 
 	// set and unset track primary artist
 
@@ -797,7 +810,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artist_tracks
       WHERE track_id = $1 AND artist_id = $2 AND is_primary = $3
@@ -814,7 +827,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artist_tracks
       WHERE track_id = $1 AND artist_id = $2 AND is_primary = $3
@@ -833,7 +846,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artist_releases
       WHERE release_id = $1 AND artist_id = $2 AND is_primary = $3
@@ -850,7 +863,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artist_releases
       WHERE release_id = $1 AND artist_id = $2 AND is_primary = $3
@@ -929,19 +942,17 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	count, err := store.Count(ctx, `SELECT COUNT(*) FROM artist_releases WHERE release_id = $1 AND is_primary = $2`, 4, true)
+	count, err := store.Count(`SELECT COUNT(*) FROM artist_releases WHERE release_id = $1 AND is_primary = $2`, 4, true)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, count, "expected only one primary artist for release")
-	count, err = store.Count(ctx, `SELECT COUNT(*) FROM artist_tracks WHERE track_id = $1 AND is_primary = $2`, 4, true)
+	count, err = store.Count(`SELECT COUNT(*) FROM artist_tracks WHERE track_id = $1 AND is_primary = $2`, 4, true)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, count, "expected only one primary artist for track")
 }
 
 func TestManualListen(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
-
-	ctx := context.Background()
 
 	// happy
 	formdata := url.Values{}
@@ -951,7 +962,7 @@ func TestManualListen(t *testing.T) {
 	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/listen", strings.NewReader(body))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
-	count, _ := store.Count(ctx, `SELECT COUNT(*) FROM listens WHERE track_id = $1`, 1)
+	count, _ := store.Count(`SELECT COUNT(*) FROM listens WHERE track_id = $1`, 1)
 	assert.Equal(t, 2, count)
 
 	// 400
@@ -964,7 +975,7 @@ func TestManualListen(t *testing.T) {
 }
 
 func TestNowPlaying(t *testing.T) {
-
+	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
 	// no playing

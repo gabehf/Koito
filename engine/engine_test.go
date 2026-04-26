@@ -1,7 +1,6 @@
 package engine_test
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -13,14 +12,13 @@ import (
 
 	"github.com/gabehf/koito/engine"
 	"github.com/gabehf/koito/internal/cfg"
-	"github.com/gabehf/koito/internal/db/psql"
+	"github.com/gabehf/koito/internal/db/sqlite"
 	"github.com/gabehf/koito/internal/utils"
-	"github.com/ory/dockertest/v3"
 )
 
-var store *psql.Psql
+var store *sqlite.Sqlite
 
-func getTestGetenv(resource *dockertest.Resource) func(string) string {
+func getTestGetenv() func(string) string {
 	dir, err := utils.GenerateRandomString(8)
 	if err != nil {
 		panic(err)
@@ -40,8 +38,10 @@ func getTestGetenv(resource *dockertest.Resource) func(string) string {
 			return "true"
 		case cfg.LOG_LEVEL_ENV:
 			return "debug"
+		case cfg.SQLITE_ENABLED:
+			return "true"
 		case cfg.DATABASE_URL_ENV:
-			return fmt.Sprintf("postgres://postgres:secret@localhost:%s", resource.GetPort("5432/tcp"))
+			return "bleh"
 		case cfg.DEFAULT_PASSWORD_ENV:
 			return "testuser123"
 		case cfg.DEFAULT_USERNAME_ENV:
@@ -62,49 +62,36 @@ func getTestGetenv(resource *dockertest.Resource) func(string) string {
 
 func TestMain(m *testing.M) {
 	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		log.Fatalf("Could not construct pool: %s", err)
-	}
+	// pool, err := dockertest.NewPool("")
+	// if err != nil {
+	// 	log.Fatalf("Could not construct pool: %s", err)
+	// }
 
-	// uses pool to try to connect to Docker
-	err = pool.Client.Ping()
-	if err != nil {
-		log.Fatalf("Could not connect to Docker: %s", err)
-	}
+	// // uses pool to try to connect to Docker
+	// err = pool.Client.Ping()
+	// if err != nil {
+	// 	log.Fatalf("Could not connect to Docker: %s", err)
+	// }
 
-	// pulls an image, creates a container based on it and runs it
-	resource, err := pool.Run("postgres", "latest", []string{"POSTGRES_PASSWORD=secret"})
-	if err != nil {
-		log.Fatalf("Could not start resource: %s", err)
-	}
+	// // pulls an image, creates a container based on it and runs it
+	// resource, err := pool.Run("postgres", "latest", []string{"POSTGRES_PASSWORD=secret"})
+	// if err != nil {
+	// 	log.Fatalf("Could not start resource: %s", err)
+	// }
 
-	getenv := getTestGetenv(resource)
-	err = cfg.Load(getenv, "test")
+	getenv := getTestGetenv()
+	err := cfg.Load(getenv, "test")
 	if err != nil {
 		log.Fatalf("Could not load cfg: %s", err)
-	}
-
-	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
-	if err := pool.Retry(func() error {
-		var err error
-		store, err = psql.New()
-		if err != nil {
-			log.Println("Failed to connect to test database, retrying...")
-			return err
-		}
-		return store.Ping(context.Background())
-	}); err != nil {
-		log.Fatalf("Could not connect to database: %s", err)
 	}
 
 	go engine.Run(getenv, os.Stdout, "vTest")
 
 	// Wait until the web server is reachable
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		url := fmt.Sprintf("http://%s/apis/web/v1/health", cfg.ListenAddr())
 		client := &http.Client{
-			Timeout: 2 * time.Second, // Set your desired timeout
+			Timeout: 2 * time.Second,
 		}
 		resp, err := client.Get(url)
 		if err != nil {
@@ -117,19 +104,27 @@ func TestMain(m *testing.M) {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
-			err = nil
 			break
 		}
 		log.Printf("Unexpected status code at %s, retrying... (%d/20)", url, i+1)
 		time.Sleep(1 * time.Second)
 	}
 
+	// Open a second connection to the same file the server uses so that direct
+	// DB assertions in tests see the server's actual state. sqlite.New() uses
+	// cfg.ConfigDir() (set by getTestGetenv) and runs idempotent migrations.
+	var storeErr error
+	store, storeErr = sqlite.New()
+	if storeErr != nil {
+		log.Fatalf("Could not open server database for test verification: %s", storeErr)
+	}
+
 	code := m.Run()
 
 	// You can't defer this because os.Exit doesn't care for defer
-	if err := pool.Purge(resource); err != nil {
-		log.Fatalf("Could not purge resource: %s", err)
-	}
+	// if err := pool.Purge(resource); err != nil {
+	// 	log.Fatalf("Could not purge resource: %s", err)
+	// }
 
 	err = os.RemoveAll(cfg.ConfigDir())
 	if err != nil {
