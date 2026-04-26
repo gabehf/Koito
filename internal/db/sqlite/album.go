@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/gabehf/koito/internal/db"
@@ -144,6 +145,9 @@ func (s *Sqlite) GetAlbumWithNoMbzIDByTitles(ctx context.Context, artistId int32
 		return nil, errors.New("GetAlbumWithNoMbzIDByTitles: insufficient information")
 	}
 	id, err := s.releaseByArtistAndTitles(ctx, artistId, titles, true)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("GetAlbumWithNoMbzIDByTitles: %w", db.ErrNotFound)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("GetAlbumWithNoMbzIDByTitles: %w", err)
 	}
@@ -154,10 +158,8 @@ func (s *Sqlite) SaveAlbum(ctx context.Context, opts db.SaveAlbumOpts) (*models.
 	if len(opts.ArtistIDs) < 1 {
 		return nil, errors.New("SaveAlbum: required parameter 'ArtistIDs' missing")
 	}
-	for _, aid := range opts.ArtistIDs {
-		if aid == 0 {
-			return nil, errors.New("SaveAlbum: none of 'ArtistIDs' may be 0")
-		}
+	if slices.Contains(opts.ArtistIDs, 0) {
+		return nil, errors.New("SaveAlbum: none of 'ArtistIDs' may be 0")
 	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -404,12 +406,21 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 	offset := (opts.Page - 1) * opts.Limit
 	t1, t2 := db.TimeframeToTimeRange(opts.Timeframe)
 
-	var (
-		rows  *sql.Rows
-		err   error
-		count int64
-	)
+	// Count first so it never competes with an open rows for the connection.
+	var count int64
+	if opts.ArtistID != 0 {
+		s.db.QueryRowContext(ctx, `
+			SELECT COUNT(DISTINCT r.id) FROM releases r
+			JOIN artist_releases ar ON r.id = ar.release_id
+			WHERE ar.artist_id = ?`, opts.ArtistID).Scan(&count)
+	} else {
+		s.db.QueryRowContext(ctx, `
+			SELECT COUNT(DISTINCT t.release_id) FROM listens l JOIN tracks t ON l.track_id = t.id
+			WHERE l.listened_at BETWEEN ? AND ?`, t1.Unix(), t2.Unix()).Scan(&count)
+	}
 
+	var rows *sql.Rows
+	var err error
 	if opts.ArtistID != 0 {
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT x.id, x.title, x.musicbrainz_id, x.image, x.various_artists, x.listen_count,
@@ -427,13 +438,6 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 			LIMIT ? OFFSET ?`,
 			opts.ArtistID, t1.Unix(), t2.Unix(), opts.Limit, offset,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("GetTopAlbumsPaginated (by artist): %w", err)
-		}
-		s.db.QueryRowContext(ctx, `
-			SELECT COUNT(DISTINCT r.id) FROM releases r
-			JOIN artist_releases ar ON r.id = ar.release_id
-			WHERE ar.artist_id = ?`, opts.ArtistID).Scan(&count)
 	} else {
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT x.id, x.title, x.musicbrainz_id, x.image, x.various_artists, x.listen_count,
@@ -450,42 +454,53 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 			LIMIT ? OFFSET ?`,
 			t1.Unix(), t2.Unix(), opts.Limit, offset,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("GetTopAlbumsPaginated: %w", err)
-		}
-		s.db.QueryRowContext(ctx, `
-			SELECT COUNT(DISTINCT t.release_id) FROM listens l JOIN tracks t ON l.track_id = t.id
-			WHERE l.listened_at BETWEEN ? AND ?`, t1.Unix(), t2.Unix()).Scan(&count)
 	}
-	defer rows.Close()
+	if err != nil {
+		return nil, fmt.Errorf("GetTopAlbumsPaginated: %w", err)
+	}
 
-	var albums []db.RankedItem[*models.Album]
+	type albumRow struct {
+		id             int32
+		title          string
+		mbzID          sql.NullString
+		image          sql.NullString
+		variousArtists int
+		listenCount    int64
+		rank           int64
+	}
+	var raw []albumRow
 	for rows.Next() {
-		var a models.Album
-		var mbzID, image sql.NullString
-		var variousArtists int
-		var item db.RankedItem[*models.Album]
-		if err := rows.Scan(&a.ID, &a.Title, &mbzID, &image, &variousArtists, &a.ListenCount, &item.Rank); err != nil {
+		var r albumRow
+		if err := rows.Scan(&r.id, &r.title, &r.mbzID, &r.image, &r.variousArtists, &r.listenCount, &r.rank); err != nil {
+			rows.Close()
 			return nil, err
 		}
-		a.MbzID = parseNullableUUID(mbzID)
-		a.Image = parseNullableUUID(image)
-		a.VariousArtists = variousArtists == 1
-		artists, err := s.artistsForRelease(ctx, a.ID)
-		if err != nil {
-			return nil, err
-		}
-		a.Artists = artists
-		item.Item = &a
-		albums = append(albums, item)
+		raw = append(raw, r)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	if albums == nil {
-		albums = []db.RankedItem[*models.Album]{}
+	albums := make([]db.RankedItem[*models.Album], 0, len(raw))
+	for _, r := range raw {
+		a := &models.Album{
+			ID:             r.id,
+			Title:          r.title,
+			ListenCount:    r.listenCount,
+			MbzID:          parseNullableUUID(r.mbzID),
+			Image:          parseNullableUUID(r.image),
+			VariousArtists: r.variousArtists == 1,
+		}
+		a.Artists, err = s.artistsForRelease(ctx, a.ID)
+		if err != nil {
+			return nil, err
+		}
+		albums = append(albums, db.RankedItem[*models.Album]{Item: a, Rank: r.rank})
 	}
+
 	return &db.PaginatedResponse[db.RankedItem[*models.Album]]{
 		Items:        albums,
 		TotalCount:   count,
@@ -505,23 +520,36 @@ func (s *Sqlite) AlbumsWithoutImages(ctx context.Context, from int32) ([]*models
 	if err != nil {
 		return nil, fmt.Errorf("AlbumsWithoutImages: %w", err)
 	}
-	defer rows.Close()
-	var albums []*models.Album
+	type albumRow struct {
+		album          models.Album
+		variousArtists int
+	}
+	var raw []albumRow
 	for rows.Next() {
-		var a models.Album
+		var r albumRow
 		var mbzID, image, imageSrc sql.NullString
-		var variousArtists int
-		if err := rows.Scan(&a.ID, &mbzID, &image, &imageSrc, &variousArtists, &a.Title); err != nil {
+		if err := rows.Scan(&r.album.ID, &mbzID, &image, &imageSrc, &r.variousArtists, &r.album.Title); err != nil {
+			rows.Close()
 			return nil, err
 		}
-		a.MbzID = parseNullableUUID(mbzID)
-		a.Image = parseNullableUUID(image)
-		a.VariousArtists = variousArtists == 1
-		artists, err := s.artistsForRelease(ctx, a.ID)
+		r.album.MbzID = parseNullableUUID(mbzID)
+		r.album.Image = parseNullableUUID(image)
+		raw = append(raw, r)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	var albums []*models.Album
+	for _, r := range raw {
+		a := r.album
+		a.VariousArtists = r.variousArtists == 1
+		a.Artists, err = s.artistsForRelease(ctx, a.ID)
 		if err != nil {
 			return nil, err
 		}
-		a.Artists = artists
 		albums = append(albums, &a)
 	}
 	return albums, rows.Err()

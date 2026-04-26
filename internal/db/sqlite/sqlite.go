@@ -45,6 +45,60 @@ func New() (*Sqlite, error) {
 	return &Sqlite{db: db}, nil
 }
 
+// NewInMemory opens an isolated in-memory SQLite database and runs migrations.
+// Each call produces an independent database, making it safe for parallel tests.
+// Not intended for production use.
+func NewInMemory() (*Sqlite, error) {
+	// Named in-memory URIs with cache=shared let multiple sql.DB connections
+	// share the same logical database within a process. A unique name per call
+	// prevents parallel test instances from seeing each other's data.
+	// SetMaxOpenConns(1) ensures goose and all subsequent queries use the same
+	// underlying connection (required for in-memory databases to persist).
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared&_pragma=foreign_keys(ON)", uuid.New().String())
+	sqldb, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("sqlite.NewInMemory: open: %w", err)
+	}
+	sqldb.SetMaxOpenConns(1)
+
+	if err := sqldb.Ping(); err != nil {
+		sqldb.Close()
+		return nil, fmt.Errorf("sqlite.NewInMemory: ping: %w", err)
+	}
+
+	goose.SetBaseFS(migrations_sqlite.Files)
+	goose.SetDialect("sqlite3")
+	if err := goose.Up(sqldb, "."); err != nil {
+		sqldb.Close()
+		return nil, fmt.Errorf("sqlite.NewInMemory: goose: %w", err)
+	}
+
+	return &Sqlite{db: sqldb}, nil
+}
+
+// Not part of the DB interface this package implements. Only used for testing.
+func (s *Sqlite) Exec(query string, args ...any) error {
+	_, err := s.db.Exec(query, args...)
+	return err
+}
+
+// Not part of the DB interface this package implements. Only used for testing.
+func (s *Sqlite) RowExists(query string, args ...any) (bool, error) {
+	var exists bool
+	err := s.db.QueryRow(query, args...).Scan(&exists)
+	return exists, err
+}
+
+func (s *Sqlite) Count(query string, args ...any) (count int, err error) {
+	err = s.db.QueryRow(query, args...).Scan(&count)
+	return
+}
+
+// Exposes db.QueryRow. Only used for testing. Not part of the DB interface this package implements.
+func (s *Sqlite) QueryRow(query string, args ...any) *sql.Row {
+	return s.db.QueryRow(query, args...)
+}
+
 func (s *Sqlite) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }

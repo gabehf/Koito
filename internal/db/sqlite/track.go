@@ -374,12 +374,27 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 	offset := (opts.Page - 1) * opts.Limit
 	t1, t2 := db.TimeframeToTimeRange(opts.Timeframe)
 
-	var (
-		rows  *sql.Rows
-		err   error
-		count int64
-	)
+	// Count first so it never competes with an open rows for the connection.
+	var count int64
+	switch {
+	case opts.AlbumID > 0:
+		s.db.QueryRowContext(ctx, `
+			SELECT COUNT(DISTINCT l.track_id) FROM listens l JOIN tracks t ON l.track_id = t.id
+			WHERE l.listened_at BETWEEN ? AND ? AND t.release_id = ?`,
+			t1.Unix(), t2.Unix(), opts.AlbumID).Scan(&count)
+	case opts.ArtistID > 0:
+		s.db.QueryRowContext(ctx, `
+			SELECT COUNT(DISTINCT l.track_id) FROM listens l JOIN artist_tracks at2 ON l.track_id = at2.track_id
+			WHERE l.listened_at BETWEEN ? AND ? AND at2.artist_id = ?`,
+			t1.Unix(), t2.Unix(), opts.ArtistID).Scan(&count)
+	default:
+		s.db.QueryRowContext(ctx,
+			`SELECT COUNT(DISTINCT track_id) FROM listens WHERE listened_at BETWEEN ? AND ?`,
+			t1.Unix(), t2.Unix()).Scan(&count)
+	}
 
+	var rows *sql.Rows
+	var err error
 	switch {
 	case opts.AlbumID > 0:
 		rows, err = s.db.QueryContext(ctx, `
@@ -397,14 +412,6 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 			ORDER BY x.listen_count DESC, x.id`,
 			t1.Unix(), t2.Unix(), opts.AlbumID, opts.Limit, offset,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("GetTopTracksPaginated (by album): %w", err)
-		}
-		s.db.QueryRowContext(ctx, `
-			SELECT COUNT(DISTINCT l.track_id) FROM listens l JOIN tracks t ON l.track_id = t.id
-			WHERE l.listened_at BETWEEN ? AND ? AND t.release_id = ?`,
-			t1.Unix(), t2.Unix(), opts.AlbumID).Scan(&count)
-
 	case opts.ArtistID > 0:
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT x.id, t.title, t.musicbrainz_id, t.release_id, r.image, x.listen_count,
@@ -421,14 +428,6 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 			ORDER BY x.listen_count DESC, x.id`,
 			t1.Unix(), t2.Unix(), opts.ArtistID, opts.Limit, offset,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("GetTopTracksPaginated (by artist): %w", err)
-		}
-		s.db.QueryRowContext(ctx, `
-			SELECT COUNT(DISTINCT l.track_id) FROM listens l JOIN artist_tracks at2 ON l.track_id = at2.track_id
-			WHERE l.listened_at BETWEEN ? AND ? AND at2.artist_id = ?`,
-			t1.Unix(), t2.Unix(), opts.ArtistID).Scan(&count)
-
 	default:
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT x.id, t.title, t.musicbrainz_id, t.release_id, r.image, x.listen_count,
@@ -444,40 +443,53 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 			ORDER BY x.listen_count DESC, x.id`,
 			t1.Unix(), t2.Unix(), opts.Limit, offset,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("GetTopTracksPaginated: %w", err)
-		}
-		s.db.QueryRowContext(ctx,
-			`SELECT COUNT(DISTINCT track_id) FROM listens WHERE listened_at BETWEEN ? AND ?`,
-			t1.Unix(), t2.Unix()).Scan(&count)
 	}
-	defer rows.Close()
+	if err != nil {
+		return nil, fmt.Errorf("GetTopTracksPaginated: %w", err)
+	}
 
-	var tracks []db.RankedItem[*models.Track]
+	type trackRow struct {
+		id          int32
+		title       string
+		mbzID       sql.NullString
+		albumID     int32
+		image       sql.NullString
+		listenCount int64
+		rank        int64
+	}
+	var raw []trackRow
 	for rows.Next() {
-		var t models.Track
-		var mbzID, image sql.NullString
-		var item db.RankedItem[*models.Track]
-		if err := rows.Scan(&t.ID, &t.Title, &mbzID, &t.AlbumID, &image, &t.ListenCount, &item.Rank); err != nil {
+		var r trackRow
+		if err := rows.Scan(&r.id, &r.title, &r.mbzID, &r.albumID, &r.image, &r.listenCount, &r.rank); err != nil {
+			rows.Close()
 			return nil, err
 		}
-		t.MbzID = parseNullableUUID(mbzID)
-		t.Image = parseNullableUUID(image)
-		artists, err := s.artistsForTrack(ctx, t.ID)
-		if err != nil {
-			return nil, err
-		}
-		t.Artists = artists
-		item.Item = &t
-		tracks = append(tracks, item)
+		raw = append(raw, r)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	if tracks == nil {
-		tracks = []db.RankedItem[*models.Track]{}
+	tracks := make([]db.RankedItem[*models.Track], 0, len(raw))
+	for _, r := range raw {
+		t := &models.Track{
+			ID:          r.id,
+			Title:       r.title,
+			AlbumID:     r.albumID,
+			ListenCount: r.listenCount,
+			MbzID:       parseNullableUUID(r.mbzID),
+			Image:       parseNullableUUID(r.image),
+		}
+		t.Artists, err = s.artistsForTrack(ctx, t.ID)
+		if err != nil {
+			return nil, err
+		}
+		tracks = append(tracks, db.RankedItem[*models.Track]{Item: t, Rank: r.rank})
 	}
+
 	return &db.PaginatedResponse[db.RankedItem[*models.Track]]{
 		Items:        tracks,
 		TotalCount:   count,
