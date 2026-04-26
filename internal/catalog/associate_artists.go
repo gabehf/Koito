@@ -14,7 +14,6 @@ import (
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type AssociateArtistsOpts struct {
@@ -87,7 +86,7 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 			result = append(result, artist)
 			continue
 		}
-		if !errors.Is(err, pgx.ErrNoRows) {
+		if !errors.Is(err, db.ErrNotFound) {
 			return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
 		}
 
@@ -118,7 +117,7 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 			result = append(result, artist)
 			continue
 		}
-		if !errors.Is(err, pgx.ErrNoRows) {
+		if !errors.Is(err, db.ErrNotFound) {
 			return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
 		}
 
@@ -188,7 +187,7 @@ func matchArtistsByMBID(ctx context.Context, d db.ArtistStore, opts AssociateArt
 			result = append(result, a)
 			continue
 		}
-		if !errors.Is(err, pgx.ErrNoRows) {
+		if !errors.Is(err, db.ErrNotFound) {
 			return nil, err
 		}
 
@@ -299,7 +298,7 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 			result = append(result, a)
 			continue
 		}
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, db.ErrNotFound) {
 			var imgid uuid.UUID
 			imgUrl, err := images.GetArtistImage(ctx, images.ArtistImageOpts{
 				Aliases: []string{name},

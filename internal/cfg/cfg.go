@@ -19,6 +19,7 @@ const (
 const (
 	// BASE_URL_ENV                  = "KOITO_BASE_URL"
 	DATABASE_URL_ENV               = "KOITO_DATABASE_URL"
+	SQLITE_ENABLED                 = "KOITO_SQLITE_ENABLED"
 	BIND_ADDR_ENV                  = "KOITO_BIND_ADDR"
 	LISTEN_PORT_ENV                = "KOITO_LISTEN_PORT"
 	ENABLE_STRUCTURED_LOGGING_ENV  = "KOITO_ENABLE_STRUCTURED_LOGGING"
@@ -57,6 +58,7 @@ type config struct {
 	listenPort int
 	configDir  string
 	// baseUrl              string
+	sqliteEnabled          bool
 	databaseUrl            string
 	musicBrainzUrl         string
 	musicBrainzRateLimit   int
@@ -112,6 +114,8 @@ func Load(getenv func(string) string, version string) error {
 // loadConfig loads the configuration from environment variables.
 func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg := new(config)
+
+	cfg.sqliteEnabled = strings.ToLower(getenv(SQLITE_ENABLED)) == "true"
 
 	cfg.databaseUrl = getenv(DATABASE_URL_ENV)
 	if cfg.databaseUrl == "" {

@@ -24,6 +24,12 @@ func ConfigDir() string {
 	return globalConfig.configDir
 }
 
+func SqliteEnabled() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.sqliteEnabled
+}
+
 func DatabaseUrl() string {
 	lock.RLock()
 	defer lock.RUnlock()

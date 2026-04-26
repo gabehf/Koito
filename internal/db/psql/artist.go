@@ -23,6 +23,9 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 	if opts.MusicBrainzID != uuid.Nil {
 		l.Debug().Msgf("Fetching artist from DB with MusicBrainz ID %s", opts.MusicBrainzID)
 		row, err := d.q.GetArtistByMbzID(ctx, &opts.MusicBrainzID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetArtist: GetArtistByMbzID: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetArtist: GetArtistByMbzID: %w", err)
 		}
@@ -30,6 +33,9 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 	} else if opts.Name != "" {
 		l.Debug().Msgf("Fetching artist from DB with name '%s'", opts.Name)
 		row, err := d.q.GetArtistByName(ctx, opts.Name)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetArtist: GetArtistByName: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetArtist: GetArtistByName: %w", err)
 		}
@@ -37,6 +43,9 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 	}
 	l.Debug().Msgf("Fetching artist from DB with id %d", opts.ID)
 	row, err := d.q.GetArtist(ctx, opts.ID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("GetArtist: %w", db.ErrNotFound)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("GetArtist: GetArtist by ID: %w", err)
 	}

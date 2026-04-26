@@ -16,7 +16,6 @@ import (
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 func ImportKoitoFile(ctx context.Context, store importStore, filename string) error {
@@ -59,7 +58,7 @@ func ImportKoitoFile(ctx context.Context, store importStore, filename string) er
 				MusicBrainzID: mbid,
 				Name:          getPrimaryAliasFromAliasSlice(ia.Aliases),
 			})
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, db.ErrNotFound) {
 				var imgid = uuid.Nil
 				// not a perfect way to check if the image url is an actual source vs manual upload but
 				// im like 99% sure it will work perfectly
@@ -95,7 +94,7 @@ func ImportKoitoFile(ctx context.Context, store importStore, filename string) er
 			Title:         getPrimaryAliasFromAliasSlice(data.Listens[i].Album.Aliases),
 			ArtistID:      artistIds[0],
 		})
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, db.ErrNotFound) {
 			var imgid = uuid.Nil
 			// not a perfect way to check if the image url is an actual source vs manual upload but
 			// im like 99% sure it will work perfectly
@@ -133,7 +132,7 @@ func ImportKoitoFile(ctx context.Context, store importStore, filename string) er
 			ReleaseID:     albumId,
 			ArtistIDs:     artistIds,
 		})
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, db.ErrNotFound) {
 			// save track
 			track, err = store.SaveTrack(ctx, db.SaveTrackOpts{
 				Title:          getPrimaryAliasFromAliasSlice(data.Listens[i].Track.Aliases),

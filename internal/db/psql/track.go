@@ -24,6 +24,9 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 	if opts.MusicBrainzID != uuid.Nil {
 		l.Debug().Msgf("Fetching track from DB with MusicBrainz ID %s", opts.MusicBrainzID)
 		t, err := d.q.GetTrackByMbzID(ctx, &opts.MusicBrainzID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetTrack: GetTrackByMbzID: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetTrack: GetTrackByMbzID: %w", err)
 		}
@@ -35,6 +38,9 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 			ReleaseID: opts.ReleaseID,
 			Column3:   opts.ArtistIDs,
 		})
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetTrack: GetTrackByTrackInfo: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetTrack: GetTrackByTrackInfo: %w", err)
 		}
@@ -43,6 +49,9 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 
 	l.Debug().Msgf("Fetching track from DB with id %d", opts.ID)
 	t, err := d.q.GetTrack(ctx, opts.ID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("GetTrack: %w", db.ErrNotFound)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("GetTrack: GetTrack By ID: %w", err)
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type AssociateTrackOpts struct {
@@ -52,7 +51,7 @@ func matchTrackByMbzID(ctx context.Context, d db.TrackStore, opts AssociateTrack
 	if err == nil {
 		l.Debug().Msgf("Found track '%s' by MusicBrainz ID", track.Title)
 		return track, nil
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	} else if !errors.Is(err, db.ErrNotFound) {
 		return nil, fmt.Errorf("matchTrackByMbzID: %w", err)
 	} else {
 		l.Debug().Msgf("Track '%s' could not be found by MusicBrainz ID", opts.TrackName)
@@ -90,7 +89,7 @@ func matchTrackByTrackInfo(ctx context.Context, d db.TrackStore, opts AssociateT
 	if err == nil {
 		l.Debug().Msgf("Track '%s' found by title, release and artist match", track.Title)
 		return track, nil
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	} else if !errors.Is(err, db.ErrNotFound) {
 		return nil, fmt.Errorf("matchTrackByTrackInfo: %w", err)
 	} else {
 		if opts.TrackMbzID != uuid.Nil {
