@@ -54,7 +54,8 @@ func Migrate(ctx context.Context, l *zerolog.Logger) error {
 		return fmt.Errorf("migrate: check existing data: %w", err)
 	}
 	if existing > 0 {
-		return fmt.Errorf("migrate: target SQLite database already contains data; aborting to prevent data loss")
+		return fmt.Errorf("migrate: target SQLite database already contains data; unset " +
+			cfg.DATABASE_URL_ENV + " if you have already migrated to prevent further migration attempts")
 	}
 
 	if _, err := sqliteDB.ExecContext(ctx, "PRAGMA foreign_keys = OFF"); err != nil {

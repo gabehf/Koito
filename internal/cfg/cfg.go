@@ -51,7 +51,6 @@ const (
 	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
 	LOGIN_GATE_ENV                 = "KOITO_LOGIN_GATE"
 	FORCE_TZ                       = "KOITO_FORCE_TZ"
-	MIGRATE_ENV                    = "KOITO_MIGRATE"
 )
 
 type config struct {
@@ -92,7 +91,6 @@ type config struct {
 	artistSeparators       []*regexp.Regexp
 	loginGate              bool
 	forceTZ                *time.Location
-	migrateEnabled         bool
 }
 
 var (
@@ -220,8 +218,6 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	if strings.ToLower(getenv(LOGIN_GATE_ENV)) == "true" {
 		cfg.loginGate = true
 	}
-
-	cfg.migrateEnabled = parseBool(getenv(MIGRATE_ENV))
 
 	if getenv(FORCE_TZ) != "" {
 		cfg.forceTZ, err = time.LoadLocation(getenv(FORCE_TZ))

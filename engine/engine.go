@@ -23,8 +23,8 @@ import (
 	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/importer"
 	"github.com/gabehf/koito/internal/logger"
-	"github.com/gabehf/koito/internal/migrate"
 	mbz "github.com/gabehf/koito/internal/mbz"
+	"github.com/gabehf/koito/internal/migrate"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/go-chi/chi/v5"
@@ -87,11 +87,7 @@ func Run(
 		}
 	}
 
-	if cfg.MigrateEnabled() {
-		if !cfg.SqliteEnabled() {
-			l.Fatal().Msg("Engine: KOITO_MIGRATE=true requires KOITO_SQLITE_ENABLED=true")
-			return fmt.Errorf("migration requires KOITO_SQLITE_ENABLED=true")
-		}
+	if cfg.SqliteEnabled() && cfg.DatabaseUrl() != "" {
 		l.Info().Msg("Engine: Running Postgres to SQLite migration")
 		if err := migrate.Migrate(ctx, l); err != nil {
 			l.Fatal().Err(err).Msg("Engine: Migration failed")
