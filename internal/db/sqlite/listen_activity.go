@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/gabehf/koito/internal/db"
@@ -19,76 +20,88 @@ func (s *Sqlite) GetListenActivity(ctx context.Context, opts db.ListenActivityOp
 	}
 
 	t1, t2 := db.ListenActivityOptsToTimes(opts)
-	offset := tzOffset(opts.Timezone)
 
-	// SQLite date strategy: add the UTC offset in seconds to the stored Unix epoch, then
-	// format as a date. This correctly localises each listen to the user's calendar day.
+	loc := opts.Timezone
+
 	var rows *sql.Rows
 	var err error
 
 	switch {
 	case opts.ArtistID > 0:
 		rows, err = s.db.QueryContext(ctx, `
-			SELECT date(listens.listened_at + ?, 'unixepoch') AS day, COUNT(*) AS listen_count
-			FROM listens
-			JOIN tracks t ON listens.track_id = t.id
-			JOIN artist_tracks at2 ON t.id = at2.track_id
-			WHERE listens.listened_at >= ? AND listens.listened_at < ?
-			  AND at2.artist_id = ?
-			GROUP BY day
-			ORDER BY day`,
-			offset, t1.Unix(), t2.Unix(), opts.ArtistID,
+			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
+			FROM listens l
+			JOIN artist_tracks at2 ON l.track_id = at2.track_id
+			WHERE l.listened_at >= ? AND l.listened_at < ? AND at2.artist_id = ?
+			GROUP BY hour_bucket`,
+			t1.Unix(), t2.Unix(), opts.ArtistID,
 		)
 	case opts.AlbumID > 0:
 		rows, err = s.db.QueryContext(ctx, `
-			SELECT date(listens.listened_at + ?, 'unixepoch') AS day, COUNT(*) AS listen_count
-			FROM listens
-			JOIN tracks t ON listens.track_id = t.id
-			WHERE listens.listened_at >= ? AND listens.listened_at < ?
-			  AND t.release_id = ?
-			GROUP BY day
-			ORDER BY day`,
-			offset, t1.Unix(), t2.Unix(), opts.AlbumID,
+			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
+			FROM listens l
+			JOIN tracks t ON l.track_id = t.id
+			WHERE l.listened_at >= ? AND l.listened_at < ? AND t.release_id = ?
+			GROUP BY hour_bucket`,
+			t1.Unix(), t2.Unix(), opts.AlbumID,
 		)
 	case opts.TrackID > 0:
 		rows, err = s.db.QueryContext(ctx, `
-			SELECT date(listens.listened_at + ?, 'unixepoch') AS day, COUNT(*) AS listen_count
+			SELECT (listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
 			FROM listens
-			JOIN tracks t ON listens.track_id = t.id
-			WHERE listens.listened_at >= ? AND listens.listened_at < ?
-			  AND t.id = ?
-			GROUP BY day
-			ORDER BY day`,
-			offset, t1.Unix(), t2.Unix(), opts.TrackID,
+			WHERE listened_at >= ? AND listened_at < ? AND track_id = ?
+			GROUP BY hour_bucket`,
+			t1.Unix(), t2.Unix(), opts.TrackID,
 		)
 	default:
 		rows, err = s.db.QueryContext(ctx, `
-			SELECT date(listened_at + ?, 'unixepoch') AS day, COUNT(*) AS listen_count
+			SELECT (listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
 			FROM listens
 			WHERE listened_at >= ? AND listened_at < ?
-			GROUP BY day
-			ORDER BY day`,
-			offset, t1.Unix(), t2.Unix(),
+			GROUP BY hour_bucket`,
+			t1.Unix(), t2.Unix(),
 		)
 	}
+
 	if err != nil {
 		return nil, fmt.Errorf("GetListenActivity: %w", err)
 	}
 	defer rows.Close()
 
-	var activity []db.ListenActivityItem
+	countsByDay := make(map[time.Time]int)
+
 	for rows.Next() {
-		var dayStr string
-		var item db.ListenActivityItem
-		if err := rows.Scan(&dayStr, &item.Listens); err != nil {
+		var hourUnix int64
+		var count int
+		if err := rows.Scan(&hourUnix, &count); err != nil {
 			return nil, err
 		}
-		t, err := time.Parse("2006-01-02", dayStr)
-		if err != nil {
-			return nil, fmt.Errorf("GetListenActivity: parse day %q: %w", dayStr, err)
-		}
-		item.Start = t
-		activity = append(activity, item)
+
+		// Convert the UTC hour block to a Go time object localized to the user's timezone
+		t := time.Unix(hourUnix, 0).In(loc)
+
+		// Strip the hours/minutes/seconds to collapse it into a pure calendar day
+		day := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
+
+		countsByDay[day] += count
 	}
-	return activity, rows.Err()
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Convert the map to the final slice and sort it chronologically
+	activity := make([]db.ListenActivityItem, 0, len(countsByDay))
+	for day, count := range countsByDay {
+		activity = append(activity, db.ListenActivityItem{
+			Start:   day,
+			Listens: int64(count),
+		})
+	}
+
+	sort.Slice(activity, func(i, j int) bool {
+		return activity[i].Start.Before(activity[j].Start)
+	})
+
+	return activity, nil
 }
