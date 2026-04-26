@@ -210,3 +210,9 @@ func ForceTZ() *time.Location {
 	defer lock.RUnlock()
 	return globalConfig.forceTZ
 }
+
+func MigrateEnabled() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.migrateEnabled
+}

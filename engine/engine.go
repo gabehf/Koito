@@ -23,6 +23,7 @@ import (
 	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/importer"
 	"github.com/gabehf/koito/internal/logger"
+	"github.com/gabehf/koito/internal/migrate"
 	mbz "github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
@@ -84,6 +85,19 @@ func Run(
 			l.Fatal().Err(err).Msg("Engine: Failed to create import directory")
 			return err
 		}
+	}
+
+	if cfg.MigrateEnabled() {
+		if !cfg.SqliteEnabled() {
+			l.Fatal().Msg("Engine: KOITO_MIGRATE=true requires KOITO_SQLITE_ENABLED=true")
+			return fmt.Errorf("migration requires KOITO_SQLITE_ENABLED=true")
+		}
+		l.Info().Msg("Engine: Running Postgres to SQLite migration")
+		if err := migrate.Migrate(ctx, l); err != nil {
+			l.Fatal().Err(err).Msg("Engine: Migration failed")
+			return err
+		}
+		l.Info().Msg("Engine: Migration complete; proceeding with SQLite")
 	}
 
 	l.Debug().Msg("Engine: Initializing database connection")
