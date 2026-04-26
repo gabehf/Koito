@@ -373,60 +373,65 @@ func (s *Sqlite) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpt
 	offset := (opts.Page - 1) * opts.Limit
 	t1, t2 := db.TimeframeToTimeRange(opts.Timeframe)
 
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT x.id, x.name, x.musicbrainz_id, x.image, x.listen_count,
-		       RANK() OVER (ORDER BY x.listen_count DESC) AS rank
-		FROM (
-			SELECT a.id, awn.name, a.musicbrainz_id, a.image, COUNT(*) AS listen_count
+	// Unified query using CTEs, deferred joins, and a total_count window function
+	query := `
+		WITH ArtistCounts AS (
+			SELECT at2.artist_id, COUNT(*) AS listen_count
 			FROM listens l
-			JOIN tracks t ON l.track_id = t.id
-			JOIN artist_tracks at2 ON at2.track_id = t.id
-			JOIN artists_with_name awn ON awn.id = at2.artist_id
-			JOIN artists a ON a.id = at2.artist_id
+			JOIN artist_tracks at2 ON l.track_id = at2.track_id
 			WHERE l.listened_at BETWEEN ? AND ?
-			GROUP BY a.id, awn.name, a.musicbrainz_id, a.image
-		) x
-		ORDER BY x.listen_count DESC, x.id
-		LIMIT ? OFFSET ?`,
-		t1.Unix(), t2.Unix(), opts.Limit, offset,
-	)
+			GROUP BY at2.artist_id
+		),
+		RankedArtists AS (
+			SELECT artist_id,
+			       listen_count,
+			       RANK() OVER (ORDER BY listen_count DESC) AS rank,
+			       COUNT(*) OVER () AS total_count
+			FROM ArtistCounts
+			ORDER BY listen_count DESC, artist_id
+			LIMIT ? OFFSET ?
+		)
+		SELECT r.artist_id, awn.name, a.musicbrainz_id, a.image, r.listen_count, r.rank, r.total_count
+		FROM RankedArtists r
+		JOIN artists a ON a.id = r.artist_id
+		JOIN artists_with_name awn ON awn.id = r.artist_id
+		ORDER BY r.rank, r.artist_id`
+
+	rows, err := s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("GetTopArtistsPaginated: %w", err)
 	}
 	defer rows.Close()
 
-	var artists []db.RankedItem[*models.Artist]
+	// Pre-allocate slice to prevent dynamic resizing overhead
+	artists := make([]db.RankedItem[*models.Artist], 0, opts.Limit)
+	var totalCount int64
+
 	for rows.Next() {
 		var a models.Artist
 		var mbzID, image sql.NullString
 		var item db.RankedItem[*models.Artist]
-		if err := rows.Scan(&a.ID, &a.Name, &mbzID, &image, &a.ListenCount, &item.Rank); err != nil {
+
+		// Scan totalCount alongside the row data
+		if err := rows.Scan(&a.ID, &a.Name, &mbzID, &image, &a.ListenCount, &item.Rank, &totalCount); err != nil {
 			return nil, err
 		}
+
 		a.MbzID = parseNullableUUID(mbzID)
 		a.Image = parseNullableUUID(image)
 		item.Item = &a
 		artists = append(artists, item)
 	}
+
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	var count int64
-	s.db.QueryRowContext(ctx, `
-		SELECT COUNT(DISTINCT at2.artist_id)
-		FROM listens l JOIN artist_tracks at2 ON l.track_id = at2.track_id
-		WHERE l.listened_at BETWEEN ? AND ?`,
-		t1.Unix(), t2.Unix()).Scan(&count)
-
-	if artists == nil {
-		artists = []db.RankedItem[*models.Artist]{}
-	}
 	return &db.PaginatedResponse[db.RankedItem[*models.Artist]]{
 		Items:        artists,
-		TotalCount:   count,
+		TotalCount:   totalCount, // Extracted from the window function
 		ItemsPerPage: int32(opts.Limit),
-		HasNextPage:  int64(offset+len(artists)) < count,
+		HasNextPage:  int64(offset+len(artists)) < totalCount,
 		CurrentPage:  int32(opts.Page),
 	}, nil
 }

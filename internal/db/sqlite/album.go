@@ -406,106 +406,101 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 	offset := (opts.Page - 1) * opts.Limit
 	t1, t2 := db.TimeframeToTimeRange(opts.Timeframe)
 
-	// Count first so it never competes with an open rows for the connection.
-	var count int64
-	if opts.ArtistID != 0 {
-		s.db.QueryRowContext(ctx, `
-			SELECT COUNT(DISTINCT r.id) FROM releases r
-			JOIN artist_releases ar ON r.id = ar.release_id
-			WHERE ar.artist_id = ?`, opts.ArtistID).Scan(&count)
-	} else {
-		s.db.QueryRowContext(ctx, `
-			SELECT COUNT(DISTINCT t.release_id) FROM listens l JOIN tracks t ON l.track_id = t.id
-			WHERE l.listened_at BETWEEN ? AND ?`, t1.Unix(), t2.Unix()).Scan(&count)
-	}
-
 	var rows *sql.Rows
 	var err error
+
 	if opts.ArtistID != 0 {
-		rows, err = s.db.QueryContext(ctx, `
-			SELECT x.id, x.title, x.musicbrainz_id, x.image, x.various_artists, x.listen_count,
-			       RANK() OVER (ORDER BY x.listen_count DESC) AS rank
-			FROM (
-				SELECT r.id, r.title, r.musicbrainz_id, r.image, r.various_artists, COUNT(*) AS listen_count
+		query := `
+			WITH AlbumCounts AS (
+				SELECT t.release_id, COUNT(*) AS listen_count
 				FROM listens l
 				JOIN tracks t ON l.track_id = t.id
-				JOIN releases_with_title r ON t.release_id = r.id
-				JOIN artist_releases ar ON r.id = ar.release_id
+				JOIN artist_releases ar ON t.release_id = ar.release_id
 				WHERE ar.artist_id = ? AND l.listened_at BETWEEN ? AND ?
-				GROUP BY r.id, r.title, r.musicbrainz_id, r.image, r.various_artists
-			) x
-			ORDER BY listen_count DESC, x.id
-			LIMIT ? OFFSET ?`,
-			opts.ArtistID, t1.Unix(), t2.Unix(), opts.Limit, offset,
-		)
+				GROUP BY t.release_id
+			),
+			RankedAlbums AS (
+				SELECT release_id, listen_count,
+					   RANK() OVER (ORDER BY listen_count DESC) AS rank,
+					   COUNT(*) OVER () AS total_count
+				FROM AlbumCounts
+				ORDER BY listen_count DESC, release_id
+				LIMIT ? OFFSET ?
+			)
+			SELECT r.release_id, rwt.title, rwt.musicbrainz_id, rwt.image, rwt.various_artists, r.listen_count, r.rank, r.total_count
+			FROM RankedAlbums r
+			JOIN releases_with_title rwt ON rwt.id = r.release_id
+			ORDER BY r.rank, r.release_id`
+
+		rows, err = s.db.QueryContext(ctx, query, opts.ArtistID, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	} else {
-		rows, err = s.db.QueryContext(ctx, `
-			SELECT x.id, x.title, x.musicbrainz_id, x.image, x.various_artists, x.listen_count,
-			       RANK() OVER (ORDER BY x.listen_count DESC) AS rank
-			FROM (
-				SELECT r.id, r.title, r.musicbrainz_id, r.image, r.various_artists, COUNT(*) AS listen_count
+		query := `
+			WITH AlbumCounts AS (
+				SELECT t.release_id, COUNT(*) AS listen_count
 				FROM listens l
 				JOIN tracks t ON l.track_id = t.id
-				JOIN releases_with_title r ON t.release_id = r.id
 				WHERE l.listened_at BETWEEN ? AND ?
-				GROUP BY r.id, r.title, r.musicbrainz_id, r.image, r.various_artists
-			) x
-			ORDER BY listen_count DESC, x.id
-			LIMIT ? OFFSET ?`,
-			t1.Unix(), t2.Unix(), opts.Limit, offset,
-		)
+				GROUP BY t.release_id
+			),
+			RankedAlbums AS (
+				SELECT release_id, listen_count,
+					   RANK() OVER (ORDER BY listen_count DESC) AS rank,
+					   COUNT(*) OVER () AS total_count
+				FROM AlbumCounts
+				ORDER BY listen_count DESC, release_id
+				LIMIT ? OFFSET ?
+			)
+			SELECT r.release_id, rwt.title, rwt.musicbrainz_id, rwt.image, rwt.various_artists, r.listen_count, r.rank, r.total_count
+			FROM RankedAlbums r
+			JOIN releases_with_title rwt ON rwt.id = r.release_id
+			ORDER BY r.rank, r.release_id`
+
+		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	}
+
 	if err != nil {
 		return nil, fmt.Errorf("GetTopAlbumsPaginated: %w", err)
 	}
+	defer rows.Close()
 
-	type albumRow struct {
-		id             int32
-		title          string
-		mbzID          sql.NullString
-		image          sql.NullString
-		variousArtists int
-		listenCount    int64
-		rank           int64
-	}
-	var raw []albumRow
+	// Pre-allocate slice
+	albums := make([]db.RankedItem[*models.Album], 0, opts.Limit)
+	var totalCount int64
+
 	for rows.Next() {
-		var r albumRow
-		if err := rows.Scan(&r.id, &r.title, &r.mbzID, &r.image, &r.variousArtists, &r.listenCount, &r.rank); err != nil {
-			rows.Close()
+		var a models.Album
+		var mbzID, image sql.NullString
+		var variousArtists int
+		var item db.RankedItem[*models.Album]
+
+		if err := rows.Scan(&a.ID, &a.Title, &mbzID, &image, &variousArtists, &a.ListenCount, &item.Rank, &totalCount); err != nil {
 			return nil, err
 		}
-		raw = append(raw, r)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
 
-	albums := make([]db.RankedItem[*models.Album], 0, len(raw))
-	for _, r := range raw {
-		a := &models.Album{
-			ID:             r.id,
-			Title:          r.title,
-			ListenCount:    r.listenCount,
-			MbzID:          parseNullableUUID(r.mbzID),
-			Image:          parseNullableUUID(r.image),
-			VariousArtists: r.variousArtists == 1,
-		}
+		a.MbzID = parseNullableUUID(mbzID)
+		a.Image = parseNullableUUID(image)
+		a.VariousArtists = variousArtists == 1
+
+		// Fetch artists for the release (Note: This is still an N+1 query.
+		// If performance allows in the future, consider batching this or using JSON_GROUP_ARRAY in SQL).
 		a.Artists, err = s.artistsForRelease(ctx, a.ID)
 		if err != nil {
 			return nil, err
 		}
-		albums = append(albums, db.RankedItem[*models.Album]{Item: a, Rank: r.rank})
+
+		item.Item = &a
+		albums = append(albums, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return &db.PaginatedResponse[db.RankedItem[*models.Album]]{
 		Items:        albums,
-		TotalCount:   count,
+		TotalCount:   totalCount,
 		ItemsPerPage: int32(opts.Limit),
-		HasNextPage:  int64(offset+len(albums)) < count,
+		HasNextPage:  int64(offset+len(albums)) < totalCount,
 		CurrentPage:  int32(opts.Page),
 	}, nil
 }
