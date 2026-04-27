@@ -11,7 +11,7 @@ import (
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/logger"
-	"github.com/gabehf/koito/internal/mbz"
+	mbz "github.com/gabehf/koito/internal/mbz"
 )
 
 type SpotifyExportItem struct {
@@ -23,7 +23,7 @@ type SpotifyExportItem struct {
 	MsPlayed   int32     `json:"ms_played"`
 }
 
-func ImportSpotifyFile(ctx context.Context, store importStore, filename string) error {
+func ImportSpotifyFile(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, filename string) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning spotify import on file: %s", filename)
 	file, err := os.Open(path.Join(cfg.ConfigDir(), "import", filename))
@@ -58,7 +58,7 @@ func ImportSpotifyFile(ctx context.Context, store importStore, filename string) 
 			continue
 		}
 		opts := catalog.SubmitListenOpts{
-			MbzCaller:      &mbz.MusicBrainzClient{},
+			MbzCaller:      mbzc,
 			Artist:         item.ArtistName,
 			TrackTitle:     item.TrackName,
 			ReleaseTitle:   item.AlbumName,
