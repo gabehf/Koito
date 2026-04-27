@@ -1,8 +1,6 @@
 package catalog_test
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -11,12 +9,11 @@ import (
 
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
-	"github.com/gabehf/koito/internal/db/psql"
+	"github.com/gabehf/koito/internal/db/sqlite"
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/utils"
 	_ "github.com/gabehf/koito/testing_init"
 	"github.com/google/uuid"
-	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -141,9 +138,7 @@ var (
 	}
 )
 
-var store *psql.Psql
-
-func getTestGetenv(resource *dockertest.Resource) func(string) string {
+func getTestGetenv() func(string) string {
 	dir, err := utils.GenerateRandomString(8)
 	if err != nil {
 		panic(err)
@@ -155,7 +150,9 @@ func getTestGetenv(resource *dockertest.Resource) func(string) string {
 		case cfg.LOG_LEVEL_ENV:
 			return "debug"
 		case cfg.DATABASE_URL_ENV:
-			return fmt.Sprintf("postgres://postgres:secret@localhost:%s", resource.GetPort("5432/tcp"))
+			return "bleh"
+		case cfg.SQLITE_ENABLED:
+			return "true"
 		case cfg.CONFIG_DIR_ENV:
 			return dir
 		case cfg.DISABLE_DEEZER_ENV, cfg.DISABLE_COVER_ART_ARCHIVE_ENV, cfg.DISABLE_MUSICBRAINZ_ENV, cfg.ENABLE_FULL_IMAGE_CACHE_ENV:
@@ -166,139 +163,151 @@ func getTestGetenv(resource *dockertest.Resource) func(string) string {
 	}
 }
 
-func truncateTestData(t *testing.T) {
-	err := store.Exec(context.Background(),
-		`TRUNCATE
-		artists,
-		artist_aliases,
-		tracks,
-		artist_tracks,
-		releases,
-		artist_releases,
-		release_aliases,
-		listens
-		RESTART IDENTITY CASCADE`)
-	require.NoError(t, err)
-}
+// func truncateTestData(t *testing.T) {
+// 	err := store.Exec(
+// 		`TRUNCATE
+// 		artists,
+// 		artist_aliases,
+// 		tracks,
+// 		artist_tracks,
+// 		releases,
+// 		artist_releases,
+// 		release_aliases,
+// 		listens
+// 		RESTART IDENTITY CASCADE`)
+// 	require.NoError(t, err)
+// }
 
-func setupTestDataWithMbzIDs(t *testing.T) {
-	truncateTestData(t)
-
-	err := store.Exec(context.Background(),
+func setupTestDataWithMbzIDs(store *sqlite.Sqlite, t *testing.T) {
+	err := store.Exec(
 		`INSERT INTO artists (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000001')`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (1, 'ATARASHII GAKKO!', 'Testing', true)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO releases (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000101')`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO release_aliases (release_id, alias, source, is_primary)
 			VALUES (1, 'AG! Calling', 'Testing', true)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO artist_releases (artist_id, release_id)
 			VALUES (1, 1)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO tracks (release_id, musicbrainz_id)
 			VALUES (1, '00000000-0000-0000-0000-000000001001')`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO track_aliases (track_id, alias, source, is_primary)
 			VALUES (1, 'Tokyo Calling', 'Testing', true)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO artist_tracks (artist_id, track_id)
 			VALUES (1, 1)`)
 	require.NoError(t, err)
 }
 
-func setupTestDataSansMbzIDs(t *testing.T) {
-	truncateTestData(t)
+func setupTestDataSansMbzIDs(store *sqlite.Sqlite, t *testing.T) {
 
-	err := store.Exec(context.Background(),
+	err := store.Exec(
 		`INSERT INTO artists (musicbrainz_id)
 			VALUES (NULL)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (1, 'ATARASHII GAKKO!', 'Testing', true)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO releases (musicbrainz_id)
 			VALUES (NULL)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO release_aliases (release_id, alias, source, is_primary)
 			VALUES (1, 'AG! Calling', 'Testing', true)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO artist_releases (artist_id, release_id)
 			VALUES (1, 1)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO tracks (release_id, musicbrainz_id)
 			VALUES (1, NULL)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO track_aliases (track_id, alias, source, is_primary)
 			VALUES (1, 'Tokyo Calling', 'Testing', true)`)
 	require.NoError(t, err)
-	err = store.Exec(context.Background(),
+	err = store.Exec(
 		`INSERT INTO artist_tracks (artist_id, track_id)
 			VALUES (1, 1)`)
 	require.NoError(t, err)
 }
 
+func newTestDB() *sqlite.Sqlite {
+	s, err := sqlite.NewInMemory()
+	if err != nil {
+		panic(err)
+	}
+
+	// insert a user into the db with id 1 to use for tests
+	err = s.Exec(`INSERT INTO users (username, password) VALUES ('test', 0x123)`)
+	if err != nil {
+		panic(err)
+	}
+
+	return s
+}
+
 func TestMain(m *testing.M) {
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		log.Fatalf("Could not construct pool: %s", err)
-	}
+	// pool, err := dockertest.NewPool("")
+	// if err != nil {
+	// 	log.Fatalf("Could not construct pool: %s", err)
+	// }
 
-	if err := pool.Client.Ping(); err != nil {
-		log.Fatalf("Could not connect to Docker: %s", err)
-	}
+	// if err := pool.Client.Ping(); err != nil {
+	// 	log.Fatalf("Could not connect to Docker: %s", err)
+	// }
 
-	resource, err := pool.Run("postgres", "latest", []string{"POSTGRES_PASSWORD=secret"})
-	if err != nil {
-		log.Fatalf("Could not start resource: %s", err)
-	}
+	// resource, err := pool.Run("postgres", "latest", []string{"POSTGRES_PASSWORD=secret"})
+	// if err != nil {
+	// 	log.Fatalf("Could not start resource: %s", err)
+	// }
 
-	err = cfg.Load(getTestGetenv(resource), "test")
+	err := cfg.Load(getTestGetenv(), "test")
 	if err != nil {
 		log.Fatalf("Could not load cfg: %s", err)
 	}
 
-	if err := pool.Retry(func() error {
-		var err error
-		store, err = psql.New()
-		if err != nil {
-			log.Println("Failed to connect to test database, retrying...")
-			return err
-		}
-		return store.Ping(context.Background())
-	}); err != nil {
-		log.Fatalf("Could not connect to database: %s", err)
-	}
+	// if err := pool.Retry(func() error {
+	// 	var err error
+	// 	store, err = psql.New()
+	// 	if err != nil {
+	// 		log.Println("Failed to connect to test database, retrying...")
+	// 		return err
+	// 	}
+	// 	return store.Ping(context.Background())
+	// }); err != nil {
+	// 	log.Fatalf("Could not connect to database: %s", err)
+	// }
 
-	// insert a user into the db with id 1 to use for tests
-	err = store.Exec(context.Background(), `INSERT INTO users (username, password) VALUES ('test', DECODE('abc123', 'hex'))`)
-	if err != nil {
-		log.Fatalf("Failed to insert test user: %v", err)
-	}
+	// var err error
+	// store, err = sqlite.NewInMemory()
+	// if err != nil {
+	// 	log.Fatal("Failed to create test sqlite DB")
+	// }
 
 	code := m.Run()
 
 	// You can't defer this because os.Exit doesn't care for defer
-	if err := pool.Purge(resource); err != nil {
-		log.Fatalf("Could not purge resource: %s", err)
-	}
+	// if err := pool.Purge(resource); err != nil {
+	// 	log.Fatalf("Could not purge resource: %s", err)
+	// }
 
 	err = os.RemoveAll(cfg.ConfigDir())
 	if err != nil {

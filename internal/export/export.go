@@ -43,7 +43,7 @@ type KoitoArtist struct {
 	Aliases   []models.Alias `json:"aliases"`
 }
 
-func ExportData(ctx context.Context, user *models.User, store db.DB, out io.Writer) error {
+func ExportData(ctx context.Context, user *models.User, store db.ExportStore, out io.Writer) error {
 	lastTime := time.Unix(0, 0)
 	lastTrackId := int32(0)
 	pageSize := int32(1000)

@@ -19,7 +19,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func ImageHandler(store db.DB) http.HandlerFunc {
+func ImageHandler(store db.ImageStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := logger.FromContext(r.Context())
 		size := chi.URLParam(r, "size")
@@ -153,7 +153,7 @@ func serveDefaultImage(w http.ResponseWriter, r *http.Request, size catalog.Imag
 }
 
 // finds the item associated with the image id, downloads it, and saves it in the source path, returning the path to the image
-func downloadMissingImage(ctx context.Context, store db.DB, id uuid.UUID) (string, error) {
+func downloadMissingImage(ctx context.Context, store db.ImageStore, id uuid.UUID) (string, error) {
 	src, err := store.GetImageSource(ctx, id)
 	if err != nil {
 		return "", fmt.Errorf("downloadMissingImage: %w", err)

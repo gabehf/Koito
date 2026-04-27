@@ -52,7 +52,7 @@ export default function Artist() {
       }}
       subContent={
         <div className="flex flex-col gap-2 items-start">
-          {artist.listen_count && (
+          {artist.listen_count > 0 && (
             <p>
               {artist.listen_count} play{artist.listen_count > 1 ? "s" : ""}
             </p>

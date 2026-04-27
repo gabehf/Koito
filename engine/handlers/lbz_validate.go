@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gabehf/koito/engine/middleware"
-	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/utils"
 )
@@ -17,7 +16,7 @@ type LbzValidateResponse struct {
 	UserName string `json:"user_name,omitempty"`
 }
 
-func LbzValidateTokenHandler(store db.DB) http.HandlerFunc {
+func LbzValidateTokenHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

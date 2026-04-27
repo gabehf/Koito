@@ -9,7 +9,14 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func SummaryHandler(store db.DB) http.HandlerFunc {
+type summaryHandlerStore interface {
+	db.ArtistStore
+	db.AlbumStore
+	db.TrackStore
+	db.ListenStore
+}
+
+func SummaryHandler(store summaryHandlerStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

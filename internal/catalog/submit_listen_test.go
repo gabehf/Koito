@@ -16,7 +16,7 @@ import (
 // this file is very long
 
 func TestSubmitListen_CreateAllMbzIDs(t *testing.T) {
-	truncateTestData(t)
+	store := newTestDB()
 
 	// artist gets created with musicbrainz id
 	// release group gets created with mbz id
@@ -54,7 +54,7 @@ func TestSubmitListen_CreateAllMbzIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -71,7 +71,7 @@ func TestSubmitListen_CreateAllMbzIDs(t *testing.T) {
 }
 
 func TestSubmitListen_CreateAllMbzIDsNoReleaseGroupID(t *testing.T) {
-	truncateTestData(t)
+	store := newTestDB()
 
 	// release group gets created with release id
 
@@ -104,14 +104,14 @@ func TestSubmitListen_CreateAllMbzIDsNoReleaseGroupID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
     )`, 1)
 	require.NoError(t, err)
 	assert.True(t, exists, "expected listen row to exist")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM releases_with_title
       WHERE title = $1
@@ -121,7 +121,7 @@ func TestSubmitListen_CreateAllMbzIDsNoReleaseGroupID(t *testing.T) {
 }
 
 func TestSubmitListen_CreateAllNoMbzIDs(t *testing.T) {
-	truncateTestData(t)
+	store := newTestDB()
 
 	// artist gets created with artist names
 	// release group gets created with artist and title
@@ -143,7 +143,7 @@ func TestSubmitListen_CreateAllNoMbzIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -153,7 +153,7 @@ func TestSubmitListen_CreateAllNoMbzIDs(t *testing.T) {
 }
 
 func TestSubmitListen_CreateAllNoMbzIDsNoArtistNamesNoReleaseTitle(t *testing.T) {
-	truncateTestData(t)
+	store := newTestDB()
 
 	// artists get created with artist and track title
 	// release group gets created with artist and track title
@@ -175,28 +175,28 @@ func TestSubmitListen_CreateAllNoMbzIDsNoArtistNamesNoReleaseTitle(t *testing.T)
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
     )`, 1)
 	require.NoError(t, err)
 	assert.True(t, exists, "expected listen row to exist")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM releases_with_title
       WHERE title = $1
     )`, opts.TrackTitle)
 	require.NoError(t, err)
 	assert.True(t, exists, "expected created release to have track title as title")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artists_with_name
       WHERE name = $1
     )`, "Rat Tally")
 	require.NoError(t, err)
 	assert.True(t, exists, "expected primary artist to be created")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artists_with_name
       WHERE name = $1
@@ -205,14 +205,14 @@ func TestSubmitListen_CreateAllNoMbzIDsNoArtistNamesNoReleaseTitle(t *testing.T)
 	assert.True(t, exists, "expected featured artist to be created")
 
 	// assert that Rat Tally is the primary artist
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artist_tracks
       WHERE artist_id = $1 AND is_primary = $2
     )`, 1, true)
 	require.NoError(t, err)
 	assert.True(t, exists, "expected primary artist to be marked as primary for track")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artist_releases
       WHERE artist_id = $1 AND is_primary = $2
@@ -222,7 +222,8 @@ func TestSubmitListen_CreateAllNoMbzIDsNoArtistNamesNoReleaseTitle(t *testing.T)
 }
 
 func TestSubmitListen_MatchAllMbzIDs(t *testing.T) {
-	setupTestDataWithMbzIDs(t)
+	store := newTestDB()
+	setupTestDataWithMbzIDs(store, t)
 
 	// artist gets matched with musicbrainz id
 	// release gets matched with mbz id
@@ -256,7 +257,7 @@ func TestSubmitListen_MatchAllMbzIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -265,17 +266,17 @@ func TestSubmitListen_MatchAllMbzIDs(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1
 	`, "Tokyo Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate track created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1
 	`, "AG! Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate release group created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1
 	`, "ATARASHII GAKKO!")
 	require.NoError(t, err)
@@ -283,7 +284,8 @@ func TestSubmitListen_MatchAllMbzIDs(t *testing.T) {
 }
 
 func TestSubmitListen_DoNotOverwriteMbzIDs(t *testing.T) {
-	setupTestDataWithMbzIDs(t)
+	store := newTestDB()
+	setupTestDataWithMbzIDs(store, t)
 
 	// artist gets matched with musicbrainz id
 	// release gets matched with mbz id
@@ -318,7 +320,7 @@ func TestSubmitListen_DoNotOverwriteMbzIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -327,22 +329,22 @@ func TestSubmitListen_DoNotOverwriteMbzIDs(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE musicbrainz_id = $1
 	`, trackMbzID)
 	require.NoError(t, err)
 	assert.Equal(t, 0, count, "duplicate track created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE musicbrainz_id = $1
 	`, releaseMbzID)
 	require.NoError(t, err)
 	assert.Equal(t, 0, count, "duplicate release group created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE musicbrainz_id = $1
 	`, existingReleaseMbzID)
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "existing release group should not be overwritten")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE musicbrainz_id = $1
 	`, artistMbzID)
 	require.NoError(t, err)
@@ -350,7 +352,8 @@ func TestSubmitListen_DoNotOverwriteMbzIDs(t *testing.T) {
 }
 
 func TestSubmitListen_MatchTrackFromMbzTitle(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	ctx := context.Background()
 	mbzc := &mbz.MbzMockCaller{
@@ -372,7 +375,7 @@ func TestSubmitListen_MatchTrackFromMbzTitle(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -381,17 +384,17 @@ func TestSubmitListen_MatchTrackFromMbzTitle(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1
 	`, "Tokyo Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate track created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1
 	`, "AG! Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate release group created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1
 	`, "ATARASHII GAKKO!")
 	require.NoError(t, err)
@@ -399,6 +402,7 @@ func TestSubmitListen_MatchTrackFromMbzTitle(t *testing.T) {
 }
 
 func TestSubmitListen_VariousArtistsRelease(t *testing.T) {
+	store := newTestDB()
 
 	ctx := context.Background()
 	mbzc := &mbz.MbzMockCaller{
@@ -420,7 +424,7 @@ func TestSubmitListen_VariousArtistsRelease(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -429,15 +433,16 @@ func TestSubmitListen_VariousArtistsRelease(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM releases WHERE various_artists = $1
-	`, true)
+	`, 1)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, count)
 }
 
 func TestSubmitListen_MatchOneArtistMbzIDOneArtistName(t *testing.T) {
-	setupTestDataWithMbzIDs(t)
+	store := newTestDB()
+	setupTestDataWithMbzIDs(store, t)
 
 	// artist gets matched with musicbrainz id
 	// release gets matched with mbz id
@@ -472,7 +477,7 @@ func TestSubmitListen_MatchOneArtistMbzIDOneArtistName(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -481,22 +486,22 @@ func TestSubmitListen_MatchOneArtistMbzIDOneArtistName(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1
 	`, "Tokyo Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate track created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1
 	`, "AG! Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate release group created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1
 	`, "ATARASHII GAKKO!")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate artist created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1
 	`, "Fake Artist")
 	require.NoError(t, err)
@@ -504,7 +509,8 @@ func TestSubmitListen_MatchOneArtistMbzIDOneArtistName(t *testing.T) {
 }
 
 func TestSubmitListen_MatchAllMbzIDsNoReleaseGroupIDNoTrackID(t *testing.T) {
-	setupTestDataWithMbzIDs(t)
+	store := newTestDB()
+	setupTestDataWithMbzIDs(store, t)
 
 	// release group gets matched with release id
 	// track gets matched with title and artist
@@ -536,7 +542,7 @@ func TestSubmitListen_MatchAllMbzIDsNoReleaseGroupIDNoTrackID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -545,12 +551,12 @@ func TestSubmitListen_MatchAllMbzIDsNoReleaseGroupIDNoTrackID(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1
 	`, "AG! Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate release created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1
 	`, "Tokyo Calling")
 	require.NoError(t, err)
@@ -558,7 +564,8 @@ func TestSubmitListen_MatchAllMbzIDsNoReleaseGroupIDNoTrackID(t *testing.T) {
 }
 
 func TestSubmitListen_MatchNoMbzIDs(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	ctx := context.Background()
 	mbzc := &mbz.MbzMockCaller{}
@@ -576,7 +583,7 @@ func TestSubmitListen_MatchNoMbzIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -585,17 +592,17 @@ func TestSubmitListen_MatchNoMbzIDs(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1 AND musicbrainz_id IS NULL
 	`, "ATARASHII GAKKO!")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate artist created or has been associated with fake musicbrainz id")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1 AND musicbrainz_id IS NULL
 	`, "AG! Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate release created or has been associated with fake musicbrainz id")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1 AND musicbrainz_id IS NULL
 	`, "Tokyo Calling")
 	require.NoError(t, err)
@@ -603,7 +610,8 @@ func TestSubmitListen_MatchNoMbzIDs(t *testing.T) {
 }
 
 func TestSubmitListen_UpdateTrackDuration(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	ctx := context.Background()
 	mbzc := &mbz.MbzMockCaller{}
@@ -622,7 +630,7 @@ func TestSubmitListen_UpdateTrackDuration(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -630,7 +638,7 @@ func TestSubmitListen_UpdateTrackDuration(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, exists, "expected listen row to exist")
 
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1 AND duration = 191
 	`, "Tokyo Calling")
 	require.NoError(t, err)
@@ -638,7 +646,8 @@ func TestSubmitListen_UpdateTrackDuration(t *testing.T) {
 }
 
 func TestSubmitListen_UpdateTrackDurationWithMbz(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	ctx := context.Background()
 	mbzc := &mbz.MbzMockCaller{
@@ -659,7 +668,7 @@ func TestSubmitListen_UpdateTrackDurationWithMbz(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -667,7 +676,7 @@ func TestSubmitListen_UpdateTrackDurationWithMbz(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, exists, "expected listen row to exist")
 
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1 AND duration = 191
 	`, "Tokyo Calling")
 	require.NoError(t, err)
@@ -675,7 +684,8 @@ func TestSubmitListen_UpdateTrackDurationWithMbz(t *testing.T) {
 }
 
 func TestSubmitListen_MatchFromTrackTitleNoMbzIDs(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	ctx := context.Background()
 	mbzc := &mbz.MbzMockCaller{
@@ -697,7 +707,7 @@ func TestSubmitListen_MatchFromTrackTitleNoMbzIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT * FROM listens
       WHERE track_id = $1
@@ -706,12 +716,12 @@ func TestSubmitListen_MatchFromTrackTitleNoMbzIDs(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1
 	`, "ATARASHII GAKKO!")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate artist created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1
 	`, "AG! Calling")
 	require.NoError(t, err)
@@ -719,7 +729,8 @@ func TestSubmitListen_MatchFromTrackTitleNoMbzIDs(t *testing.T) {
 }
 
 func TestSubmitListen_AssociateAllMbzIDs(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	// existing artist gets associated with mbz id (also updates aliases)
 	// exisiting release gets associated with mbz id
@@ -753,7 +764,7 @@ func TestSubmitListen_AssociateAllMbzIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -762,38 +773,38 @@ func TestSubmitListen_AssociateAllMbzIDs(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1
 	`, "Tokyo Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate track created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1
 	`, "AG! Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate release created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1
 	`, "ATARASHII GAKKO!")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate artist created")
 
 	// Verify that the mbz ids were saved
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM tracks
       WHERE musicbrainz_id = $1
     )`, trackMbzID)
 	require.NoError(t, err)
 	assert.True(t, exists, "expected track row with mbz id to exist")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artists
       WHERE musicbrainz_id = $1
     )`, artistMbzID)
 	require.NoError(t, err)
 	assert.True(t, exists, "expected artist row with mbz id to exist")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM releases
       WHERE musicbrainz_id = $1
@@ -803,7 +814,8 @@ func TestSubmitListen_AssociateAllMbzIDs(t *testing.T) {
 }
 
 func TestSubmitListen_AssociateAllMbzIDsWithMbzUnreachable(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	// existing artist gets associated with mbz id (also updates aliases)
 	// exisiting release gets associated with mbz id
@@ -833,7 +845,7 @@ func TestSubmitListen_AssociateAllMbzIDsWithMbzUnreachable(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -842,31 +854,31 @@ func TestSubmitListen_AssociateAllMbzIDsWithMbzUnreachable(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM tracks_with_title WHERE title = $1
 	`, "Tokyo Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate track created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM releases_with_title WHERE title = $1
 	`, "AG! Calling")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate release created")
-	count, err = store.Count(ctx, `
+	count, err = store.Count(`
 	SELECT COUNT(*) FROM artists_with_name WHERE name = $1
 	`, "ATARASHII GAKKO!")
 	require.NoError(t, err)
 	assert.Equal(t, 1, count, "duplicate artist created")
 
 	// Verify that the mbz ids were saved
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM tracks
       WHERE musicbrainz_id = $1
     )`, trackMbzID)
 	require.NoError(t, err)
 	assert.True(t, exists, "expected track row with mbz id to exist")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artists
       WHERE musicbrainz_id = $1
@@ -874,7 +886,7 @@ func TestSubmitListen_AssociateAllMbzIDsWithMbzUnreachable(t *testing.T) {
 	require.NoError(t, err)
 	// as artist names and mbz ids can be ids with unknown order
 	assert.False(t, exists, "artists cannot be associated with mbz ids when mbz is unreachable")
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM releases
       WHERE musicbrainz_id = $1
@@ -884,7 +896,8 @@ func TestSubmitListen_AssociateAllMbzIDsWithMbzUnreachable(t *testing.T) {
 }
 
 func TestSubmitListen_AssociateReleaseAliases(t *testing.T) {
-	setupTestDataSansMbzIDs(t)
+	store := newTestDB()
+	setupTestDataSansMbzIDs(store, t)
 
 	// existing artist gets associated with mbz id (also updates aliases)
 	// exisiting release group gets associated with mbz id
@@ -921,7 +934,7 @@ func TestSubmitListen_AssociateReleaseAliases(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -930,7 +943,7 @@ func TestSubmitListen_AssociateReleaseAliases(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// verify that track, release group, and artist are existing ones and not duplicates
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 	SELECT COUNT(*) FROM release_aliases WHERE alias = $1
 	`, "AG! Calling - Alt Title")
 	require.NoError(t, err)
@@ -938,7 +951,7 @@ func TestSubmitListen_AssociateReleaseAliases(t *testing.T) {
 }
 
 func TestSubmitListen_MusicBrainzUnreachable(t *testing.T) {
-	truncateTestData(t)
+	store := newTestDB()
 
 	// test don't fail when mbz unreachable
 
@@ -968,7 +981,7 @@ func TestSubmitListen_MusicBrainzUnreachable(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -978,7 +991,7 @@ func TestSubmitListen_MusicBrainzUnreachable(t *testing.T) {
 }
 
 func TestSubmitListen_MusicBrainzUnreachableMBIDMappings(t *testing.T) {
-	truncateTestData(t)
+	store := newTestDB()
 
 	// correctly associate MBID when musicbrainz unreachable, but map provided
 
@@ -1011,7 +1024,7 @@ func TestSubmitListen_MusicBrainzUnreachableMBIDMappings(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the listen was saved
-	exists, err := store.RowExists(ctx, `
+	exists, err := store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM listens
       WHERE track_id = $1
@@ -1020,7 +1033,7 @@ func TestSubmitListen_MusicBrainzUnreachableMBIDMappings(t *testing.T) {
 	assert.True(t, exists, "expected listen row to exist")
 
 	// Verify that the artist has the mbid saved
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artists
       WHERE musicbrainz_id = $1
@@ -1029,7 +1042,7 @@ func TestSubmitListen_MusicBrainzUnreachableMBIDMappings(t *testing.T) {
 	assert.True(t, exists, "expected artist to have correct musicbrainz id")
 
 	// Verify that the artist has the mbid saved
-	exists, err = store.RowExists(ctx, `
+	exists, err = store.RowExists(`
     SELECT EXISTS (
       SELECT 1 FROM artists
       WHERE musicbrainz_id = $1

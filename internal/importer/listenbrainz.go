@@ -14,14 +14,13 @@ import (
 	"github.com/gabehf/koito/engine/handlers"
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
-	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/google/uuid"
 )
 
-func ImportListenBrainzExport(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCaller, filename string) error {
+func ImportListenBrainzExport(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, filename string) error {
 	l := logger.FromContext(ctx)
 
 	r, err := zip.OpenReader(path.Join(path.Join(cfg.ConfigDir(), "import", filename)))
@@ -57,7 +56,7 @@ func ImportListenBrainzExport(ctx context.Context, store db.DB, mbzc mbz.MusicBr
 	return finishImport(ctx, filename, 0)
 }
 
-func ImportListenBrainzFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCaller, r io.Reader, filename string) error {
+func ImportListenBrainzFile(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, r io.Reader, filename string) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning ListenBrainz import on file: %s", filename)
 

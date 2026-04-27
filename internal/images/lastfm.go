@@ -127,6 +127,10 @@ func (c *LastFMClient) getEntity(ctx context.Context, params url.Values, result 
 	return nil
 }
 
+// lastFMPlaceholderHash is the hash of Last.fm's generic "no artist image" placeholder.
+// Last.fm stopped serving real artist images years ago and returns this for nearly every artist.
+const lastFMPlaceholderHash = "2a96cbd8b46e442fc41c2b86b821562f"
+
 // selectBestImage picks the largest available image from the LastFM slice
 func (c *LastFMClient) selectBestImage(images []lastFMImage) string {
 	// Rank preference: mega > extralarge > large > medium > small
@@ -135,7 +139,7 @@ func (c *LastFMClient) selectBestImage(images []lastFMImage) string {
 
 	imgMap := make(map[string]string)
 	for _, img := range images {
-		if img.URL != "" {
+		if img.URL != "" && !strings.Contains(img.URL, lastFMPlaceholderHash) {
 			imgMap[img.Size] = img.URL
 		}
 	}

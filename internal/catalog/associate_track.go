@@ -10,7 +10,6 @@ import (
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type AssociateTrackOpts struct {
@@ -22,7 +21,7 @@ type AssociateTrackOpts struct {
 	Mbzc       mbz.MusicBrainzCaller
 }
 
-func AssociateTrack(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*models.Track, error) {
+func AssociateTrack(ctx context.Context, d db.TrackStore, opts AssociateTrackOpts) (*models.Track, error) {
 	l := logger.FromContext(ctx)
 	if opts.TrackName == "" {
 		return nil, errors.New("AssociateTrack: missing required parameter 'opts.TrackName'")
@@ -44,7 +43,7 @@ func AssociateTrack(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*mod
 }
 
 // If no match is found, will call matchTrackByTitleAndArtist and associate the Mbz ID with the result
-func matchTrackByMbzID(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*models.Track, error) {
+func matchTrackByMbzID(ctx context.Context, d db.TrackStore, opts AssociateTrackOpts) (*models.Track, error) {
 	l := logger.FromContext(ctx)
 	track, err := d.GetTrack(ctx, db.GetTrackOpts{
 		MusicBrainzID: opts.TrackMbzID,
@@ -52,7 +51,7 @@ func matchTrackByMbzID(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*
 	if err == nil {
 		l.Debug().Msgf("Found track '%s' by MusicBrainz ID", track.Title)
 		return track, nil
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	} else if !errors.Is(err, db.ErrNotFound) {
 		return nil, fmt.Errorf("matchTrackByMbzID: %w", err)
 	} else {
 		l.Debug().Msgf("Track '%s' could not be found by MusicBrainz ID", opts.TrackName)
@@ -79,7 +78,7 @@ func matchTrackByMbzID(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*
 	}
 }
 
-func matchTrackByTrackInfo(ctx context.Context, d db.DB, opts AssociateTrackOpts) (*models.Track, error) {
+func matchTrackByTrackInfo(ctx context.Context, d db.TrackStore, opts AssociateTrackOpts) (*models.Track, error) {
 	l := logger.FromContext(ctx)
 	// try provided track title
 	track, err := d.GetTrack(ctx, db.GetTrackOpts{
@@ -90,7 +89,7 @@ func matchTrackByTrackInfo(ctx context.Context, d db.DB, opts AssociateTrackOpts
 	if err == nil {
 		l.Debug().Msgf("Track '%s' found by title, release and artist match", track.Title)
 		return track, nil
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	} else if !errors.Is(err, db.ErrNotFound) {
 		return nil, fmt.Errorf("matchTrackByTrackInfo: %w", err)
 	} else {
 		if opts.TrackMbzID != uuid.Nil {

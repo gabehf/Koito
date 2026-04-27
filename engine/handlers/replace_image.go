@@ -21,7 +21,12 @@ type ReplaceImageResponse struct {
 	Message string `json:"message,omitempty"`
 }
 
-func ReplaceImageHandler(store db.DB) http.HandlerFunc {
+type replaceImageStore interface {
+	db.ArtistStore
+	db.AlbumStore
+}
+
+func ReplaceImageHandler(store replaceImageStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

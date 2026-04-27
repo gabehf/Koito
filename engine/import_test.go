@@ -20,16 +20,14 @@ import (
 )
 
 func TestImportMaloja(t *testing.T) {
+	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "maloja_import_test.json")
 	destDir := filepath.Join(cfg.ConfigDir(), "import")
 	dest := filepath.Join(destDir, "maloja_import_test.json")
 
-	// not going to make the dest dir because engine should make it already
-
 	input, err := os.ReadFile(src)
 	require.NoError(t, err)
-
 	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
 
 	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
@@ -40,21 +38,17 @@ func TestImportMaloja(t *testing.T) {
 	t.Log(a)
 	assert.Equal(t, "Magnify Tokyo", a.Name)
 	assert.EqualValues(t, 38, a.ListenCount)
-
-	truncateTestData(t)
 }
 
 func TestImportSpotify(t *testing.T) {
+	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "Streaming_History_Audio_spotify_import_test.json")
 	destDir := filepath.Join(cfg.ConfigDir(), "import")
 	dest := filepath.Join(destDir, "Streaming_History_Audio_spotify_import_test.json")
 
-	// not going to make the dest dir because engine should make it already
-
 	input, err := os.ReadFile(src)
 	require.NoError(t, err)
-
 	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
 
 	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
@@ -70,103 +64,17 @@ func TestImportSpotify(t *testing.T) {
 	// spotify includes duration data, but we only import when reason_end = trackdone
 	// this is the only track with valid duration data
 	assert.EqualValues(t, 181, track.Duration)
-
-	truncateTestData(t)
 }
 
 func TestImportLastFM(t *testing.T) {
+	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "recenttracks-shoko2-1749776100.json")
 	destDir := filepath.Join(cfg.ConfigDir(), "import")
 	dest := filepath.Join(destDir, "recenttracks-shoko2-1749776100.json")
 
-	// not going to make the dest dir because engine should make it already
-
 	input, err := os.ReadFile(src)
 	require.NoError(t, err)
-
-	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
-
-	mbzcMock := &mbz.MbzMockCaller{
-		Artists: map[uuid.UUID]*mbz.MusicBrainzArtist{
-			uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a"): &mbz.MusicBrainzArtist{
-				Name: "OurR",
-				Aliases: []mbz.MusicBrainzArtistAlias{
-					{
-						Name:    "OurR",
-						Primary: true,
-					},
-				},
-			},
-		},
-	}
-
-	engine.RunImporter(logger.Get(), store, mbzcMock)
-
-	album, err := store.GetAlbum(context.Background(), db.GetAlbumOpts{MusicBrainzID: uuid.MustParse("e9e78802-0bf8-4ca3-9655-1d943d2d2fa0")})
-	require.NoError(t, err)
-	assert.Equal(t, "ZOO!!", album.Title)
-	artist, err := store.GetArtist(context.Background(), db.GetArtistOpts{MusicBrainzID: uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a")})
-	require.NoError(t, err)
-	assert.Equal(t, "OurR", artist.Name)
-	artist, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Necry Talkie"})
-	require.NoError(t, err)
-	track, err := store.GetTrack(context.Background(), db.GetTrackOpts{Title: "放課後の記憶", ReleaseID: album.ID, ArtistIDs: []int32{artist.ID}})
-	require.NoError(t, err)
-	t.Log(track)
-	listens, err := store.GetListensPaginated(context.Background(), db.GetItemsOpts{TrackID: int(track.ID), Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
-	require.NoError(t, err)
-	require.Len(t, listens.Items, 1)
-	assert.WithinDuration(t, time.Unix(1749774900, 0), listens.Items[0].Time, 1*time.Second)
-
-	truncateTestData(t)
-}
-
-func TestImportLastFM_MbzDisabled(t *testing.T) {
-
-	src := path.Join("..", "test_assets", "recenttracks-shoko2-1749776100.json")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
-	dest := filepath.Join(destDir, "recenttracks-shoko2-1749776100.json")
-
-	// not going to make the dest dir because engine should make it already
-
-	input, err := os.ReadFile(src)
-	require.NoError(t, err)
-
-	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
-
-	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
-
-	album, err := store.GetAlbum(context.Background(), db.GetAlbumOpts{MusicBrainzID: uuid.MustParse("e9e78802-0bf8-4ca3-9655-1d943d2d2fa0")})
-	require.NoError(t, err)
-	assert.Equal(t, "ZOO!!", album.Title)
-	artist, err := store.GetArtist(context.Background(), db.GetArtistOpts{MusicBrainzID: uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a")})
-	require.NoError(t, err)
-	assert.Equal(t, "OurR", artist.Name)
-	artist, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Necry Talkie"})
-	require.NoError(t, err)
-	track, err := store.GetTrack(context.Background(), db.GetTrackOpts{Title: "放課後の記憶", ReleaseID: album.ID, ArtistIDs: []int32{artist.ID}})
-	require.NoError(t, err)
-	t.Log(track)
-	listens, err := store.GetListensPaginated(context.Background(), db.GetItemsOpts{TrackID: int(track.ID), Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
-	require.NoError(t, err)
-	require.Len(t, listens.Items, 1)
-	assert.WithinDuration(t, time.Unix(1749774900, 0), listens.Items[0].Time, 1*time.Second)
-
-	truncateTestData(t)
-}
-
-func TestImportListenBrainz(t *testing.T) {
-
-	src := path.Join("..", "test_assets", "listenbrainz_shoko1_1749780844.zip")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
-	dest := filepath.Join(destDir, "listenbrainz_shoko1_1749780844.zip")
-
-	// not going to make the dest dir because engine should make it already
-
-	input, err := os.ReadFile(src)
-	require.NoError(t, err)
-
 	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
 
 	mbzcMock := &mbz.MbzMockCaller{
@@ -174,28 +82,90 @@ func TestImportListenBrainz(t *testing.T) {
 			uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a"): {
 				Name: "OurR",
 				Aliases: []mbz.MusicBrainzArtistAlias{
-					{
-						Name:    "OurR",
-						Primary: true,
-					},
+					{Name: "OurR", Primary: true},
+				},
+			},
+		},
+	}
+
+	engine.RunImporter(logger.Get(), store, mbzcMock)
+
+	album, err := store.GetAlbum(context.Background(), db.GetAlbumOpts{MusicBrainzID: uuid.MustParse("e9e78802-0bf8-4ca3-9655-1d943d2d2fa0")})
+	require.NoError(t, err)
+	assert.Equal(t, "ZOO!!", album.Title)
+	artist, err := store.GetArtist(context.Background(), db.GetArtistOpts{MusicBrainzID: uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a")})
+	require.NoError(t, err)
+	assert.Equal(t, "OurR", artist.Name)
+	artist, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Necry Talkie"})
+	require.NoError(t, err)
+	track, err := store.GetTrack(context.Background(), db.GetTrackOpts{Title: "放課後の記憶", ReleaseID: album.ID, ArtistIDs: []int32{artist.ID}})
+	require.NoError(t, err)
+	t.Log(track)
+	listens, err := store.GetListensPaginated(context.Background(), db.GetItemsOpts{TrackID: int(track.ID), Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
+	require.NoError(t, err)
+	require.Len(t, listens.Items, 1)
+	assert.WithinDuration(t, time.Unix(1749774900, 0), listens.Items[0].Time, 1*time.Second)
+}
+
+func TestImportLastFM_MbzDisabled(t *testing.T) {
+	store := newTestDB()
+
+	src := path.Join("..", "test_assets", "recenttracks-shoko2-1749776100.json")
+	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	dest := filepath.Join(destDir, "recenttracks-shoko2-1749776100.json")
+
+	input, err := os.ReadFile(src)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
+
+	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
+
+	album, err := store.GetAlbum(context.Background(), db.GetAlbumOpts{MusicBrainzID: uuid.MustParse("e9e78802-0bf8-4ca3-9655-1d943d2d2fa0")})
+	require.NoError(t, err)
+	assert.Equal(t, "ZOO!!", album.Title)
+	artist, err := store.GetArtist(context.Background(), db.GetArtistOpts{MusicBrainzID: uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a")})
+	require.NoError(t, err)
+	assert.Equal(t, "OurR", artist.Name)
+	artist, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Necry Talkie"})
+	require.NoError(t, err)
+	track, err := store.GetTrack(context.Background(), db.GetTrackOpts{Title: "放課後の記憶", ReleaseID: album.ID, ArtistIDs: []int32{artist.ID}})
+	require.NoError(t, err)
+	t.Log(track)
+	listens, err := store.GetListensPaginated(context.Background(), db.GetItemsOpts{TrackID: int(track.ID), Timeframe: db.Timeframe{Period: db.PeriodAllTime}})
+	require.NoError(t, err)
+	require.Len(t, listens.Items, 1)
+	assert.WithinDuration(t, time.Unix(1749774900, 0), listens.Items[0].Time, 1*time.Second)
+}
+
+func TestImportListenBrainz(t *testing.T) {
+	store := newTestDB()
+
+	src := path.Join("..", "test_assets", "listenbrainz_shoko1_1749780844.zip")
+	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	dest := filepath.Join(destDir, "listenbrainz_shoko1_1749780844.zip")
+
+	input, err := os.ReadFile(src)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
+
+	mbzcMock := &mbz.MbzMockCaller{
+		Artists: map[uuid.UUID]*mbz.MusicBrainzArtist{
+			uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a"): {
+				Name: "OurR",
+				Aliases: []mbz.MusicBrainzArtistAlias{
+					{Name: "OurR", Primary: true},
 				},
 			},
 			uuid.MustParse("09887aa7-226e-4ecc-9a0c-02d2ae5777e1"): {
 				Name: "Carly Rae Jepsen",
 				Aliases: []mbz.MusicBrainzArtistAlias{
-					{
-						Name:    "Carly Rae Jepsen",
-						Primary: true,
-					},
+					{Name: "Carly Rae Jepsen", Primary: true},
 				},
 			},
-			uuid.MustParse("78e46ae5-9bfd-433b-be3f-19e993d67ecc"): &mbz.MusicBrainzArtist{
+			uuid.MustParse("78e46ae5-9bfd-433b-be3f-19e993d67ecc"): {
 				Name: "Rufus Wainwright",
 				Aliases: []mbz.MusicBrainzArtistAlias{
-					{
-						Name:    "OurR",
-						Primary: true,
-					},
+					{Name: "OurR", Primary: true},
 				},
 			},
 		},
@@ -222,21 +192,17 @@ func TestImportListenBrainz(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, listens.Items, 1)
 	assert.WithinDuration(t, time.Unix(1749780612, 0), listens.Items[0].Time, 1*time.Second)
-
-	truncateTestData(t)
 }
 
 func TestImportListenBrainz_MbzDisabled(t *testing.T) {
+	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "listenbrainz_shoko1_1749780844.zip")
 	destDir := filepath.Join(cfg.ConfigDir(), "import")
 	dest := filepath.Join(destDir, "listenbrainz_shoko1_1749780844.zip")
 
-	// not going to make the dest dir because engine should make it already
-
 	input, err := os.ReadFile(src)
 	require.NoError(t, err)
-
 	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
 
 	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
@@ -260,21 +226,17 @@ func TestImportListenBrainz_MbzDisabled(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, listens.Items, 1)
 	assert.WithinDuration(t, time.Unix(1749780612, 0), listens.Items[0].Time, 1*time.Second)
-
-	truncateTestData(t)
 }
 
 func TestImportListenBrainz_MBIDMapping(t *testing.T) {
+	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "listenbrainz_shoko1_123456789.zip")
 	destDir := filepath.Join(cfg.ConfigDir(), "import")
 	dest := filepath.Join(destDir, "listenbrainz_shoko1_123456789.zip")
 
-	// not going to make the dest dir because engine should make it already
-
 	input, err := os.ReadFile(src)
 	require.NoError(t, err)
-
 	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
 
 	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
@@ -288,11 +250,10 @@ func TestImportListenBrainz_MBIDMapping(t *testing.T) {
 	track, err := store.GetTrack(context.Background(), db.GetTrackOpts{MusicBrainzID: uuid.MustParse("3bbeb4e3-ab6d-460d-bfc5-de49e4251061")})
 	require.NoError(t, err)
 	assert.Equal(t, "Zombie", track.Title)
-
-	truncateTestData(t)
 }
 
 func TestImportKoito(t *testing.T) {
+	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "koito_export_test.json")
 	destDir := filepath.Join(cfg.ConfigDir(), "import")
@@ -308,7 +269,6 @@ func TestImportKoito(t *testing.T) {
 
 	input, err := os.ReadFile(src)
 	require.NoError(t, err)
-
 	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
 
 	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
@@ -374,6 +334,4 @@ func TestImportKoito(t *testing.T) {
 	count, err = store.CountArtists(ctx, db.Timeframe{Period: db.PeriodAllTime})
 	require.NoError(t, err)
 	assert.EqualValues(t, 6, count)
-
-	truncateTestData(t)
 }
