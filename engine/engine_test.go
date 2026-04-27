@@ -40,8 +40,6 @@ func getTestGetenv() func(string) string {
 			return "debug"
 		case cfg.SQLITE_ENABLED:
 			return "true"
-		case cfg.DATABASE_URL_ENV:
-			return "bleh"
 		case cfg.DEFAULT_PASSWORD_ENV:
 			return "testuser123"
 		case cfg.DEFAULT_USERNAME_ENV:
