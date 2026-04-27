@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,10 +20,12 @@ import (
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/db/psql"
+	"github.com/gabehf/koito/internal/db/sqlite"
 	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/importer"
 	"github.com/gabehf/koito/internal/logger"
 	mbz "github.com/gabehf/koito/internal/mbz"
+	"github.com/gabehf/koito/internal/migrate"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/go-chi/chi/v5"
@@ -37,7 +40,7 @@ func Run(
 ) error {
 	err := cfg.Load(getenv, version)
 	if err != nil {
-		panic("Engine: Failed to load configuration")
+		log.Fatalf("Engine: failed to load configuration: %v", err)
 	}
 
 	l := logger.Get()
@@ -85,16 +88,67 @@ func Run(
 		}
 	}
 
+	if cfg.SqliteEnabled() && cfg.DatabaseUrl() != "" {
+		l.Info().Msg("Engine: Running Postgres to SQLite migration")
+		if err := migrate.Migrate(ctx, l); err != nil {
+			l.Fatal().Err(err).Msg("Engine: Migration failed")
+			return err
+		}
+		l.Info().Msg("Engine: Migration complete; proceeding with SQLite")
+	}
+
 	l.Debug().Msg("Engine: Initializing database connection")
-	var store *psql.Psql
-	store, err = psql.New()
-	for err != nil {
-		l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
-		time.Sleep(5 * time.Second)
-		store, err = psql.New()
+	var store db.DB
+	if cfg.SqliteEnabled() {
+		l.Info().Msg("Engine: Using SQLite database driver")
+		var s *sqlite.Sqlite
+		s, err = sqlite.New()
+		for err != nil {
+			l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
+			time.Sleep(5 * time.Second)
+			s, err = sqlite.New()
+		}
+		store = s
+	} else {
+		var p *psql.Psql
+		p, err = psql.New()
+		for err != nil {
+			l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
+			time.Sleep(5 * time.Second)
+			p, err = psql.New()
+		}
+		store = p
 	}
 	defer store.Close(ctx)
 	l.Info().Msg("Engine: Database connection established")
+
+	l.Debug().Msg("Engine: Checking for default user")
+	userCount, _ := store.CountUsers(ctx)
+	if userCount < 1 {
+		l.Info().Msg("Engine: Creating default user")
+		user, err := store.SaveUser(ctx, db.SaveUserOpts{
+			Username: cfg.DefaultUsername(),
+			Password: cfg.DefaultPassword(),
+			Role:     models.UserRoleAdmin,
+		})
+		if err != nil {
+			l.Fatal().Err(err).Msg("Engine: Failed to save default user in database")
+		}
+		apikey, err := utils.GenerateRandomString(48)
+		if err != nil {
+			l.Fatal().Err(err).Msg("Engine: Failed to generate default API key")
+		}
+		label := "Default"
+		_, err = store.SaveApiKey(ctx, db.SaveApiKeyOpts{
+			Key:    apikey,
+			UserID: user.ID,
+			Label:  label,
+		})
+		if err != nil {
+			l.Fatal().Err(err).Msg("Engine: Failed to save default API key in database")
+		}
+		l.Info().Msgf("Engine: Default user created. Login: %s : %s", cfg.DefaultUsername(), cfg.DefaultPassword())
+	}
 
 	if cfg.ForceTZ() != nil {
 		l.Debug().Msgf("Engine: Forcing the use of timezone '%s'", cfg.ForceTZ().String())
@@ -145,34 +199,6 @@ func Run(
 		EnableLastFM:   cfg.LastFMApiKey() != "",
 	})
 	l.Info().Msg("Engine: Image sources initialized")
-
-	l.Debug().Msg("Engine: Checking for default user")
-	userCount, _ := store.CountUsers(ctx)
-	if userCount < 1 {
-		l.Info().Msg("Engine: Creating default user")
-		user, err := store.SaveUser(ctx, db.SaveUserOpts{
-			Username: cfg.DefaultUsername(),
-			Password: cfg.DefaultPassword(),
-			Role:     models.UserRoleAdmin,
-		})
-		if err != nil {
-			l.Fatal().Err(err).Msg("Engine: Failed to save default user in database")
-		}
-		apikey, err := utils.GenerateRandomString(48)
-		if err != nil {
-			l.Fatal().Err(err).Msg("Engine: Failed to generate default API key")
-		}
-		label := "Default"
-		_, err = store.SaveApiKey(ctx, db.SaveApiKeyOpts{
-			Key:    apikey,
-			UserID: user.ID,
-			Label:  label,
-		})
-		if err != nil {
-			l.Fatal().Err(err).Msg("Engine: Failed to save default API key in database")
-		}
-		l.Info().Msgf("Engine: Default user created. Login: %s : %s", cfg.DefaultUsername(), cfg.DefaultPassword())
-	}
 
 	l.Debug().Msg("Engine: Checking allowed hosts configuration")
 	if cfg.AllowAllHosts() {

@@ -16,6 +16,7 @@ import (
 )
 
 func TestImageLifecycle(t *testing.T) {
+	store := newTestDB()
 
 	// serve yuu.jpg as test image
 	imageBytes, err := os.ReadFile(filepath.Join("test_assets", "yuu.jpg"))

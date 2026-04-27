@@ -26,6 +26,9 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 	if opts.MusicBrainzID != uuid.Nil {
 		l.Debug().Msgf("Fetching album from DB with MusicBrainz Release ID %s", opts.MusicBrainzID)
 		row, err := d.q.GetReleaseByMbzID(ctx, &opts.MusicBrainzID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetAlbum: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetAlbum: %w", err)
 		}
@@ -36,6 +39,9 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 			ArtistID: opts.ArtistID,
 			Title:    opts.Title,
 		})
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetAlbum: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetAlbum: %w", err)
 		}
@@ -46,6 +52,9 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 			ArtistID: opts.ArtistID,
 			Column1:  opts.Titles,
 		})
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetAlbum: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetAlbum: %w", err)
 		}
@@ -54,6 +63,9 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 
 	l.Debug().Msgf("Fetching album from DB with id %d", opts.ID)
 	row, err := d.q.GetRelease(ctx, opts.ID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("GetAlbum: %w", db.ErrNotFound)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("GetAlbum: %w", err)
 	}
@@ -112,6 +124,9 @@ func (d *Psql) GetAlbumWithNoMbzIDByTitles(ctx context.Context, artistId int32, 
 			ArtistID: artistId,
 			Column1:  titles,
 		})
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("GetAlbumWithNoMbzIDByTitles: %w", db.ErrNotFound)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("GetAlbum: %w", err)
 		}
