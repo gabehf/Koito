@@ -90,6 +90,7 @@ export default function LastPlays(props: Props) {
       <h3 className="hover:underline">
         <Link to={`/listens?period=all_time${params}`}>{header}</Link>
       </h3>
+      {listens.length < 1 && "Nothing to show"}
       <table className="-ml-4">
         <tbody>
           {props.showNowPlaying && npData && npData.currently_playing && (

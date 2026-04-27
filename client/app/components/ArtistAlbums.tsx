@@ -38,6 +38,7 @@ export default function ArtistAlbums({ artistId, name }: Props) {
     <div>
       <h3>Albums featuring {name}</h3>
       <div className="flex flex-wrap gap-8">
+        {data.items.length < 1 && "Nothing to show"}
         {data.items.map((item) => (
           <Link
             to={`/album/${item.item.id}`}
