@@ -102,7 +102,7 @@ export default function MediaLayout(props: Props) {
                 {props.title}
                 <span className="text-xl font-medium text-(--color-fg-secondary)">
                   {" "}
-                  #{props.rank}
+                  {props.rank !== 0 && "#" + props.rank}
                 </span>
               </h1>
             </div>
