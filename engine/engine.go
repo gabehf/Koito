@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -39,7 +40,7 @@ func Run(
 ) error {
 	err := cfg.Load(getenv, version)
 	if err != nil {
-		panic("Engine: Failed to load configuration")
+		log.Fatalf("Engine: failed to load configuration: %v", err)
 	}
 
 	l := logger.Get()
