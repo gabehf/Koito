@@ -101,8 +101,10 @@ func matchTrackByTrackInfo(ctx context.Context, d db.TrackStore, opts AssociateT
 					ArtistIDs: opts.ArtistIDs,
 				})
 				if err == nil {
-					l.Debug().Msgf("Track '%s' found by MusicBrainz title, release and artist match", opts.TrackName)
-					return track, nil
+					if track.MbzID == nil || *track.MbzID == uuid.Nil || *track.MbzID == opts.TrackMbzID {
+						l.Debug().Msgf("Track '%s' found by MusicBrainz title, release and artist match", opts.TrackName)
+						return track, nil
+					}
 				}
 			}
 		}
