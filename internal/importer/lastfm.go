@@ -107,7 +107,6 @@ func ImportLastFMFile(ctx context.Context, store importStore, mbzc mbz.MusicBrai
 			opts := catalog.SubmitListenOpts{
 				MbzCaller:          mbzc,
 				Artist:             track.Artist.Text,
-				ArtistNames:        []string{track.Artist.Text},
 				ArtistMbzIDs:       []uuid.UUID{artistMbzID},
 				TrackTitle:         track.Name,
 				RecordingMbzID:     trackMbzID,
