@@ -75,6 +75,13 @@ func Run(
 			return err
 		}
 	}
+	f, err := os.CreateTemp(cfg.ConfigDir(), ".koito_perm_check_*")
+	if err != nil {
+		l.Fatal().Err(err).Msg("Engine: Config directory is not writable")
+		return err
+	}
+	f.Close()
+	os.Remove(f.Name())
 	l.Info().Msgf("Engine: Using config directory: %s", cfg.ConfigDir())
 
 	l.Debug().Msgf("Engine: Checking import directory: %s", path.Join(cfg.ConfigDir(), "import"))
