@@ -46,18 +46,21 @@ export default function Album() {
       }}
       subContent={
         <div className="flex flex-col gap-2 items-start">
-          {album.artists.length > 0 && (
+          {album.artists.length > 0 && !album.is_various_artists && (
             <p>
-              {album.artists.map((artist, i) => (
-                <span key={artist.id}>
-                  {i > 0 && ", "}
-                  <Link className="hover:underline" to={`/artist/${artist.id}`}>
-                    {artist.name}
+              {
+                <span key={album.artists[0].id}>
+                  <Link
+                    className="hover:underline"
+                    to={`/artist/${album.artists[0].id}`}
+                  >
+                    {album.artists[0].name}
                   </Link>
                 </span>
-              ))}
+              }
             </p>
           )}
+          {album.is_various_artists && <p>Various Artists</p>}
           {album.listen_count !== 0 && (
             <p>
               {album.listen_count} play{album.listen_count > 1 ? "s" : ""}
@@ -91,4 +94,3 @@ export default function Album() {
     </MediaLayout>
   );
 }
-
