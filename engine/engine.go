@@ -200,15 +200,6 @@ func Run(
 	})
 	l.Info().Msg("Engine: Image sources initialized")
 
-	l.Debug().Msg("Engine: Checking allowed hosts configuration")
-	if cfg.AllowAllHosts() {
-		l.Warn().Msg("Engine: Configuration allows requests from all hosts. This is a potential security risk!")
-	} else if len(cfg.AllowedHosts()) == 0 || cfg.AllowedHosts()[0] == "" {
-		l.Warn().Msgf("Engine: No hosts allowed! Did you forget to set the %s variable?", cfg.ALLOWED_HOSTS_ENV)
-	} else {
-		l.Info().Msgf("Engine: Allowing hosts: %v", cfg.AllowedHosts())
-	}
-
 	if len(cfg.AllowedOrigins()) == 0 || cfg.AllowedOrigins()[0] == "" {
 		l.Info().Msgf("Engine: Using default CORS policy")
 	} else {
@@ -220,13 +211,17 @@ func Run(
 	}
 
 	l.Debug().Msg("Engine: Setting up HTTP server")
+
+	if len(cfg.AllowedHosts()) > 0 {
+		l.Info().Msg("Engine: The environment variable " + cfg.ALLOWED_HOSTS_ENV + " is no longer used and can be removed.")
+	}
+
 	var ready atomic.Bool
 	mux := chi.NewRouter()
 	mux.Use(middleware.WithRequestID)
 	mux.Use(middleware.Logger(l))
 	mux.Use(chimiddleware.Recoverer)
 	mux.Use(chimiddleware.RealIP)
-	mux.Use(middleware.AllowedHosts)
 	bindRoutes(mux, &ready, store, mbzC)
 
 	httpServer := &http.Server{
