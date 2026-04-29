@@ -191,7 +191,7 @@ func migrateApiKeys(ctx context.Context, pg *sql.DB, tx *sql.Tx, l *zerolog.Logg
 
 func migrateSessions(ctx context.Context, pg *sql.DB, tx *sql.Tx, l *zerolog.Logger) error {
 	l.Info().Msg("Migrate: migrating sessions")
-	rows, err := pg.QueryContext(ctx, `SELECT id::text, user_id, created_at, expires_at, persistent FROM sessions ORDER BY created_at`)
+	rows, err := pg.QueryContext(ctx, `SELECT id::text, user_id, created_at, expires_at, persistent FROM sessions WHERE expires_at > NOW() ORDER BY created_at`)
 	if err != nil {
 		return fmt.Errorf("migrate sessions: query: %w", err)
 	}
