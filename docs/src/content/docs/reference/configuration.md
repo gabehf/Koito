@@ -22,9 +22,6 @@ If the environment variable is defined without **and** with the suffix at the sa
 `KOITO_DATABASE_URL` will be deprecated in v0.2.0 onwards, and SQLite will be the only database supported in future versions. In future versions of Koito v0.2.0 onwards, migration to SQLite will not be optional, so it is recommended to migrate manually first, creating an Export of your data first to ensure you don't lose any precious listening data.
 :::
 
-##### KOITO_ALLOWED_HOSTS
-- Required: `true`
-- Description: A list of hosts to allow requests from. E.g. `koito.mydomain.com,192.168.0.100:4110`.
 ##### KOITO_DEFAULT_USERNAME
 - Default: `admin`
 - Description: The username for the user that is created on first startup. Only applies when running Koito for the first time.
