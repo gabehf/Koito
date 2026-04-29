@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS artists (
     id             INTEGER PRIMARY KEY,
-    musicbrainz_id TEXT,
+    musicbrainz_id TEXT UNIQUE,
     image          TEXT,
     image_source   TEXT
 );
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS artist_aliases (
 
 CREATE TABLE IF NOT EXISTS releases (
     id              INTEGER PRIMARY KEY,
-    musicbrainz_id  TEXT,
+    musicbrainz_id  TEXT UNIQUE,
     image           TEXT,
     image_source    TEXT,
     various_artists INTEGER NOT NULL DEFAULT 0
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS release_aliases (
 
 CREATE TABLE IF NOT EXISTS tracks (
     id             INTEGER PRIMARY KEY,
-    musicbrainz_id TEXT,
+    musicbrainz_id TEXT UNIQUE,
     release_id     INTEGER NOT NULL REFERENCES releases(id) ON DELETE CASCADE,
     duration       INTEGER NOT NULL DEFAULT 0
 );
