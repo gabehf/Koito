@@ -33,19 +33,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func Run(
-	getenv func(string) string,
-	w io.Writer,
-	version string,
-) error {
-	err := cfg.Load(getenv, version)
-	if err != nil {
-		log.Fatalf("Engine: failed to load configuration: %v", err)
+func initLogger(getenv func(string) string, version string, w io.Writer) (*zerolog.Logger, context.Context, error) {
+	if err := cfg.Load(getenv, version); err != nil {
+		return nil, nil, fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	l := logger.Get()
-
-	l.Debug().Msg("Engine: Starting application initialization")
 
 	if cfg.StructuredLogging() {
 		l.Debug().Msg("Engine: Enabling structured logging")
@@ -55,15 +48,51 @@ func Run(
 		*l = l.Output(zerolog.ConsoleWriter{
 			Out:        w,
 			TimeFormat: time.RFC3339,
-			FormatMessage: func(i interface{}) string {
+			FormatMessage: func(i any) string {
 				return fmt.Sprintf("\u001b[30;1m>\u001b[0m %s |", i)
 			},
 		})
 	}
 
 	ctx := logger.NewContext(l)
-
 	l.Info().Msgf("Koito %s", version)
+	return l, ctx, nil
+}
+
+func connectDB(l *zerolog.Logger) db.DB {
+	l.Debug().Msg("Engine: Initializing database connection")
+	if cfg.SqliteEnabled() {
+		l.Info().Msg("Engine: Using SQLite database driver")
+		s, err := sqlite.New()
+		for err != nil {
+			l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
+			time.Sleep(5 * time.Second)
+			s, err = sqlite.New()
+		}
+		l.Info().Msg("Engine: Database connection established")
+		return s
+	}
+	p, err := psql.New()
+	for err != nil {
+		l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
+		time.Sleep(5 * time.Second)
+		p, err = psql.New()
+	}
+	l.Info().Msg("Engine: Database connection established")
+	return p
+}
+
+func Run(
+	getenv func(string) string,
+	w io.Writer,
+	version string,
+) error {
+	l, ctx, err := initLogger(getenv, version, w)
+	if err != nil {
+		log.Fatalf("Engine: %v", err)
+	}
+
+	l.Debug().Msg("Engine: Starting application initialization")
 
 	l.Debug().Msgf("Engine: Checking config directory: %s", cfg.ConfigDir())
 	_, err = os.Stat(cfg.ConfigDir())
@@ -97,30 +126,8 @@ func Run(
 		l.Info().Msg("Engine: Migration complete; proceeding with SQLite")
 	}
 
-	l.Debug().Msg("Engine: Initializing database connection")
-	var store db.DB
-	if cfg.SqliteEnabled() {
-		l.Info().Msg("Engine: Using SQLite database driver")
-		var s *sqlite.Sqlite
-		s, err = sqlite.New()
-		for err != nil {
-			l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
-			time.Sleep(5 * time.Second)
-			s, err = sqlite.New()
-		}
-		store = s
-	} else {
-		var p *psql.Psql
-		p, err = psql.New()
-		for err != nil {
-			l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
-			time.Sleep(5 * time.Second)
-			p, err = psql.New()
-		}
-		store = p
-	}
+	store := connectDB(l)
 	defer store.Close(ctx)
-	l.Info().Msg("Engine: Database connection established")
 
 	l.Debug().Msg("Engine: Checking for default user")
 	userCount, _ := store.CountUsers(ctx)
