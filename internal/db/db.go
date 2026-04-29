@@ -82,6 +82,7 @@ type UserStore interface {
 	GetUserBySession(ctx context.Context, sessionId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetUserByApiKey(ctx context.Context, key string) (*models.User, error)
+	GetAdminUser(ctx context.Context) (*models.User, error)
 	GetApiKeysByUserID(ctx context.Context, id int32) ([]models.ApiKey, error)
 	SaveUser(ctx context.Context, opts SaveUserOpts) (*models.User, error)
 	SaveApiKey(ctx context.Context, opts SaveApiKeyOpts) (*models.ApiKey, error)

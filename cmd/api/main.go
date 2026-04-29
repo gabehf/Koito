@@ -12,11 +12,14 @@ import (
 var Version = "dev"
 
 func main() {
-	if err := engine.Run(
-		readEnvOrFile,
-		os.Stdout,
-		Version,
-	); err != nil {
+	if len(os.Args) > 1 && os.Args[1] == "reset-password" {
+		if err := engine.ResetPassword(readEnvOrFile, os.Stdout, Version); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+	if err := engine.Run(readEnvOrFile, os.Stdout, Version); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

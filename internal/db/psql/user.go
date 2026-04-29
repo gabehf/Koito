@@ -48,6 +48,10 @@ func (d *Psql) GetUserByApiKey(ctx context.Context, key string) (*models.User, e
 	}, nil
 }
 
+func (d *Psql) GetAdminUser(ctx context.Context) (*models.User, error) {
+	return nil, errors.New("GetAdminUser: not supported for postgres")
+}
+
 func (d *Psql) SaveUser(ctx context.Context, opts db.SaveUserOpts) (*models.User, error) {
 	l := logger.FromContext(ctx)
 	err := ValidateUsername(opts.Username)

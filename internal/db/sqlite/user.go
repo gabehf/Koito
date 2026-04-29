@@ -62,6 +62,21 @@ func (s *Sqlite) GetUserByUsername(ctx context.Context, username string) (*model
 	return &u, nil
 }
 
+func (s *Sqlite) GetAdminUser(ctx context.Context) (*models.User, error) {
+	var u models.User
+	var role string
+	err := s.db.QueryRowContext(ctx,
+		`SELECT id, username, role, password FROM users WHERE role = 'admin' LIMIT 1`,
+	).Scan(&u.ID, &u.Username, &role, &u.Password)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("GetAdminUser: %w", err)
+	}
+	u.Role = models.UserRole(role)
+	return &u, nil
+}
+
 func (s *Sqlite) GetUserByApiKey(ctx context.Context, key string) (*models.User, error) {
 	var u models.User
 	var role string
