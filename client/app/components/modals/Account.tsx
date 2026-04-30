@@ -71,7 +71,7 @@ export default function Account() {
           onSubmit={(e) => e.preventDefault()}
           className="flex flex-col gap-4"
         >
-          <div className="flex flex gap-4">
+          <div className="flex gap-4">
             <input
               name="koito-update-username"
               type="text"
@@ -92,7 +92,7 @@ export default function Account() {
           onSubmit={(e) => e.preventDefault()}
           className="flex flex-col gap-4"
         >
-          <div className="flex flex gap-4">
+          <div className="flex gap-4">
             <input
               name="koito-update-password"
               type="password"

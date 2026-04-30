@@ -7,7 +7,6 @@ import { useAppContext } from "~/providers/AppProvider";
 import MergeModal from "~/components/modals/MergeModal";
 import ImageReplaceModal from "~/components/modals/ImageReplaceModal";
 import DeleteModal from "~/components/modals/DeleteModal";
-import RenameModal from "~/components/modals/EditModal/EditModal";
 import EditModal from "~/components/modals/EditModal/EditModal";
 import AddListenModal from "~/components/modals/AddListenModal";
 import MbzIcon from "~/components/icons/MbzIcon";

@@ -3,12 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { timeSince } from "~/utils/utils";
 import ArtistLinks from "./ArtistLinks";
 import {
+  apiFetch,
   deleteListen,
-  getLastListens,
-  getNowPlaying,
-  type getItemsArgs,
   type Listen,
-  type Track,
+  type NowPlaying,
+  type PaginatedResponse,
 } from "api/api";
 import { Link } from "react-router";
 import { useAppContext } from "~/providers/AppProvider";
@@ -22,20 +21,30 @@ interface Props {
   showNowPlaying?: boolean;
 }
 
+const getLastListens = (args: {
+  limit: number;
+  period: string;
+  artist_id?: number;
+  album_id?: number;
+  track_id?: number;
+  page: number;
+}) => apiFetch<PaginatedResponse<Listen>>("/apis/web/v1/listens", args);
+
+const getNowPlaying = () => apiFetch<NowPlaying>("/apis/web/v1/now-playing");
+
 export default function LastPlays(props: Props) {
   const { user } = useAppContext();
+  const args = {
+    limit: props.limit,
+    period: "all_time",
+    artist_id: props.artistId as number | undefined,
+    album_id: props.albumId as number | undefined,
+    track_id: props.trackId,
+    page: 0,
+  };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "last-listens",
-      {
-        limit: props.limit,
-        period: "all_time",
-        artist_id: props.artistId,
-        album_id: props.albumId,
-        track_id: props.trackId,
-      },
-    ],
-    queryFn: ({ queryKey }) => getLastListens(queryKey[1] as getItemsArgs),
+    queryKey: ["last-listens", args],
+    queryFn: () => getLastListens(args),
   });
   const { data: npData } = useQuery({
     queryKey: ["now-playing"],

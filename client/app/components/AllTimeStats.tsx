@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { getStats, type Stats, type ApiError } from "api/api";
+import { apiFetch, type Stats } from "api/api";
+
+const getStats = (period: string) =>
+  apiFetch<Stats>("/apis/web/v1/stats", { period });
 
 export default function AllTimeStats() {
   const { isPending, isError, data, error } = useQuery({
     queryKey: ["stats", "all_time"],
-    queryFn: ({ queryKey }) => getStats(queryKey[1]),
+    queryFn: () => getStats("all_time"),
   });
 
   const header = "All time stats";

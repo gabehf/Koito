@@ -12,16 +12,8 @@ export default function SetVariousArtists({ id }: Props) {
   const [success, setSuccess] = useState("");
 
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "get-album",
-      {
-        id: id,
-      },
-    ],
-    queryFn: ({ queryKey }) => {
-      const params = queryKey[1] as { id: number };
-      return getAlbum(params.id);
-    },
+    queryKey: ["get-album", id],
+    queryFn: () => getAlbum(id),
   });
 
   useEffect(() => {

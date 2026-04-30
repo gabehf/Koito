@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
+import { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 
 export function Modal({
   isOpen,
   onClose,
   children,
   maxW,
-  h
+  h,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -36,17 +36,17 @@ export function Modal({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Close on Escape key
-      if (e.key === 'Escape') {
-        onClose()
-      // Trap tab navigation to the modal
-      } else if (e.key === 'Tab') {
+      if (e.key === "Escape") {
+        onClose();
+        // Trap tab navigation to the modal
+      } else if (e.key === "Tab") {
         if (modalRef.current) {
           const focusableEls = modalRef.current.querySelectorAll<HTMLElement>(
             'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
           );
           const firstEl = focusableEls[0];
           const lastEl = focusableEls[focusableEls.length - 1];
-          const activeEl = document.activeElement
+          const activeEl = document.activeElement;
 
           if (e.shiftKey && activeEl === firstEl) {
             e.preventDefault();
@@ -54,29 +54,28 @@ export function Modal({
           } else if (!e.shiftKey && activeEl === lastEl) {
             e.preventDefault();
             firstEl.focus();
-          } else if (!Array.from(focusableEls).find(node => node.isEqualNode(activeEl))) {
+          } else if (
+            !Array.from(focusableEls).find((node) => node.isEqualNode(activeEl))
+          ) {
             e.preventDefault();
             firstEl.focus();
           }
         }
-      };
+      }
     };
-    if (isOpen) document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    if (isOpen) document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   // Close on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(e.target as Node)
-      ) {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
-    if (isOpen) document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    if (isOpen) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, [isOpen, onClose]);
 
   if (!shouldRender) return null;
@@ -84,15 +83,15 @@ export function Modal({
   return ReactDOM.createPortal(
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-100 ${
-        isClosing ? 'animate-fade-out' : 'animate-fade-in'
+        isClosing ? "animate-fade-out" : "animate-fade-in"
       }`}
     >
       <div
         ref={modalRef}
         className={`bg-secondary rounded-lg shadow-md p-6 w-full relative max-h-3/4 overflow-y-auto transition-all duration-100 ${
-          isClosing ? 'animate-fade-out-scale' : 'animate-fade-in-scale'
+          isClosing ? "animate-fade-out-scale" : "animate-fade-in-scale"
         }`}
-        style={{ maxWidth: maxW ?? 600, height: h ?? '' }}
+        style={{ maxWidth: maxW ?? 600, height: h ?? "" }}
       >
         {children}
         <button

@@ -37,6 +37,7 @@ async function handleJson<T>(r: Response): Promise<T> {
   }
   return (await r.json()) as T;
 }
+<<<<<<< HEAD
 async function getLastListens(
   args: getItemsArgs,
 ): Promise<PaginatedResponse<Listen>> {
@@ -53,9 +54,24 @@ async function getTopTracks(
 
   if (args.artist_id) url += `&artist_id=${args.artist_id}`;
   else if (args.album_id) url += `&album_id=${args.album_id}`;
+=======
+>>>>>>> 6c6bd50 (unused imports, yarn update, linter, refactor api)
 
+export async function apiFetch<T>(
+  path: string,
+  params?: Record<string, string | number | undefined>,
+): Promise<T> {
+  let url = path;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    for (const [key, val] of Object.entries(params)) {
+      if (val !== undefined) searchParams.set(key, String(val));
+    }
+    const qs = searchParams.toString();
+    if (qs) url += "?" + qs;
+  }
   const r = await fetch(url);
-  return handleJson<PaginatedResponse<Ranked<Track>>>(r);
+  return handleJson<T>(r);
 }
 
 async function getTopAlbums(
@@ -68,6 +84,7 @@ async function getTopAlbums(
   return handleJson<PaginatedResponse<Ranked<Album>>>(r);
 }
 
+<<<<<<< HEAD
 async function getTopArtists(
   args: getItemsArgs,
 ): Promise<PaginatedResponse<Ranked<Artist>>> {
@@ -99,6 +116,8 @@ async function getStats(period: string): Promise<Stats> {
   return handleJson<Stats>(r);
 }
 
+=======
+>>>>>>> 6c6bd50 (unused imports, yarn update, linter, refactor api)
 function search(q: string): Promise<SearchResponse> {
   q = encodeURIComponent(q);
   return fetch(`/apis/web/v1/search?q=${q}`).then(
@@ -115,7 +134,7 @@ function imageUrl(id: string, size: string) {
 function replaceImage(
   type: string,
   id: string,
-  form: FormData
+  form: FormData,
 ): Promise<Response> {
   return fetch(`/apis/web/v1/${type}/${id}/image`, {
     method: "PATCH",
@@ -254,7 +273,7 @@ function updateUser(username: string, password: string) {
 }
 function getAliases(type: string, id: number): Promise<Alias[]> {
   return fetch(`/apis/web/v1/${type}/${id}/aliases`).then(
-    (r) => r.json() as Promise<Alias[]>
+    (r) => r.json() as Promise<Alias[]>,
   );
 }
 function createAlias(
@@ -299,7 +318,7 @@ function updateMbzId(
 }
 function getAlbum(id: number): Promise<Album> {
   return fetch(`/apis/web/v1/album/${id}`).then(
-    (r) => r.json() as Promise<Album>
+    (r) => r.json() as Promise<Album>,
   );
 }
 
@@ -312,10 +331,6 @@ function deleteListen(listen: Listen): Promise<Response> {
 }
 function getExport() {}
 
-function getNowPlaying(): Promise<NowPlaying> {
-  return fetch("/apis/web/v1/now-playing").then((r) => r.json());
-}
-
 async function getRewindStats(args: timeframe): Promise<RewindStats> {
   const r = await fetch(
     `/apis/web/v1/summary?week=${args.week}&month=${args.month}&year=${args.year}&from=${args.from}&to=${args.to}`,
@@ -324,13 +339,7 @@ async function getRewindStats(args: timeframe): Promise<RewindStats> {
 }
 
 export {
-  getLastListens,
-  getTopTracks,
   getTopAlbums,
-  getTopArtists,
-  getActivity,
-  getInterest,
-  getStats,
   search,
   replaceImage,
   mergeTracks,
@@ -355,7 +364,6 @@ export {
   getAlbum,
   getExport,
   submitListen,
-  getNowPlaying,
   getRewindStats,
 };
 type Track = {
