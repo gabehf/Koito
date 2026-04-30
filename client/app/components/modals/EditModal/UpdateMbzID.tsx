@@ -11,7 +11,6 @@ export default function UpdateMbzID({ type, id }: Props) {
   const [err, setError] = useState<string | undefined>();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mbzid, setMbzid] = useState<"">();
   const [success, setSuccess] = useState("");
 
   const handleUpdateMbzID = () => {

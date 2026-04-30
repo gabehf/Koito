@@ -1,14 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getActivity,
-  type getActivityArgs,
-  type ListenActivityItem,
-} from "api/api";
 import Popup from "./Popup";
 import { useState } from "react";
 import { useTheme } from "~/hooks/useTheme";
 import ActivityOptsSelector from "./ActivityOptsSelector";
 import type { Theme } from "~/styles/themes.css";
+import { apiFetch, type ListenActivityItem } from "api/api";
 
 function getPrimaryColor(theme: Theme): string {
   const value = theme.primary;
@@ -34,6 +30,16 @@ interface Props {
   autoAdjust?: boolean;
 }
 
+const getActivity = (args: {
+  step: string;
+  range: number;
+  month: number;
+  year: number;
+  artist_id: number;
+  album_id: number;
+  track_id: number;
+}) => apiFetch<ListenActivityItem[]>("/apis/web/v1/listen-activity", args);
+
 export default function ActivityGrid({
   step = "day",
   range = 182,
@@ -47,20 +53,18 @@ export default function ActivityGrid({
   const [stepState, setStep] = useState(step);
   const [rangeState, setRange] = useState(range);
 
+  const args = {
+    step: stepState,
+    range: rangeState,
+    month,
+    year,
+    artist_id: artistId,
+    album_id: albumId,
+    track_id: trackId,
+  };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "listen-activity",
-      {
-        step: stepState,
-        range: rangeState,
-        month: month,
-        year: year,
-        artist_id: artistId,
-        album_id: albumId,
-        track_id: trackId,
-      },
-    ],
-    queryFn: ({ queryKey }) => getActivity(queryKey[1] as getActivityArgs),
+    queryKey: ["listen-activity", args],
+    queryFn: () => getActivity(args),
   });
 
   const { theme } = useTheme();

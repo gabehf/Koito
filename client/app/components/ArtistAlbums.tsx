@@ -1,6 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTopAlbums, imageUrl, type getItemsArgs } from "api/api";
+import {
+  apiFetch,
+  imageUrl,
+  type PaginatedResponse,
+  type Ranked,
+  type Album,
+} from "api/api";
 import { Link } from "react-router";
+
+const getArtistAlbums = (artistId: number) =>
+  apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top-albums", {
+    period: "all_time",
+    limit: 99,
+    artist_id: artistId,
+  });
 
 interface Props {
   artistId: number;
@@ -10,11 +23,8 @@ interface Props {
 
 export default function ArtistAlbums({ artistId, name }: Props) {
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "top-albums",
-      { limit: 99, period: "all_time", artist_id: artistId },
-    ],
-    queryFn: ({ queryKey }) => getTopAlbums(queryKey[1] as getItemsArgs),
+    queryKey: ["artist-albums", artistId],
+    queryFn: () => getArtistAlbums(artistId),
   });
 
   if (isPending) {

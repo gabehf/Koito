@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import ArtistLinks from "./ArtistLinks";
 import {
-  getTopAlbums,
-  getTopTracks,
-  imageUrl,
-  type getItemsArgs,
+  apiFetch,
+  type PaginatedResponse,
+  type Ranked,
+  type Album,
 } from "api/api";
 import { Link } from "react-router";
-import TopListSkeleton from "./skeletons/TopListSkeleton";
 import TopItemList from "./TopItemList";
 
 interface Props {
@@ -16,18 +14,24 @@ interface Props {
   artistId?: Number;
 }
 
+const getTopAlbums = (args: {
+  limit: number;
+  period: string;
+  artist_id?: number;
+  page: number;
+}) =>
+  apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top-albums", args);
+
 export default function TopAlbums(props: Props) {
+  const args = {
+    limit: props.limit,
+    period: props.period,
+    artist_id: props.artistId as number | undefined,
+    page: 0,
+  };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "top-albums",
-      {
-        limit: props.limit,
-        period: props.period,
-        artistId: props.artistId,
-        page: 0,
-      },
-    ],
-    queryFn: ({ queryKey }) => getTopAlbums(queryKey[1] as getItemsArgs),
+    queryKey: ["top-albums", args],
+    queryFn: () => getTopAlbums(args),
   });
 
   const header = "Top albums";

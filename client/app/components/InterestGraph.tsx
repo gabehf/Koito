@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getInterest, type getInterestArgs } from "api/api";
+import { apiFetch, type InterestBucket } from "api/api";
 import { useTheme } from "~/hooks/useTheme";
 import type { Theme } from "~/styles/themes.css";
 import { Area, AreaChart } from "recharts";
-import { RechartsDevtools } from "@recharts/devtools";
 
 function getPrimaryColor(theme: Theme): string {
   const value = theme.primary;
@@ -24,23 +23,28 @@ interface Props {
   trackId?: number;
 }
 
+const getInterest = (args: {
+  buckets: number;
+  artist_id: number;
+  album_id: number;
+  track_id: number;
+}) => apiFetch<InterestBucket[]>("/apis/web/v1/interest", args);
+
 export default function InterestGraph({
   buckets = 16,
   artistId = 0,
   albumId = 0,
   trackId = 0,
 }: Props) {
+  const args = {
+    buckets,
+    artist_id: artistId,
+    album_id: albumId,
+    track_id: trackId,
+  };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "interest",
-      {
-        buckets: buckets,
-        artist_id: artistId,
-        album_id: albumId,
-        track_id: trackId,
-      },
-    ],
-    queryFn: ({ queryKey }) => getInterest(queryKey[1] as getInterestArgs),
+    queryKey: ["interest", args],
+    queryFn: () => getInterest(args),
   });
 
   const { theme } = useTheme();

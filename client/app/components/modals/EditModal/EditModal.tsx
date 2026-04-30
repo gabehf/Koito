@@ -4,7 +4,6 @@ import {
   deleteAlias,
   getAliases,
   setPrimaryAlias,
-  updateMbzId,
   type Alias,
 } from "api/api";
 import { Modal } from "../Modal";
@@ -29,17 +28,8 @@ export default function EditModal({ open, setOpen, type, id }: Props) {
   const [displayData, setDisplayData] = useState<Alias[]>([]);
 
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "aliases",
-      {
-        type: type,
-        id: id,
-      },
-    ],
-    queryFn: ({ queryKey }) => {
-      const params = queryKey[1] as { type: string; id: number };
-      return getAliases(params.type, params.id);
-    },
+    queryKey: ["aliases", { type, id }],
+    queryFn: () => getAliases(type, id),
   });
 
   useEffect(() => {

@@ -17,6 +17,8 @@
     "@tanstack/react-query": "^5.80.6",
     "@vanilla-extract/css": "^1.17.4",
     "color.js": "^1.2.0",
+    "eslint": "^10.2.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "isbot": "^5.1.27",
     "lucide-react": "^0.513.0",
     "react": "^19.1.0",
@@ -36,5 +38,6 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4"
-  }
+  },
+  "packageManager": "yarn@4.14.1"
 }

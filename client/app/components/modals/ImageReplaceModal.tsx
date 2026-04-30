@@ -55,7 +55,6 @@ export default function ImageReplaceModal({
         <input
           type="text"
           autoFocus
-          // i find my stupid a(n) logic to be a little silly so im leaving it in even if its not optimal
           placeholder={`Enter image URL, or drag-and-drop a local file`}
           className="w-full mx-auto fg bg rounded p-2"
           value={query}

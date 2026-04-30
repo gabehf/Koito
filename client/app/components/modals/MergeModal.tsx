@@ -103,10 +103,14 @@ export default function MergeModal(props: Props) {
           autoFocus
           defaultValue={props.currentTitle}
           // i find my stupid a(n) logic to be a little silly so im leaving it in even if its not optimal
-          placeholder={`Search for a${props.type.toLowerCase()[0] === "a" ? "n" : ""
-            } ${props.type.toLowerCase()} to be merged into the current ${props.type.toLowerCase()}`}
+          placeholder={`Search for a${
+            props.type.toLowerCase()[0] === "a" ? "n" : ""
+          } ${props.type.toLowerCase()} to be merged into the current ${props.type.toLowerCase()}`}
           className="w-full mx-auto fg bg rounded p-2"
-          onFocus={(e) => { setQuery(e.target.value); e.target.select()}}
+          onFocus={(e) => {
+            setQuery(e.target.value);
+            e.target.select();
+          }}
           onChange={(e) => setQuery(e.target.value)}
         />
         <SearchResults selectorMode data={data} onSelect={toggleSelect} />

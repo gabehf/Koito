@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAlbum, type Artist } from "api/api";
+import { type Artist } from "api/api";
 import { useEffect, useState } from "react";
 
 interface Props {

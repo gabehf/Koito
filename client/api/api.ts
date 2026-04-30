@@ -37,26 +37,24 @@ async function handleJson<T>(r: Response): Promise<T> {
   }
   return (await r.json()) as T;
 }
-async function getLastListens(
-  args: getItemsArgs
-): Promise<PaginatedResponse<Listen>> {
-  const r = await fetch(
-    `/apis/web/v1/listens?period=${args.period}&limit=${args.limit}&artist_id=${args.artist_id}&album_id=${args.album_id}&track_id=${args.track_id}&page=${args.page}`
-  );
-  return handleJson<PaginatedResponse<Listen>>(r);
-}
 
-async function getTopTracks(
-  args: getItemsArgs
-): Promise<PaginatedResponse<Ranked<Track>>> {
-  let url = `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&page=${args.page}`;
-
-  if (args.artist_id) url += `&artist_id=${args.artist_id}`;
-  else if (args.album_id) url += `&album_id=${args.album_id}`;
-
+export async function apiFetch<T>(
+  path: string,
+  params?: Record<string, string | number | undefined>
+): Promise<T> {
+  let url = path;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    for (const [key, val] of Object.entries(params)) {
+      if (val !== undefined) searchParams.set(key, String(val));
+    }
+    const qs = searchParams.toString();
+    if (qs) url += "?" + qs;
+  }
   const r = await fetch(url);
-  return handleJson<PaginatedResponse<Ranked<Track>>>(r);
+  return handleJson<T>(r);
 }
+
 
 async function getTopAlbums(
   args: getItemsArgs
@@ -68,35 +66,6 @@ async function getTopAlbums(
   return handleJson<PaginatedResponse<Ranked<Album>>>(r);
 }
 
-async function getTopArtists(
-  args: getItemsArgs
-): Promise<PaginatedResponse<Ranked<Artist>>> {
-  const url = `/apis/web/v1/top-artists?period=${args.period}&limit=${args.limit}&page=${args.page}`;
-  const r = await fetch(url);
-  return handleJson<PaginatedResponse<Ranked<Artist>>>(r);
-}
-
-async function getActivity(
-  args: getActivityArgs
-): Promise<ListenActivityItem[]> {
-  const r = await fetch(
-    `/apis/web/v1/listen-activity?step=${args.step}&range=${args.range}&month=${args.month}&year=${args.year}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
-  );
-  return handleJson<ListenActivityItem[]>(r);
-}
-
-async function getInterest(args: getInterestArgs): Promise<InterestBucket[]> {
-  const r = await fetch(
-    `/apis/web/v1/interest?buckets=${args.buckets}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
-  );
-  return handleJson<InterestBucket[]>(r);
-}
-
-async function getStats(period: string): Promise<Stats> {
-  const r = await fetch(`/apis/web/v1/stats?period=${period}`);
-
-  return handleJson<Stats>(r);
-}
 
 function search(q: string): Promise<SearchResponse> {
   q = encodeURIComponent(q);
@@ -311,9 +280,6 @@ function deleteListen(listen: Listen): Promise<Response> {
 }
 function getExport() {}
 
-function getNowPlaying(): Promise<NowPlaying> {
-  return fetch("/apis/web/v1/now-playing").then((r) => r.json());
-}
 
 async function getRewindStats(args: timeframe): Promise<RewindStats> {
   const r = await fetch(
@@ -323,13 +289,7 @@ async function getRewindStats(args: timeframe): Promise<RewindStats> {
 }
 
 export {
-  getLastListens,
-  getTopTracks,
   getTopAlbums,
-  getTopArtists,
-  getActivity,
-  getInterest,
-  getStats,
   search,
   replaceImage,
   mergeTracks,
@@ -354,7 +314,6 @@ export {
   getAlbum,
   getExport,
   submitListen,
-  getNowPlaying,
   getRewindStats,
 };
 type Track = {

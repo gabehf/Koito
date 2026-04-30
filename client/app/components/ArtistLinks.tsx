@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router';
+import React from "react";
+import { Link } from "react-router";
 
 type Artist = {
   id: number;
@@ -14,9 +14,14 @@ const ArtistLinks: React.FC<ArtistLinksProps> = ({ artists }) => {
   return (
     <>
       {artists.map((artist, index) => (
-        <span key={artist.id} className='color-fg-secondary'>
-          <Link className="hover:text-(--color-fg-tertiary)" to={`/artist/${artist.id}`}>{artist.name}</Link>
-          {index < artists.length - 1 ? ', ' : ''}
+        <span key={artist.id} className="color-fg-secondary">
+          <Link
+            className="hover:text-(--color-fg-tertiary)"
+            to={`/artist/${artist.id}`}
+          >
+            {artist.name}
+          </Link>
+          {index < artists.length - 1 ? ", " : ""}
         </span>
       ))}
     </>

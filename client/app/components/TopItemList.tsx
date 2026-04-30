@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import ArtistLinks from "./ArtistLinks";
 import {
   imageUrl,
