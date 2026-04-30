@@ -157,6 +157,7 @@ func ImportKoitoFile(ctx context.Context, store importStore, filename string) er
 		err = store.SaveListen(ctx, db.SaveListenOpts{
 			TrackID: track.ID,
 			Time:    data.Listens[i].ListenedAt,
+			Client:  data.Listens[i].Client,
 			UserID:  1,
 		})
 		if err != nil {

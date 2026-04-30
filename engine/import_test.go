@@ -281,6 +281,11 @@ func TestImportKoito(t *testing.T) {
 	_, err = store.GetArtist(ctx, db.GetArtistOpts{Name: "Elizabeth Powell"})
 	assert.NoError(t, err)
 
+	// ensure client is saved
+	ctn, err := store.Count("SELECT COUNT(*) FROM listens WHERE client IS NOT '';")
+	require.NoError(t, err)
+	assert.Greater(t, ctn, 0)
+
 	// ensure artist aliases are saved
 	artist, err := store.GetArtist(ctx, db.GetArtistOpts{MusicBrainzID: suzukiMBID})
 	require.NoError(t, err)

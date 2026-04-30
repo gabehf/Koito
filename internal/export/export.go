@@ -21,6 +21,7 @@ type KoitoExport struct {
 }
 type KoitoListen struct {
 	ListenedAt time.Time     `json:"listened_at"`
+	Client     string        `json:"client"`
 	Track      KoitoTrack    `json:"track"`
 	Album      KoitoAlbum    `json:"album"`
 	Artists    []KoitoArtist `json:"artists"`
@@ -119,6 +120,10 @@ func ExportData(ctx context.Context, user *models.User, store db.ExportStore, ou
 }
 
 func convertToExportFormat(item *db.ExportItem) *KoitoListen {
+	var client string
+	if item.Client != nil {
+		client = *item.Client
+	}
 	ret := &KoitoListen{
 		ListenedAt: item.ListenedAt.UTC(),
 		Track: KoitoTrack{
@@ -126,6 +131,7 @@ func convertToExportFormat(item *db.ExportItem) *KoitoListen {
 			Duration: int(item.TrackDuration),
 			Aliases:  item.TrackAliases,
 		},
+		Client: client,
 		Album: KoitoAlbum{
 			MBID:           item.ReleaseMbid,
 			ImageUrl:       item.ReleaseImageSource,
