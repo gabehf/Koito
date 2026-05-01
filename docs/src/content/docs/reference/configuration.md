@@ -5,7 +5,7 @@ description: The available configuration options when setting up Koito.
 
 Koito is configured using **environment variables**. This is the full list of configuration options supported by Koito.
 
-The suffix `_FILE` is also supported for every environment variable. This allows the use of Docker secrets, for example: `KOITO_DATABASE_URL_FILE=/run/secrets/database-url` will load the content of the file at `/run/secrets/database-url` for the environment variable `KOITO_DATABASE_URL`.
+The suffix `_FILE` is also supported for every environment variable. This allows the use of Docker secrets, for example: `KOITO_SUBSONIC_PARAMS_FILE=/run/secrets/subsonic-params` will load the content of the file at `/run/secrets/subsonic-params` for the environment variable `KOITO_SUBSONIC_PARAMS`.
 
 :::caution
 If the environment variable is defined without **and** with the suffix at the same time, the content of the environment variable without the `_FILE` suffix will have the higher priority.
