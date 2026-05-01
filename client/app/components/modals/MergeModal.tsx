@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { search, type SearchResponse } from "api/api";
 import SearchResults from "../SearchResults";
@@ -21,7 +21,7 @@ interface Props {
 export default function MergeModal(props: Props) {
   const [query, setQuery] = useState(props.currentTitle);
   const [data, setData] = useState<SearchResponse>();
-  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const deferredQuery = useDeferredValue(query);
   const [mergeTarget, setMergeTarget] = useState<{ title: string; id: number }>(
     { title: "", id: 0 }
   );
@@ -73,26 +73,13 @@ export default function MergeModal(props: Props) {
   };
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(query);
-      if (query === "") {
-        setData(undefined);
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [query]);
-
-  useEffect(() => {
-    if (debouncedQuery) {
-      search(debouncedQuery).then((r) => {
+    if (deferredQuery) {
+      search(deferredQuery).then((r) => {
         r = props.mergeCleanerFunc(r, props.currentId);
         setData(r);
       });
     }
-  }, [debouncedQuery]);
+  }, [deferredQuery]);
 
   return (
     <Modal isOpen={props.open} onClose={closeMergeModal}>

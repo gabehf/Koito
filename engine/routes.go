@@ -88,6 +88,7 @@ func bindRoutes(
 			r.Post("/artists/primary", handlers.SetPrimaryArtistHandler(db))
 			r.Delete("/album", handlers.DeleteAlbumHandler(db))
 			r.Delete("/track", handlers.DeleteTrackHandler(db))
+			r.Patch("/track", handlers.UpdateTrackHandler(db))
 			r.Post("/listen", handlers.SubmitListenWithIDHandler(db))
 			r.Delete("/listen", handlers.DeleteListenHandler(db))
 			r.Post("/aliases", handlers.CreateAliasHandler(db))
