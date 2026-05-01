@@ -11,7 +11,7 @@ services:
     image: gabehf/koito:latest
     container_name: koito
     environment:
-      - KOITO_ENABLE_SQLITE=true # will not be needed after v0.2.0
+      - KOITO_SQLITE_ENABLED=true # will not be needed after v0.2.0
     ports:
       - "4110:4110"
     volumes:
@@ -20,7 +20,7 @@ services:
 
 ```
 
-`KOITO_ENABLE_SQLITE=true` is highly recommended for new installations, as PostgreSQL support will be deprecated in v0.2.0 onwards. After v0.2.0, you will not need `KOITO_ENABLE_SQLITE` anymore.
+`KOITO_SQLITE_ENABLED=true` is highly recommended for new installations, as PostgreSQL support will be deprecated in v0.2.0 onwards. After v0.2.0, you will not need `KOITO_SQLITE_ENABLED` anymore.
 
 You can find a full list of configuration options in the [configuration reference](/reference/configuration).
 
@@ -47,7 +47,7 @@ make build
 When the build is finished, you can run the executable at the root of the directory.
 
 ```sh
-KOITO_ENABLE_SQLITE=true ./koito
+KOITO_SQLITE_ENABLED=true ./koito
 ```
 
 Then, navigate your browser to `localhost:4110` to enter your Koito instance.

@@ -11,7 +11,7 @@ services:
     image: gabehf/koito:latest
     container_name: koito
     environment:
-      - KOITO_ENABLE_SQLITE=true # will not be needed after v0.2.0
+      - KOITO_SQLITE_ENABLED=true # will not be needed after v0.2.0
       - KOITO_SUBSONIC_URL=https://navidrome.mydomain.com # the url to your navidrome instance
       - KOITO_SUBSONIC_PARAMS=u=<navidrome_username>&t=<navidrome_token>&s=<navidrome_salt>
       - KOITO_DEFAULT_THEME=black # i like this theme, use whatever you want
