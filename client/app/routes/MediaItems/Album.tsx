@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { Link, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import TopTracks from "~/components/TopTracks";
 import { mergeAlbums, type Album } from "api/api";
 import LastPlays from "~/components/LastPlays";
@@ -46,6 +46,21 @@ export default function Album() {
       }}
       subContent={
         <div className="flex flex-col gap-2 items-start">
+          {album.artists.length > 0 && !album.is_various_artists && (
+            <p>
+              {
+                <span key={album.artists[0].id}>
+                  <Link
+                    className="hover:underline"
+                    to={`/artist/${album.artists[0].id}`}
+                  >
+                    {album.artists[0].name}
+                  </Link>
+                </span>
+              }
+            </p>
+          )}
+          {album.is_various_artists && <p>Various Artists</p>}
           {album.listen_count !== 0 && (
             <p>
               {album.listen_count} play{album.listen_count > 1 ? "s" : ""}

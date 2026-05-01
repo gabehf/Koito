@@ -11,7 +11,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func SubmitListenWithIDHandler(store db.DB) http.HandlerFunc {
+func SubmitListenWithIDHandler(store db.ListenStore) http.HandlerFunc {
 
 	var defaultClientStr = "Koito Web UI"
 

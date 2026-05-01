@@ -11,7 +11,9 @@ import (
 )
 
 func TestBackfillDuration(t *testing.T) {
-	setupTestDataWithMbzIDs(t)
+	store := newTestDB()
+
+	setupTestDataWithMbzIDs(store, t)
 
 	ctx := context.Background()
 	mbzc := &mbz.MbzMockCaller{
@@ -28,7 +30,7 @@ func TestBackfillDuration(t *testing.T) {
 	err = catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzc)
 	assert.NoError(t, err)
 
-	count, err := store.Count(ctx, `
+	count, err := store.Count(`
 		SELECT COUNT(*) FROM tracks_with_title WHERE title = $1 AND duration > 0
 		`, "Tokyo Calling")
 	require.NoError(t, err)

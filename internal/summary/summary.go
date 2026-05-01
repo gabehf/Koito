@@ -25,7 +25,14 @@ type Summary struct {
 	NewArtists       int                             `json:"new_artists"`
 }
 
-func GenerateSummary(ctx context.Context, store db.DB, userId int32, timeframe db.Timeframe, title string) (summary *Summary, err error) {
+type summaryStore interface {
+	db.ArtistStore
+	db.AlbumStore
+	db.TrackStore
+	db.ListenStore
+}
+
+func GenerateSummary(ctx context.Context, store summaryStore, userId int32, timeframe db.Timeframe, title string) (summary *Summary, err error) {
 	// l := logger.FromContext(ctx)
 
 	summary = new(Summary)

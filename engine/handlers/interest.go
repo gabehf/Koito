@@ -9,7 +9,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func GetInterestHandler(store db.DB) func(w http.ResponseWriter, r *http.Request) {
+func GetInterestHandler(store db.ListenStore) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

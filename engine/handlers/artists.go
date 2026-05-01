@@ -10,7 +10,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func SetPrimaryArtistHandler(store db.DB) http.HandlerFunc {
+func SetPrimaryArtistHandler(store db.ArtistStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// sets the primary alias for albums, artists, and tracks
@@ -97,7 +97,7 @@ func SetPrimaryArtistHandler(store db.DB) http.HandlerFunc {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
-func GetArtistsForItemHandler(store db.DB) http.HandlerFunc {
+func GetArtistsForItemHandler(store db.ArtistStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

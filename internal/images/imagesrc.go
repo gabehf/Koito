@@ -83,6 +83,16 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	} else {
 		l.Debug().Msg("GetArtistImage: Subsonic image fetching is disabled")
 	}
+	if imgsrc.deezerEnabled {
+		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
+		if err != nil {
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Deezer")
+		} else if img != "" {
+			return img, nil
+		}
+	} else {
+		l.Debug().Msg("GetArtistImage: Deezer image fetching is disabled")
+	}
 	if imgsrc.lastfmEnabled {
 		img, err := imgsrc.lastfmC.GetArtistImage(ctx, opts.MBID, opts.Aliases[0])
 		if err != nil {
@@ -92,17 +102,6 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 		}
 	} else {
 		l.Debug().Msg("GetArtistImage: LastFM image fetching is disabled")
-	}
-	if imgsrc.deezerEnabled {
-		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
-		if err != nil {
-			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from Deezer")
-			return "", err
-		} else if img != "" {
-			return img, nil
-		}
-	} else {
-		l.Debug().Msg("GetArtistImage: Deezer image fetching is disabled")
 	}
 	l.Warn().Msg("GetArtistImage: No image providers are enabled")
 	return "", nil

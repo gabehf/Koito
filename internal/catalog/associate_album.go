@@ -14,7 +14,6 @@ import (
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type AssociateAlbumOpts struct {
@@ -27,7 +26,7 @@ type AssociateAlbumOpts struct {
 	SkipCacheImage    bool
 }
 
-func AssociateAlbum(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*models.Album, error) {
+func AssociateAlbum(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpts) (*models.Album, error) {
 	l := logger.FromContext(ctx)
 	if opts.TrackName == "" {
 		return nil, errors.New("AssociateAlbum: required parameter TrackName missing")
@@ -45,7 +44,7 @@ func AssociateAlbum(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*mod
 	}
 }
 
-func matchAlbumByMbzReleaseID(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*models.Album, error) {
+func matchAlbumByMbzReleaseID(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpts) (*models.Album, error) {
 	l := logger.FromContext(ctx)
 	a, err := d.GetAlbum(ctx, db.GetAlbumOpts{MusicBrainzID: opts.ReleaseMbzID})
 	if err == nil {
@@ -57,7 +56,7 @@ func matchAlbumByMbzReleaseID(ctx context.Context, d db.DB, opts AssociateAlbumO
 			VariousArtists: a.VariousArtists,
 			Image:          a.Image,
 		}, nil
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	} else if !errors.Is(err, db.ErrNotFound) {
 		return nil, fmt.Errorf("matchAlbumByMbzReleaseID: %w", err)
 	} else {
 		l.Debug().Msgf("Album '%s' could not be found by MusicBrainz Release ID", opts.ReleaseName)
@@ -69,7 +68,7 @@ func matchAlbumByMbzReleaseID(ctx context.Context, d db.DB, opts AssociateAlbumO
 	}
 }
 
-func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*models.Album, error) {
+func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpts) (*models.Album, error) {
 	l := logger.FromContext(ctx)
 
 	release, err := opts.Mbzc.GetRelease(ctx, opts.ReleaseMbzID)
@@ -108,7 +107,7 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.DB, opts Asso
 				l.Info().AnErr("err", err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to get release group from MusicBrainz")
 			}
 		}
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	} else if !errors.Is(err, db.ErrNotFound) {
 		l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: error while searching for album by MusicBrainz Release ID")
 		return nil, fmt.Errorf("createOrUpdateAlbumWithMbzReleaseID: %w", err)
 	} else {
@@ -187,7 +186,7 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.DB, opts Asso
 	}, nil
 }
 
-func matchAlbumByTitle(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*models.Album, error) {
+func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpts) (*models.Album, error) {
 	l := logger.FromContext(ctx)
 
 	var releaseName string
@@ -213,7 +212,7 @@ func matchAlbumByTitle(ctx context.Context, d db.DB, opts AssociateAlbumOpts) (*
 				l.Err(err).Msg("matchAlbumByTitle: failed to associate existing release with MusicBrainz ID")
 			}
 		}
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	} else if !errors.Is(err, db.ErrNotFound) {
 		return nil, fmt.Errorf("matchAlbumByTitle: %w", err)
 	} else {
 		var imgid uuid.UUID

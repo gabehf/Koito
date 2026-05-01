@@ -11,7 +11,6 @@ import (
 
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
-	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/google/uuid"
@@ -41,7 +40,7 @@ type LastFMImage struct {
 	Url  string `json:"#text"`
 }
 
-func ImportLastFMFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCaller, filename string) error {
+func ImportLastFMFile(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, filename string) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning LastFM import on file: %s", filename)
 	file, err := os.Open(path.Join(cfg.ConfigDir(), "import", filename))
@@ -108,7 +107,6 @@ func ImportLastFMFile(ctx context.Context, store db.DB, mbzc mbz.MusicBrainzCall
 			opts := catalog.SubmitListenOpts{
 				MbzCaller:          mbzc,
 				Artist:             track.Artist.Text,
-				ArtistNames:        []string{track.Artist.Text},
 				ArtistMbzIDs:       []uuid.UUID{artistMbzID},
 				TrackTitle:         track.Name,
 				RecordingMbzID:     trackMbzID,

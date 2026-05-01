@@ -211,7 +211,7 @@ func DeleteImage(filename uuid.UUID) error {
 
 // Finds any images in all image_cache folders and deletes them if they are not associated with
 // an album or artist.
-func PruneOrphanedImages(ctx context.Context, store db.DB) error {
+func PruneOrphanedImages(ctx context.Context, store db.ImageStore) error {
 	l := logger.FromContext(ctx)
 
 	configDir := cfg.ConfigDir()
@@ -233,7 +233,7 @@ func PruneOrphanedImages(ctx context.Context, store db.DB) error {
 }
 
 // returns the number of pruned images
-func pruneDirImgs(ctx context.Context, store db.DB, path string, memo map[string]bool) (int, error) {
+func pruneDirImgs(ctx context.Context, store db.ImageStore, path string, memo map[string]bool) (int, error) {
 	l := logger.FromContext(ctx)
 	count := 0
 	files, err := os.ReadDir(path)
@@ -268,7 +268,7 @@ func pruneDirImgs(ctx context.Context, store db.DB, path string, memo map[string
 	return count, nil
 }
 
-func FetchMissingArtistImages(ctx context.Context, store db.DB) error {
+func FetchMissingArtistImages(ctx context.Context, store db.ArtistStore) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msg("FetchMissingArtistImages: Starting backfill of missing artist images")
 
@@ -298,7 +298,7 @@ func FetchMissingArtistImages(ctx context.Context, store db.DB) error {
 				Msg("FetchMissingArtistImages: Attempting to fetch missing artist image")
 
 			var aliases []string
-			if aliasrow, err := store.GetAllArtistAliases(ctx, artist.ID); err != nil {
+			if aliasrow, err := store.GetAllArtistAliases(ctx, artist.ID); err == nil {
 				aliases = utils.FlattenAliases(aliasrow)
 			} else {
 				aliases = []string{artist.Name}
@@ -332,7 +332,7 @@ func FetchMissingArtistImages(ctx context.Context, store db.DB) error {
 		}
 	}
 }
-func FetchMissingAlbumImages(ctx context.Context, store db.DB) error {
+func FetchMissingAlbumImages(ctx context.Context, store db.AlbumStore) error {
 	l := logger.FromContext(ctx)
 	l.Info().Msg("FetchMissingAlbumImages: Starting backfill of missing album images")
 

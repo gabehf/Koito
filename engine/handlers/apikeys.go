@@ -10,7 +10,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func GenerateApiKeyHandler(store db.DB) http.HandlerFunc {
+func GenerateApiKeyHandler(store db.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -60,7 +60,7 @@ func GenerateApiKeyHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func DeleteApiKeyHandler(store db.DB) http.HandlerFunc {
+func DeleteApiKeyHandler(store db.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -99,7 +99,7 @@ func DeleteApiKeyHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func GetApiKeysHandler(store db.DB) http.HandlerFunc {
+func GetApiKeysHandler(store db.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -125,7 +125,7 @@ func GetApiKeysHandler(store db.DB) http.HandlerFunc {
 	}
 }
 
-func UpdateApiKeyLabelHandler(store db.DB) http.HandlerFunc {
+func UpdateApiKeyLabelHandler(store db.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)

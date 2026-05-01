@@ -99,7 +99,7 @@ func bindRoutes(
 			r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
 			r.Patch("/user/apikeys", handlers.UpdateApiKeyLabelHandler(db))
 			r.Delete("/user/apikeys", handlers.DeleteApiKeyHandler(db))
-			r.Get("/user/me", handlers.MeHandler(db))
+			r.Get("/user/me", handlers.MeHandler())
 			r.Patch("/user", handlers.UpdateUserHandler(db))
 		})
 	})
@@ -113,7 +113,7 @@ func bindRoutes(
 		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
 			Post("/submit-listens", handlers.LbzSubmitListenHandler(db, mbz))
 		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
-			Get("/validate-token", handlers.LbzValidateTokenHandler(db))
+			Get("/validate-token", handlers.LbzValidateTokenHandler())
 	})
 
 	// serve react client
