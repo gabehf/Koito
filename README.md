@@ -41,42 +41,27 @@ You can view my public instance with my listening data at https://koito.mnrva.de
 
 ## Installation
 
-See the [installation guide](https://koito.io/guides/installation/), or, if you just want to cut to the chase, use this docker compose file:
+See the [installation guide](https://koito.io/guides/installation/), or, if you just want to cut to the chase, use this docker compose file with a minimal configuration:
 
 ```yaml
 services:
   koito:
     image: gabehf/koito:latest
     container_name: koito
-    depends_on:
-      - db
     environment:
-      - KOITO_DATABASE_URL=postgres://postgres:secret_password@db:5432/koitodb
-      - KOITO_ALLOWED_HOSTS=koito.example.com,192.168.0.100:4110
+      - KOITO_SQLITE_ENABLED=true # will not be needed after v0.2.0
     ports:
       - "4110:4110"
     volumes:
-      - ./koito-data:/etc/koito
+      - ./koito:/etc/koito
     restart: unless-stopped
-
-  db:
-    image: postgres:16
-    container_name: psql
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: koitodb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret_password
-    volumes:
-      - ./db-data:/var/lib/postgresql/data
 ```
-
-Be sure to replace `secret_password` with a random password of your choice, and set `KOITO_ALLOWED_HOSTS` to include the domain name or IP address you will be accessing Koito 
-from when using either of the Docker methods described above. You should also change the default username and password, if you didn't configure custom defaults.
 
 ## Importing Data
 
 See the [data importing guide](https://koito.io/guides/importing/) in the docs.
+
+Before importing, it is recommended you set up any image sources you want to have enabled. You can view the configuration options for image sources in the full list of configuration options.
 
 ## Full list of configuration options
 
