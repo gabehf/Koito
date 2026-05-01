@@ -35,6 +35,13 @@ func testDataForTracks(t *testing.T) {
 				   ('00000000-0000-0000-0000-000000000022')`)
 	require.NoError(t, err)
 
+	// Associate releases with artists
+	err = store.Exec(context.Background(),
+		`INSERT INTO artist_releases (artist_id, release_id, is_primary)
+     VALUES (1, 1, true),
+            (2, 2, true)`)
+	require.NoError(t, err)
+
 	// Insert release aliases
 	err = store.Exec(context.Background(),
 		`INSERT INTO release_aliases (release_id, alias, source, is_primary)
@@ -58,8 +65,8 @@ func testDataForTracks(t *testing.T) {
 
 	// Associate tracks with artists
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_tracks (artist_id, track_id)
-			VALUES (1, 1), (2, 2)`)
+		`INSERT INTO artist_tracks (artist_id, track_id, is_primary)
+			VALUES (1, 1, true), (2, 2, true)`)
 	require.NoError(t, err)
 
 	// Insert listens
@@ -187,6 +194,50 @@ func TestUpdateTrack(t *testing.T) {
 		Duration:      int32(newDuration),
 	})
 	assert.NoError(t, err) // No update should occur
+
+	// Test adding artist to track
+	err = store.UpdateTrack(ctx, db.UpdateTrackOpts{
+		ID:         1,
+		AddArtists: []int32{2},
+	})
+	assert.NoError(t, err)
+
+	exists, err := store.RowExists(ctx, `
+        SELECT EXISTS (
+            SELECT 1 FROM artist_tracks
+            WHERE artist_id = $1 AND track_id = $2
+        )`, 2, 1)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected artist to be associated with track")
+
+	// Test removing artist from track
+	err = store.UpdateTrack(ctx, db.UpdateTrackOpts{
+		ID:            1,
+		RemoveArtists: []int32{2},
+	})
+	assert.NoError(t, err)
+
+	exists, err = store.RowExists(ctx, `
+        SELECT EXISTS (
+            SELECT 1 FROM artist_tracks
+            WHERE artist_id = $1 AND track_id = $2
+        )`, 2, 1)
+	require.NoError(t, err)
+	assert.False(t, exists, "expected artist to be unassociated with track")
+
+	// Test that the primary artist cannot be removed
+	err = store.UpdateTrack(ctx, db.UpdateTrackOpts{
+		ID:            1,
+		RemoveArtists: []int32{int32(1)},
+	})
+	assert.NoError(t, err)
+	exists, err = store.RowExists(ctx, `
+        SELECT EXISTS (
+            SELECT 1 FROM artist_tracks
+            WHERE artist_id = $1 AND track_id = $2
+        )`, 1, 1)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected primary artist to not be removed from track")
 }
 
 func TestTrackAliases(t *testing.T) {
