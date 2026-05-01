@@ -73,6 +73,8 @@ There are currently some known issues that I am actively working on, in addition
 
 If you have any feature ideas, open a GitHub issue to let me know. I'm sorting through ideas to decide which data visualizations and customization options to add next.
 
+You can also donate money to me, @gabehf, the primary developer, via the "sponsor" or "ko-fi" buttons, and I will spend that money on luxurious trips and fine cuisine in foreign countries, or rent.
+
 ## Star History
 
 <a href="https://www.star-history.com/#gabehf/koito&type=date&legend=top-left">
