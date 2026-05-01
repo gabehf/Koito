@@ -123,11 +123,13 @@ END;
 
 CREATE INDEX IF NOT EXISTS idx_listens_listened_at       ON listens(listened_at);
 CREATE INDEX IF NOT EXISTS idx_listens_track_id          ON listens(track_id);
+CREATE INDEX IF NOT EXISTS idx_listens_track_id_listened_at ON listens(track_id, listened_at);
 CREATE INDEX IF NOT EXISTS idx_listens_user_id           ON listens(user_id);
 CREATE INDEX IF NOT EXISTS idx_artist_tracks_track_id    ON artist_tracks(track_id);
 CREATE INDEX IF NOT EXISTS idx_artist_tracks_artist_id   ON artist_tracks(artist_id);
 CREATE INDEX IF NOT EXISTS idx_artist_releases_release_id ON artist_releases(release_id);
 CREATE INDEX IF NOT EXISTS idx_tracks_release_id         ON tracks(release_id);
+CREATE INDEX IF NOT EXISTS idx_artist_aliases_artist_id  ON artist_aliases(artist_id);
 CREATE INDEX IF NOT EXISTS idx_artist_aliases_alias      ON artist_aliases(alias);
 CREATE INDEX IF NOT EXISTS idx_release_aliases_alias     ON release_aliases(alias);
 CREATE INDEX IF NOT EXISTS idx_track_aliases_alias       ON track_aliases(alias);
