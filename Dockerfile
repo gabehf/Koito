@@ -20,7 +20,7 @@ ENV GOOS=linux
 WORKDIR /app
 
 RUN apt-get update && \
-	apt-get install -y libvips-dev pkg-config && \
+	apt-get install -y --no-install-recommends libvips-dev pkg-config && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY go.mod go.sum ./
@@ -36,7 +36,7 @@ FROM debian:bookworm-slim AS final
 WORKDIR /app
 
 RUN apt-get update && \
-	apt-get install -y libvips42 && \
+	apt-get install -y --no-install-recommends libvips42 ca-certificates && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend /app/app ./app
