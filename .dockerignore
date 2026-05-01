@@ -1,0 +1,13 @@
+.git
+.github
+.vscode
+.env
+.env.*
+*.md
+LICENSE
+docs
+test_assets
+testing_init
+client/node_modules
+client/build
+client/.react-router
