@@ -10,32 +10,16 @@ services:
   koito:
     image: gabehf/koito:latest
     container_name: koito
-    depends_on:
-      - db
-    user: 1000:1000
     environment:
-      - KOITO_DATABASE_URL=postgres://postgres:<a_super_random_string>@db:5432/koitodb
-      - KOITO_ALLOWED_HOSTS=koito.mydomain.com,192.168.1.100
+      - KOITO_ENABLE_SQLITE=true # will not be needed after v0.2.0
       - KOITO_SUBSONIC_URL=https://navidrome.mydomain.com # the url to your navidrome instance
       - KOITO_SUBSONIC_PARAMS=u=<navidrome_username>&t=<navidrome_token>&s=<navidrome_salt>
       - KOITO_DEFAULT_THEME=black # i like this theme, use whatever you want
     ports:
       - "4110:4110"
     volumes:
-      - ./koito-data:/etc/koito
+      - ./koito:/etc/koito
     restart: unless-stopped
-
-  db:
-    user: 1000:1000
-    image: postgres:16
-    container_name: psql
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: koitodb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: <a_super_random_string>
-    volumes:
-      - ./db-data:/var/lib/postgresql/data
 ```
 
 ### How do I get the Subsonic params?
