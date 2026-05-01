@@ -7,8 +7,7 @@ To use the ListenBrainz API, you need to get your generated API key from the UI.
 
 First, open the settings in your Koito instance by clicking on the settings icon or pressing `\`.
 
-Then, you can navigate to the account tab and log in using the default credentials `admin` and `changeme`, or
-the credentials you supplied when first running Koito using the `KOITO_DEFAULT_USERNAME` and `KOITO_DEFAULT_PASSWORD` environment variables.
+Then, you can navigate to the account tab and log in using the default credentials `admin` and `changeme`, or the credentials you supplied when first running Koito using the `KOITO_DEFAULT_USERNAME` and `KOITO_DEFAULT_PASSWORD` environment variables.
 
 :::caution
 Be sure to change the username and password after logging in for the first time if you used the defaults.
