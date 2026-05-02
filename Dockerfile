@@ -41,7 +41,6 @@ RUN apt-get update && \
 
 COPY --from=backend /app/app ./app
 COPY --from=frontend /client/build ./client/build
-COPY ./client/public ./client/public
 COPY ./assets ./assets
 COPY ./db ./db
 
