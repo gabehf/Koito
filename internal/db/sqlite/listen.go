@@ -9,6 +9,7 @@ import (
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/models"
+	"github.com/google/uuid"
 )
 
 func (s *Sqlite) SaveListen(ctx context.Context, opts db.SaveListenOpts) error {
@@ -158,6 +159,10 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		if err != nil {
 			return nil, err
 		}
+		l.Track.Image, err = s.imageForTrack(ctx, l.Track.ID)
+		if err != nil {
+			return nil, err
+		}
 		listens = append(listens, l)
 	}
 
@@ -168,4 +173,23 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		HasNextPage:  int64(offset+len(listens)) < count,
 		CurrentPage:  int32(opts.Page),
 	}, nil
+}
+
+func (s *Sqlite) imageForTrack(ctx context.Context, trackId int32) (*uuid.UUID, error) {
+	row := s.db.QueryRowContext(ctx, `
+		SELECT r.image
+		FROM releases r
+		JOIN tracks t ON r.id = t.release_id
+		WHERE t.id = ? AND r.image IS NOT NULL`,
+		trackId,
+	)
+	var imageid *uuid.UUID
+	err := row.Scan(&imageid)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("imageForTrack: %w", err)
+	}
+	return imageid, nil
 }
