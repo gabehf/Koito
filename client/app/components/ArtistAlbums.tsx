@@ -6,7 +6,7 @@ import {
   type Ranked,
   type Album,
 } from "api/api";
-import { Link } from "react-router";
+import MediaItem from "./primitives/MediaItem";
 
 const getArtistAlbums = (artistId: number) =>
   apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top-albums", {
@@ -50,23 +50,16 @@ export default function ArtistAlbums({ artistId, name }: Props) {
       <div className="flex flex-wrap gap-8">
         {data.items.length < 1 && "Nothing to show"}
         {data.items.map((item) => (
-          <Link
-            to={`/album/${item.item.id}`}
-            className="flex gap-2 items-start"
-          >
-            <img
-              src={imageUrl(item.item.image, "medium")}
-              alt={item.item.title}
-              style={{ width: 130 }}
+          <div className="w-[330px]">
+            <MediaItem
+              image={imageUrl(item.item.image, "medium")}
+              imageSize={125}
+              link={`/album/${item.item.id}`}
+              alignTop
+              title={item.item.title}
+              subtitle={`${item.item.listen_count} plays`}
             />
-            <div className="w-[180px] flex flex-col items-start gap-1">
-              <p>{item.item.title}</p>
-              <p className="text-sm color-fg-secondary">
-                {item.item.listen_count} play
-                {item.item.listen_count > 1 ? "s" : ""}
-              </p>
-            </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

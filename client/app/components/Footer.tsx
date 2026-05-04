@@ -4,7 +4,7 @@ import pkg from "../../package.json";
 export default function Footer() {
   return (
     <div className="mx-auto py-10 pt-20 color-fg-tertiary text-sm">
-      <ul className="flex flex-col items-center w-sm justify-around">
+      <ul className="flex flex-col items-center justify-around">
         <li>Koito {import.meta.env.VITE_KOITO_VERSION || pkg.version}</li>
         <li>
           <a

@@ -7,6 +7,9 @@ import {
 } from "api/api";
 import { useQuery } from "@tanstack/react-query";
 import Image from "./primitives/Image";
+import CardHeader from "./primitives/CardHeader";
+import ArtistLinks from "./ArtistLinks";
+import MediaItem from "./primitives/MediaItem";
 
 interface Props {
   period: string;
@@ -22,7 +25,7 @@ export default function TopAlbumsCard({ period }: Props) {
     queryFn: () => getTopAlbums(args),
   });
 
-  const header = "Top artists";
+  const header = "Top albums";
 
   if (isPending) {
     return (
@@ -42,7 +45,9 @@ export default function TopAlbumsCard({ period }: Props) {
 
   return (
     <div>
-      <h3 className="ml-6">{header}</h3>
+      <CardHeader to={`/chart/top-albums?period=${period}`} isOffset>
+        {header}
+      </CardHeader>
       <div className="max-w-[350px] border bg-(--color-bg-secondary) rounded-(--border-radius)">
         <div className="relative">
           <img
@@ -69,39 +74,44 @@ export default function TopAlbumsCard({ period }: Props) {
           />
           <div className="absolute bottom-10 left-5">
             <h2 className="font-medium text-sm">{data.items[0].item.title}</h2>
-            <div className="color-fg-secondary">
-              {data.items[0].item.listen_count} plays
+            <div>
+              <ArtistLinks
+                artists={
+                  data.items[0].item.artists
+                    ? [data.items[0].item.artists[0]]
+                    : [{ id: 0, name: "Unknown Artist" }]
+                }
+              />
+              <div className="color-fg-secondary">
+                {data.items[0].item.listen_count} plays
+              </div>
             </div>
           </div>
         </div>
         <div className="flex flex-col items-start">
-          <div className="pl-6 pb-6">
-            <div className="flex gap-3 items-center">
-              <Image
-                src={imageUrl(data.items[1].item.image, "medium")}
-                size={125}
-              />
-              <div className="flex flex-col items-start">
-                <h4 className="font-normal">{data.items[1].item.title}</h4>
-                <p className="color-fg-secondary">
-                  {data.items[1].item.listen_count} plays
-                </p>
-              </div>
-            </div>
+          <div className="px-6 pb-6">
+            <MediaItem
+              image={imageUrl(data.items[1].item.image, "medium")}
+              imageSize={125}
+              link={`/album/${data.items[1].item.id}`}
+              title={data.items[1].item.title}
+              subtitle={
+                <ArtistLinks artists={[data.items[1].item.artists[0]]} />
+              }
+              meta={`${data.items[1].item.listen_count} plays`}
+            />
           </div>
-          <div className="pl-6 pb-6">
-            <div className="flex gap-3 items-center">
-              <Image
-                src={imageUrl(data.items[2].item.image, "medium")}
-                size={125}
-              />
-              <div className="flex flex-col items-start">
-                <h4 className="font-normal">{data.items[2].item.title}</h4>
-                <p className="color-fg-secondary">
-                  {data.items[2].item.listen_count} plays
-                </p>
-              </div>
-            </div>
+          <div className="px-6 pb-6">
+            <MediaItem
+              image={imageUrl(data.items[2].item.image, "medium")}
+              imageSize={125}
+              link={`/album/${data.items[2].item.id}`}
+              title={data.items[2].item.title}
+              subtitle={
+                <ArtistLinks artists={[data.items[2].item.artists[0]]} />
+              }
+              meta={`${data.items[2].item.listen_count} plays`}
+            />
           </div>
         </div>
       </div>

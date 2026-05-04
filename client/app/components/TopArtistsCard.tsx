@@ -6,6 +6,9 @@ import {
   type Artist,
 } from "api/api";
 import { useQuery } from "@tanstack/react-query";
+import CardHeader from "./primitives/CardHeader";
+import Image from "./primitives/Image";
+import MediaItem from "./primitives/MediaItem";
 
 interface Props {
   period: string;
@@ -41,7 +44,9 @@ export default function TopArtistsCard({ period }: Props) {
 
   return (
     <div>
-      <h3 className="ml-6">{header}</h3>
+      <CardHeader to={`/chart/top-artists?period=${period}`} isOffset>
+        {header}
+      </CardHeader>
       <div className="max-w-[350px] border bg-(--color-bg-secondary) rounded-(--border-radius)">
         <div className="relative">
           <img
@@ -75,32 +80,22 @@ export default function TopArtistsCard({ period }: Props) {
         </div>
         <div className="flex flex-col items-start">
           <div className="pl-6 pb-6">
-            <div className="flex gap-3 items-center">
-              <img
-                src={imageUrl(data.items[1].item.image, "medium")}
-                className="rounded-[10px] w-[125px]"
-              />
-              <div className="flex flex-col items-start">
-                <h4 className="font-normal">{data.items[1].item.name}</h4>
-                <p className="color-fg-secondary">
-                  {data.items[1].item.listen_count} plays
-                </p>
-              </div>
-            </div>
+            <MediaItem
+              image={imageUrl(data.items[1].item.image, "medium")}
+              imageSize={125}
+              link={`/artist/${data.items[1].item.id}`}
+              title={data.items[1].item.name}
+              meta={`${data.items[1].item.listen_count} plays`}
+            />
           </div>
           <div className="pl-6 pb-6">
-            <div className="flex gap-3 items-center">
-              <img
-                src={imageUrl(data.items[2].item.image, "medium")}
-                className="rounded-[10px] w-[125px]"
-              />
-              <div className="flex flex-col items-start">
-                <h4 className="font-normal">{data.items[2].item.name}</h4>
-                <p className="color-fg-secondary">
-                  {data.items[2].item.listen_count} plays
-                </p>
-              </div>
-            </div>
+            <MediaItem
+              image={imageUrl(data.items[2].item.image, "medium")}
+              imageSize={125}
+              link={`/artist/${data.items[2].item.id}`}
+              title={data.items[2].item.name}
+              meta={`${data.items[2].item.listen_count} plays`}
+            />
           </div>
         </div>
       </div>

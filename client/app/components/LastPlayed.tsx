@@ -13,6 +13,7 @@ import {
 } from "api/api";
 import { Link } from "react-router";
 import { useAppContext } from "~/providers/AppProvider";
+import CardHeader from "./primitives/CardHeader";
 
 interface Props {
   limit: number;
@@ -98,9 +99,7 @@ export default function LastPlays(props: Props) {
 
   return (
     <div className="text-sm sm:text-[15px]">
-      <h3 className="hover:underline">
-        <Link to={`/listens?period=all_time${params}`}>{header}</Link>
-      </h3>
+      <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
       {listens.length < 1 && "Nothing to show"}
       <table className="table-fixed border-collapse mt-10">
         <tbody>
@@ -133,34 +132,32 @@ export default function LastPlays(props: Props) {
             >
               <td className="py-2 pr-3">
                 <Link to={`/track/${item.track.id}`}>
-                  <Image
-                    imageUrl={imageUrl(item.track.image, "small")}
-                    size={32}
-                  />
+                  <Image src={imageUrl(item.track.image, "small")} size={32} />
                 </Link>
               </td>
-              <td className="min-w-[150px]">
+              <td className="min-w-[150px] max-w-[190px] sm:max-w-[300px]">
                 <Link
                   className="hover:text-[--color-fg-secondary]"
                   to={`/track/${item.track.id}`}
                 >
+                  {props.hideArtists ? null : (
+                    <>
+                      <ArtistLinks artists={item.track.artists} />
+                      {" — "}
+                    </>
+                  )}
                   {item.track.title}
                 </Link>
               </td>
-              <td className="text-ellipsis overflow-hidden text-center min-w-[150px]">
-                {props.hideArtists ? null : (
-                  <>
-                    <ArtistLinks artists={item.track.artists} />
-                  </>
-                )}
-              </td>
               <td
-                className="color-fg-tertiary pr-2 sm:pr-4 text-sm text-end whitespace-nowrap w-0 min-w-[150px]"
+                className="color-fg-tertiary pr-2 sm:pr-4 text-sm text-end whitespace-nowrap w-[100px]"
                 title={new Date(item.time).toString()}
               >
-                <p className="-mr-[18px]">{timeSince(new Date(item.time))}</p>
+                <p className="sm:-mr-[18px]">
+                  {timeSince(new Date(item.time))}
+                </p>
               </td>
-              <td className="pr-2 align-middle">
+              <td className="pr-2 align-middle hidden sm:table">
                 <button
                   onClick={() => handleDelete(item)}
                   className="absolute top-3.5 -right-5 opacity-0 group-hover:opacity-100 transition-opacity text-(--color-fg-tertiary) hover:text-(--color-error)"

@@ -60,7 +60,7 @@
   --header-weight: 600;
   --header-line-height: 3rem;
 
-  --border-radius: 10px;
+  --border-radius: 8px;
 }
 
 @media (min-width: 60rem) {
@@ -115,12 +115,14 @@ h3 {
   font-size: var(--header-md);
   text-transform: uppercase;
   margin-bottom: 0.5em;
-  color: var(--color-fg-secondary);
 }
 h4 {
   font-family: "League Spartan";
   font-size: var(--header-sm);
   font-weight: var(--header-weight);
+}
+h5 {
+  font-family: "League Spartan";
 }
 .header-font {
   font-family: "League Spartan";

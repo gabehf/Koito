@@ -54,9 +54,9 @@ export const themes: Record<string, Theme> = {
     info: "#2196f3",
   },
   midnight: {
-    bg: "rgb(8, 15, 24)",
-    bgSecondary: "rgb(15, 27, 46)",
-    bgTertiary: "rgb(15, 41, 70)",
+    bg: "#080B10",
+    bgSecondary: "#0A121C",
+    bgTertiary: "#1A2E47",
     fg: "#dbdfe7",
     fgSecondary: "#9ea3a8",
     fgTertiary: "#74787c",
@@ -103,7 +103,7 @@ export const themes: Record<string, Theme> = {
   },
   black: {
     bg: "#000000",
-    bgSecondary: "#1a1a1a",
+    bgSecondary: "#0e0e0e",
     bgTertiary: "#2a2a2a",
     fg: "#dddddd",
     fgSecondary: "#aaaaaa",

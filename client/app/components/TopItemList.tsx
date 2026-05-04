@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import ArtistLinks from "./ArtistLinks";
+import MediaItem from "./primitives/MediaItem";
 import {
   imageUrl,
   type Album,
@@ -13,6 +14,7 @@ type Item = Album | Track | Artist;
 
 interface Props<T extends Ranked<Item>> {
   data: PaginatedResponse<T>;
+  startIndex?: number;
   separators?: ConstrainBoolean;
   ranked?: boolean;
   type: "album" | "track" | "artist";
@@ -22,24 +24,18 @@ interface Props<T extends Ranked<Item>> {
 export default function TopItemList<T extends Ranked<Item>>({
   data,
   separators,
+  startIndex,
   type,
   className,
   ranked,
 }: Props<T>) {
+  if (startIndex) data.items.splice(0, startIndex - 1);
   return (
     <div className={`flex flex-col gap-1 ${className} min-w-[200px]`}>
       {data.items.map((item, index) => {
         const key = `${type}-${item.item.id}`;
         return (
-          <div
-            key={key}
-            style={{ fontSize: 12 }}
-            className={`${
-              separators && index !== data.items.length - 1
-                ? "border-b border-(--color-fg-tertiary) mb-1 pb-2"
-                : ""
-            }`}
-          >
+          <div key={key} style={{ fontSize: 12 }} className="mb-0.5">
             <ItemCard
               ranked={ranked}
               rank={item.rank}
@@ -47,6 +43,9 @@ export default function TopItemList<T extends Ranked<Item>>({
               type={type}
               key={type + item.item.id}
             />
+            {separators && index !== data.items.length - 1 && (
+              <div className="border-b border-(--color-bg-tertiary) mx-6 mt-2" />
+            )}
           </div>
         );
       })}
@@ -112,40 +111,28 @@ function ItemCard({
       const track = item as Track;
 
       return (
-        <table style={{ fontSize: 15 }}>
+        <table className="sm:text-[15px] text-[13px] border-collapse">
           <tbody>
             <tr>
-              <td className="pr-3">
-                {ranked && <div className="w-7 text-end">{rank}</div>}
+              {ranked && (
+                <td className="pr-3">
+                  {<div className="w-7 text-end">{rank}</div>}
+                </td>
+              )}
+              <td className="pr-3 py-1 w-[250px] sm:w-[325px]">
+                <MediaItem
+                  className="gap-2"
+                  image={imageUrl(track.image, "medium")}
+                  link={`/track/${track.id}`}
+                  imageSize={56}
+                  title={<Link to={`/track/${track.id}`}>{track.title}</Link>}
+                  subtitle={<ArtistLinks artists={track.artists} />}
+                />
               </td>
-              <td className="pr-3 py-2">
-                <Link to={`/track/${track.id}`}>
-                  <img
-                    loading="lazy"
-                    src={imageUrl(track.image, "medium")}
-                    alt={track.title}
-                    className="max-w-[56px] rounded-lg border-1 border-(--color-bg-tertiary)"
-                  />
-                </Link>
-              </td>
-              <td className="min-w-[200px]">
-                <div>
-                  <Link
-                    to={`/track/${track.id}`}
-                    className="hover:text-(--color-fg-secondary)"
-                  >
-                    <span style={{ fontSize: 14 }}>{track.title}</span>
-                  </Link>
-                  <br />
-                  <div>
-                    <ArtistLinks
-                      artists={track.artists || [{ id: 0, Name: "Unknown Artist" }]}
-                    />
-                  </div>
+              <td className="min-w-[75px]">
+                <div className="color-fg-secondary text-end">
+                  {track.listen_count} plays
                 </div>
-              </td>
-              <td>
-                <div className="color-fg-secondary text-end">{track.listen_count} plays</div>
               </td>
             </tr>
           </tbody>

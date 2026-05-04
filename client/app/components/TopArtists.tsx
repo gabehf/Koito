@@ -11,6 +11,7 @@ import TopItemList from "./TopItemList";
 interface Props {
   limit: number;
   period: string;
+  startIndex?: number;
   artistId?: Number;
   albumId?: Number;
 }
@@ -41,6 +42,10 @@ export default function TopArtists(props: Props) {
         <p className="error">Error: {error.message}</p>
       </div>
     );
+  }
+
+  if (props.startIndex) {
+    data.items.splice(0, props.startIndex - 1);
   }
 
   return (

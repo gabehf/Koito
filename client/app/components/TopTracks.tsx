@@ -7,6 +7,7 @@ import {
 } from "api/api";
 import { Link } from "react-router";
 import TopItemList from "./TopItemList";
+import CardHeader from "./primitives/CardHeader";
 
 interface Props {
   limit: number;
@@ -62,13 +63,11 @@ const TopTracks = (props: Props) => {
 
   return (
     <div>
-      <h3 className="hover:underline">
-        <Link to={`/chart/top/tracks?period=${props.period}${params}`}>
-          {header}
-        </Link>
-      </h3>
-      <div className="max-w-[300px]">
-        <TopItemList type="track" data={data} />
+      <CardHeader to={`/chart/top-tracks?period=${props.period}${params}`}>
+        {header}
+      </CardHeader>
+      <div className="mt-6">
+        <TopItemList type="track" data={data} separators />
         {data.items.length < 1 ? "Nothing to show" : ""}
       </div>
     </div>

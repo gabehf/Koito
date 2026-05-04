@@ -14,15 +14,12 @@ export default function PeriodSelector({
   const periods = ["day", "week", "month", "year", "all_time"];
 
   const periodDisplay = (str: string) => {
-    return str
-      .split("_")
-      .map((w) =>
-        w
-          .split("")
-          .map((char, index) => (index === 0 ? char.toUpperCase() : char))
-          .join("")
-      )
-      .join(" ");
+    return str.split("_").map((w) =>
+      w
+        .split("")
+        .map((char, index) => (index === 0 ? char.toUpperCase() : char))
+        .join("")
+    )[0];
   };
 
   const setPeriod = (val: string) => {
@@ -47,22 +44,18 @@ export default function PeriodSelector({
   }, []);
 
   return (
-    <div className="flex gap-2 grow-0 text-sm sm:text-[16px]">
-      <p>Showing stats for:</p>
+    <div className="flex gap-2 grow-0 text-sm sm:text-[16px] px-3 sm:px-6 py-2 border bg-(--color-bg-secondary) rounded-(--border-radius)">
       {periods.map((p, i) => (
         <div key={`period_setter_${p}`}>
           <button
-            className={`period-selector ${
-              p === current ? "color-fg" : "color-fg-secondary"
-            } ${i !== periods.length - 1 ? "pr-2" : ""}`}
+            className={`uppercase period-selector ${
+              p === current ? "color-fg" : "color-fg-tertiary"
+            } ${i !== periods.length - 1 ? "pr-8" : ""}`}
             onClick={() => setPeriod(p)}
             disabled={p === current}
           >
             {periodDisplay(p)}
           </button>
-          <span className="color-fg-secondary">
-            {i !== periods.length - 1 ? "|" : ""}
-          </span>
         </div>
       ))}
     </div>
