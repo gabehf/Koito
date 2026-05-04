@@ -20,7 +20,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
 export default function Album() {
   const album = useLoaderData() as Album;
-  const [period, setPeriod] = useState("week");
+  const period = "all_time";
 
   console.log(album);
 
@@ -80,9 +80,6 @@ export default function Album() {
         </div>
       }
     >
-      <div className="mt-10">
-        <PeriodSelector setter={setPeriod} current={period} />
-      </div>
       <div className="flex flex-wrap gap-20 mt-10">
         <LastPlayed limit={30} albumId={album.id} />
         <TopTracks limit={12} period={period} albumId={album.id} />

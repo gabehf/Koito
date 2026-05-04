@@ -26,7 +26,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
 export default function Track() {
   const { track, album } = useLoaderData();
-  const [period, setPeriod] = useState("week");
+  const period = "all_time";
 
   return (
     <MediaLayout
@@ -87,9 +87,6 @@ export default function Track() {
         </div>
       }
     >
-      <div className="mt-10">
-        <PeriodSelector setter={setPeriod} current={period} />
-      </div>
       <div className="flex flex-wrap gap-20 mt-10">
         <LastPlayed limit={20} trackId={track.id} />
         <div className="flex flex-col items-start gap-4">
