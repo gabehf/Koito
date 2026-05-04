@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { timeSince } from "~/utils/utils";
 import ArtistLinks from "./ArtistLinks";
+import Image from "./primitives/Image";
 import {
   apiFetch,
   deleteListen,
@@ -95,25 +96,16 @@ export default function LastPlays(props: Props) {
   params += props.trackId ? `&track_id=${props.trackId}` : "";
 
   return (
-    <div className="text-sm sm:text-[16px]">
+    <div className="text-sm sm:text-[15px]">
       <h3 className="hover:underline">
         <Link to={`/listens?period=all_time${params}`}>{header}</Link>
       </h3>
       {listens.length < 1 && "Nothing to show"}
-      <table className="-ml-4">
+      <table className="table-fixed border-collapse">
         <tbody>
           {props.showNowPlaying && npData && npData.currently_playing && (
             <tr className="group hover:bg-[--color-bg-secondary]">
-              <td className="w-[18px] pr-2 align-middle"></td>
-              <td className="color-fg-tertiary pr-2 sm:pr-4 text-sm whitespace-nowrap w-0">
-                Now Playing
-              </td>
-              <td className="text-ellipsis overflow-hidden max-w-[400px] sm:max-w-[600px]">
-                {props.hideArtists ? null : (
-                  <>
-                    <ArtistLinks artists={npData.track.artists} /> –{" "}
-                  </>
-                )}
+              <td>
                 <Link
                   className="hover:text-[--color-fg-secondary]"
                   to={`/track/${npData.track.id}`}
@@ -121,41 +113,61 @@ export default function LastPlays(props: Props) {
                   {npData.track.title}
                 </Link>
               </td>
+              <td className="text-ellipsis overflow-hidden text-center sm:max-w-[600px]">
+                {props.hideArtists ? null : (
+                  <>
+                    <ArtistLinks artists={npData.track.artists} /> –{" "}
+                  </>
+                )}
+              </td>
+              <td className="color-fg-tertiary pr-2 sm:pr-4 text-sm whitespace-nowrap w-0">
+                Now Playing
+              </td>
             </tr>
           )}
           {listens.map((item) => (
             <tr
               key={`last_listen_${item.time}`}
-              className="group hover:bg-[--color-bg-secondary]"
+              className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0"
             >
-              <td className="w-[18px] pr-2 align-middle">
-                <button
-                  onClick={() => handleDelete(item)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-(--color-fg-tertiary) hover:text-(--color-error)"
-                  aria-label="Delete"
-                  hidden={user === null || user === undefined}
-                >
-                  ×
-                </button>
+              <td className="py-2 pr-3">
+                <Link to={`/track/${item.track.id}`}>
+                  <Image
+                    imageUrl={imageUrl(item.track.image, "small")}
+                    size={32}
+                  />
+                </Link>
               </td>
-              <td
-                className="color-fg-tertiary pr-2 sm:pr-4 text-sm whitespace-nowrap w-0"
-                title={new Date(item.time).toString()}
-              >
-                {timeSince(new Date(item.time))}
-              </td>
-              <td className="text-ellipsis overflow-hidden max-w-[400px] sm:max-w-[600px]">
-                {props.hideArtists ? null : (
-                  <>
-                    <ArtistLinks artists={item.track.artists} /> –{" "}
-                  </>
-                )}
+              <td className="min-w-[150px]">
                 <Link
                   className="hover:text-[--color-fg-secondary]"
                   to={`/track/${item.track.id}`}
                 >
                   {item.track.title}
                 </Link>
+              </td>
+              <td className="text-ellipsis overflow-hidden text-center min-w-[150px]">
+                {props.hideArtists ? null : (
+                  <>
+                    <ArtistLinks artists={item.track.artists} />
+                  </>
+                )}
+              </td>
+              <td
+                className="color-fg-tertiary pr-2 sm:pr-4 text-sm text-end whitespace-nowrap w-0 min-w-[150px]"
+                title={new Date(item.time).toString()}
+              >
+                <p className="-mr-[18px]">{timeSince(new Date(item.time))}</p>
+              </td>
+              <td className="pr-2 align-middle">
+                <button
+                  onClick={() => handleDelete(item)}
+                  className="absolute top-3.5 -right-5 opacity-0 group-hover:opacity-100 transition-opacity text-(--color-fg-tertiary) hover:text-(--color-error)"
+                  aria-label="Delete"
+                  hidden={user === null || user === undefined}
+                >
+                  ×
+                </button>
               </td>
             </tr>
           ))}
