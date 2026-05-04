@@ -112,7 +112,7 @@ h3 {
   font-weight: 400;
   font-size: var(--header-md);
   text-transform: uppercase;
-  margin-bottom: 1em;
+  margin-bottom: 0.5em;
   color: var(--color-fg-secondary);
 }
 h4 {

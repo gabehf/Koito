@@ -32,7 +32,7 @@ export default function Home() {
           <TopTracks period={period} limit={homeItems} />
           <LastPlayed
             showNowPlaying={true}
-            limit={Math.floor(homeItems * 2.7)}
+            limit={14}
           />
         </div>
       </div>

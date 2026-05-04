@@ -101,7 +101,7 @@ export default function LastPlays(props: Props) {
         <Link to={`/listens?period=all_time${params}`}>{header}</Link>
       </h3>
       {listens.length < 1 && "Nothing to show"}
-      <table className="table-fixed border-collapse">
+      <table className="table-fixed border-collapse mt-10">
         <tbody>
           {props.showNowPlaying && npData && npData.currently_playing && (
             <tr className="group hover:bg-[--color-bg-secondary]">
