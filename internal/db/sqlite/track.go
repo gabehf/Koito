@@ -223,6 +223,22 @@ func (s *Sqlite) SaveTrackAliases(ctx context.Context, id int32, aliases []strin
 	return tx.Commit()
 }
 
+func (s *Sqlite) AddArtistsToTrack(ctx context.Context, opts db.AddArtistsToTrackOpts) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("AddArtistsToTrack: BeginTx: %w", err)
+	}
+	defer tx.Rollback()
+	for _, artistID := range opts.ArtistIDs {
+		if _, err := tx.ExecContext(ctx,
+			`INSERT OR IGNORE INTO artist_tracks (artist_id, track_id, is_primary) VALUES (?,?,0)`,
+			artistID, opts.TrackID); err != nil {
+			return fmt.Errorf("AddArtistsToTrack: insert: %w", err)
+		}
+	}
+	return tx.Commit()
+}
+
 func (s *Sqlite) UpdateTrack(ctx context.Context, opts db.UpdateTrackOpts) error {
 	if opts.ID == 0 {
 		return errors.New("UpdateTrack: track id not specified")
@@ -245,6 +261,43 @@ func (s *Sqlite) UpdateTrack(ctx context.Context, opts db.UpdateTrackOpts) error
 			`UPDATE tracks SET duration = ? WHERE id = ?`,
 			opts.Duration, opts.ID); err != nil {
 			return fmt.Errorf("UpdateTrack: duration: %w", err)
+		}
+	}
+	if len(opts.AddArtists) > 0 {
+		var releaseID int32
+		if t, err := s.GetTrack(ctx, db.GetTrackOpts{ID: opts.ID}); err != nil {
+			return fmt.Errorf("UpdateTrack: GetTrack By ID: %w", err)
+		} else {
+			releaseID = t.AlbumID
+		}
+
+		if err = s.AddArtistsToTrack(ctx, db.AddArtistsToTrackOpts{
+			TrackID:   opts.ID,
+			ArtistIDs: opts.AddArtists,
+		}); err != nil {
+			return fmt.Errorf("UpdateTrack: AssociateArtistToTrack: %w", err)
+		}
+		if err = s.AddArtistsToAlbum(ctx, db.AddArtistsToAlbumOpts{
+			ArtistIDs: opts.AddArtists,
+			AlbumID:   releaseID,
+		}); err != nil {
+			return fmt.Errorf("UpdateTrack: AssociateArtistToRelease: %w", err)
+		}
+	}
+
+	if len(opts.RemoveArtists) > 0 {
+		for _, aid := range opts.RemoveArtists {
+			if _, err = tx.ExecContext(ctx, `DELETE FROM artist_tracks
+					WHERE artist_id = ?
+					  AND track_id = ?
+					  AND is_primary = false;`,
+				aid, opts.ID,
+			); err != nil {
+				return fmt.Errorf("UpdateTrack: RemoveArtists: %w", err)
+			}
+		}
+		if err = cleanOrphanedEntries(ctx, tx); err != nil {
+			return fmt.Errorf("UpdateTrack: CleanOrphanedEntries: %w", err)
 		}
 	}
 	return tx.Commit()

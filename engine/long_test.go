@@ -950,6 +950,56 @@ func TestSetPrimaryArtist(t *testing.T) {
 	assert.EqualValues(t, 1, count, "expected only one primary artist for track")
 }
 
+func TestUpdateArtists_Track(t *testing.T) {
+	truncateTestData(t)
+	t.Run("Submit Listens", doSubmitListens)
+
+	// happy path: add artist 2 to track 1
+	resp, err := makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=1&add_artist=2", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	exists, err := store.RowExists(`
+		SELECT EXISTS (
+			SELECT 1 FROM artist_tracks
+			WHERE track_id = $1 AND artist_id = $2
+		)`, 1, 2)
+	require.NoError(t, err)
+	assert.True(t, exists, "expected artist 2 to be associated with track 1")
+
+	// happy path: remove artist 2 from track 1
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=1&remove_artist=2", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	exists, err = store.RowExists(`
+		SELECT EXISTS (
+			SELECT 1 FROM artist_tracks
+			WHERE track_id = $1 AND artist_id = $2
+		)`, 1, 2)
+	require.NoError(t, err)
+	assert.False(t, exists, "expected artist 2 to be removed from track 1")
+
+	// 401 Unauthorized
+	req, err := http.NewRequest("PATCH", host()+"/apis/web/v1/track?id=1&add_artist=2", nil)
+	require.NoError(t, err)
+	resp, err = http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+	// 400 Bad Request: invalid id
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=notanumber&add_artist=2", nil)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	// 400 Bad Request: invalid add_artist
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=1&add_artist=notanumber", nil)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	truncateTestData(t)
+}
+
 func TestManualListen(t *testing.T) {
 	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)

@@ -118,6 +118,11 @@ type AddArtistsToAlbumOpts struct {
 	ArtistIDs []int32
 }
 
+type AddArtistsToTrackOpts struct {
+	TrackID   int32
+	ArtistIDs []int32
+}
+
 type GetItemsOpts struct {
 	Limit     int
 	Page      int
