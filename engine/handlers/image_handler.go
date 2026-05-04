@@ -158,6 +158,9 @@ func downloadMissingImage(ctx context.Context, store db.ImageStore, id uuid.UUID
 	if err != nil {
 		return "", fmt.Errorf("downloadMissingImage: %w", err)
 	}
+	if src == catalog.ImageSourceUserUpload {
+		return "", fmt.Errorf("downloadMissingImage: user uploaded image is missing")
+	}
 	var size catalog.ImageSize
 	if cfg.FullImageCacheEnabled() {
 		size = catalog.ImageSizeFull
