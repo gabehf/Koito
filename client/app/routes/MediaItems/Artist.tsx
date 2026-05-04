@@ -21,7 +21,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
 export default function Artist() {
   const artist = useLoaderData() as Artist;
-  const [period, setPeriod] = useState("week");
+  const period = "all_time";
 
   // remove canonical name from alias list
   console.log(artist.aliases);
@@ -71,9 +71,6 @@ export default function Artist() {
         </div>
       }
     >
-      <div className="mt-10">
-        <PeriodSelector setter={setPeriod} current={period} />
-      </div>
       <div className="flex flex-col gap-20">
         <div className="flex gap-15 mt-10 flex-wrap">
           <LastPlayed limit={20} artistId={artist.id} />
