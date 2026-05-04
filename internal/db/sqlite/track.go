@@ -15,10 +15,10 @@ import (
 )
 
 func (s *Sqlite) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Track, error) {
-	if opts.MusicBrainzID != uuid.Nil {
+	if opts.MusicBrainzID != uuid.Nil && opts.ReleaseID != 0 {
 		var id int32
 		err := s.db.QueryRowContext(ctx,
-			`SELECT id FROM tracks WHERE musicbrainz_id = ? LIMIT 1`, opts.MusicBrainzID.String()).Scan(&id)
+			`SELECT id FROM tracks WHERE musicbrainz_id = ? AND release_id = ? LIMIT 1`, opts.MusicBrainzID.String(), opts.ReleaseID).Scan(&id)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("GetTrack: by MbzID: %w", db.ErrNotFound)
 		}

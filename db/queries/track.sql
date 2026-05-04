@@ -25,7 +25,7 @@ WHERE t.id = $1 LIMIT 1;
 
 -- name: GetTrackByMbzID :one
 SELECT * FROM tracks_with_title
-WHERE musicbrainz_id = $1 LIMIT 1;
+WHERE musicbrainz_id = $1 AND release_id = $2 LIMIT 1;
 
 -- name: GetAllTracksFromArtist :many
 SELECT t.*

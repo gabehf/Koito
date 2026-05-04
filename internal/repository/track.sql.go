@@ -463,11 +463,16 @@ func (q *Queries) GetTrackAllTimeRank(ctx context.Context, id int32) (GetTrackAl
 
 const getTrackByMbzID = `-- name: GetTrackByMbzID :one
 SELECT id, musicbrainz_id, duration, release_id, title FROM tracks_with_title
-WHERE musicbrainz_id = $1 LIMIT 1
+WHERE musicbrainz_id = $1 AND release_id = $2 LIMIT 1
 `
 
-func (q *Queries) GetTrackByMbzID(ctx context.Context, musicbrainzID *uuid.UUID) (TracksWithTitle, error) {
-	row := q.db.QueryRow(ctx, getTrackByMbzID, musicbrainzID)
+type GetTrackByMbzIDParams struct {
+	MusicBrainzID *uuid.UUID
+	ReleaseID     int32
+}
+
+func (q *Queries) GetTrackByMbzID(ctx context.Context, arg GetTrackByMbzIDParams) (TracksWithTitle, error) {
+	row := q.db.QueryRow(ctx, getTrackByMbzID, arg.MusicBrainzID, arg.ReleaseID)
 	var i TracksWithTitle
 	err := row.Scan(
 		&i.ID,

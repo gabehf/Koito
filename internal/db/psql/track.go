@@ -21,9 +21,12 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 	l := logger.FromContext(ctx)
 	var track models.Track
 
-	if opts.MusicBrainzID != uuid.Nil {
+	if opts.MusicBrainzID != uuid.Nil && opts.ReleaseID != 0 {
 		l.Debug().Msgf("Fetching track from DB with MusicBrainz ID %s", opts.MusicBrainzID)
-		t, err := d.q.GetTrackByMbzID(ctx, &opts.MusicBrainzID)
+		t, err := d.q.GetTrackByMbzID(ctx, repository.GetTrackByMbzIDParams{
+			MusicBrainzID: &opts.MusicBrainzID,
+			ReleaseID:     opts.ReleaseID,
+		})
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("GetTrack: GetTrackByMbzID: %w", db.ErrNotFound)
 		}

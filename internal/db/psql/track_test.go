@@ -89,7 +89,7 @@ func TestGetTrack(t *testing.T) {
 	assert.EqualValues(t, 100, track.TimeListened)
 
 	// Test GetTrack by MusicBrainzID
-	track, err = store.GetTrack(ctx, db.GetTrackOpts{MusicBrainzID: uuid.MustParse("22222222-2222-2222-2222-222222222222")})
+	track, err = store.GetTrack(ctx, db.GetTrackOpts{MusicBrainzID: uuid.MustParse("22222222-2222-2222-2222-222222222222"), ReleaseID: 2})
 	require.NoError(t, err)
 	assert.Equal(t, int32(2), track.ID)
 	assert.Equal(t, "Track Two", track.Title)
