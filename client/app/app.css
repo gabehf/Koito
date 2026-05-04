@@ -65,7 +65,7 @@
   :root {
     --header-xl: 78px;
     --header-lg: 36px;
-    --header-md: 22px;
+    --header-md: 18px;
     --header-sm: 16px;
     --header-xl-weight: 600;
     --header-weight: 600;
@@ -109,9 +109,11 @@ h2 {
 }
 h3 {
   font-family: "League Spartan";
-  font-weight: var(--header-weight);
+  font-weight: 400;
   font-size: var(--header-md);
-  margin-bottom: 0.5em;
+  text-transform: uppercase;
+  margin-bottom: 1em;
+  color: var(--color-fg-secondary);
 }
 h4 {
   font-family: "League Spartan";
