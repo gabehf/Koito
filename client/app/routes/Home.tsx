@@ -3,11 +3,12 @@ import TopTracks from "~/components/TopTracks";
 import LastPlayed from "~/components/LastPlayed";
 import ActivityGrid from "~/components/ActivityGrid";
 import TopAlbums from "~/components/TopAlbums";
-import TopArtists from "~/components/TopArtists";
+import TopArtistsCard from "~/components/TopArtistsCard";
 import AllTimeStats from "~/components/AllTimeStats";
 import { useState } from "react";
 import PeriodSelector from "~/components/PeriodSelector";
 import { useAppContext } from "~/providers/AppProvider";
+import TopAlbumsCard from "~/components/TopAlbumsCard";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Koito" }, { name: "description", content: "Koito" }];
@@ -27,13 +28,10 @@ export default function Home() {
         </div>
         <PeriodSelector setter={setPeriod} current={period} />
         <div className="flex flex-wrap gap-10 2xl:gap-20 xl:gap-10 justify-between mx-5 md:gap-5">
-          <TopArtists period={period} limit={homeItems} />
-          <TopAlbums period={period} limit={homeItems} />
+          <TopArtistsCard period={period} />
+          <TopAlbumsCard period={period} />
           <TopTracks period={period} limit={homeItems} />
-          <LastPlayed
-            showNowPlaying={true}
-            limit={14}
-          />
+          <LastPlayed showNowPlaying={true} limit={14} />
         </div>
       </div>
     </main>

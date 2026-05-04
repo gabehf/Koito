@@ -1,14 +1,18 @@
 interface Props {
   size: number;
-  imageUrl: string;
+  src: string;
+  className?: string;
 }
 
 export default function ActivityGrid(props: Props) {
-
-  return <>
-    <img
-      src={props.imageUrl}
-      className="image rounded-[10px] border"
-      style={{ height: props.size, width: props.size }} />
-  </>
+  const classes = "image rounded-(--border-radius) border " + props.className;
+  return (
+    <>
+      <img
+        src={props.src}
+        className={classes}
+        style={{ height: props.size, width: props.size }}
+      />
+    </>
+  );
 }
