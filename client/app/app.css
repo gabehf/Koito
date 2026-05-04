@@ -59,6 +59,8 @@
   --header-xl-weight: 600;
   --header-weight: 600;
   --header-line-height: 3rem;
+
+  --border-radius: 10px;
 }
 
 @media (min-width: 60rem) {
