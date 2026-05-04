@@ -27,7 +27,7 @@ export default function SidebarItem({
   icon,
 }: Props) {
   const classes =
-    "hover:cursor-pointer hover:bg-(--color-bg-tertiary) transition duration-100 rounded-md p-2 inline-block";
+    "hover:cursor-pointer hover:bg-(--color-bg-tertiary) hover:text-(--color-fg) transition duration-100 rounded-md p-2 inline-block";
 
   const popupInner = keyHint ? (
     <div className="flex items-center gap-2">

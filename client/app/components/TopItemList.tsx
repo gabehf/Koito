@@ -72,7 +72,9 @@ function ItemCard({
 
       return (
         <div style={{ fontSize: 12 }} className={itemClasses}>
-          {ranked && <div className="w-7 text-end">{rank}</div>}
+          {ranked && (
+            <div className="w-7 color-fg-secondary text-end">{rank}</div>
+          )}
           <Link to={`/album/${album.id}`}>
             <img
               loading="lazy"
@@ -116,7 +118,13 @@ function ItemCard({
             <tr>
               {ranked && (
                 <td className="pr-3">
-                  {<div className="w-7 text-end">{rank}</div>}
+                  <div
+                    className={`color-fg-secondary text-end ${
+                      rank === 1 && "color-primary"
+                    }`}
+                  >
+                    {rank.toString().padStart(2, "0")}
+                  </div>
                 </td>
               )}
               <td className="pr-3 py-1 w-[250px] sm:w-[325px]">

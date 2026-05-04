@@ -7,7 +7,6 @@ import {
 } from "api/api";
 import { useQuery } from "@tanstack/react-query";
 import CardHeader from "./primitives/CardHeader";
-import Image from "./primitives/Image";
 import MediaItem from "./primitives/MediaItem";
 
 interface Props {
@@ -18,7 +17,10 @@ const getTopArtists = (args: { limit: number; period: string; page: number }) =>
   apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top-artists", args);
 
 export default function TopArtistsCard({ period }: Props) {
-  const args = { limit: 3, period: period, page: 0 };
+  const numItems = 6;
+  const imageSize = 75;
+
+  const args = { limit: numItems, period: period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
     queryKey: ["top-artists", args],
     queryFn: () => getTopArtists(args),
@@ -29,14 +31,18 @@ export default function TopArtistsCard({ period }: Props) {
   if (isPending) {
     return (
       <div className="w-[300px]">
-        <h3>{header}</h3>
+        <CardHeader to={`/chart/top-artists?period=${period}`} isOffset>
+          {header}
+        </CardHeader>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <h3>{header}</h3>
+        <CardHeader to={`/chart/top-artists?period=${period}`} isOffset>
+          {header}
+        </CardHeader>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -50,7 +56,7 @@ export default function TopArtistsCard({ period }: Props) {
       <div className="max-w-[350px] border bg-(--color-bg-secondary) rounded-(--border-radius)">
         <div className="relative">
           <img
-            src={imageUrl(data.items[0].item.image, "large")}
+            src={imageUrl(data.items[0]?.item.image, "large")}
             style={{
               borderRadius: "var(--border-radius) var(--border-radius) 0 0",
             }}
@@ -72,31 +78,24 @@ export default function TopArtistsCard({ period }: Props) {
             }}
           />
           <div className="absolute bottom-10 left-5">
-            <h2 className="font-medium text-sm">{data.items[0].item.name}</h2>
+            <h2 className="font-medium text-sm">{data.items[0]?.item.name}</h2>
             <div className="color-fg-secondary">
-              {data.items[0].item.listen_count} plays
+              {data.items[0]?.item.listen_count} plays
             </div>
           </div>
         </div>
         <div className="flex flex-col items-start">
-          <div className="pl-6 pb-6">
-            <MediaItem
-              image={imageUrl(data.items[1].item.image, "medium")}
-              imageSize={125}
-              link={`/artist/${data.items[1].item.id}`}
-              title={data.items[1].item.name}
-              meta={`${data.items[1].item.listen_count} plays`}
-            />
-          </div>
-          <div className="pl-6 pb-6">
-            <MediaItem
-              image={imageUrl(data.items[2].item.image, "medium")}
-              imageSize={125}
-              link={`/artist/${data.items[2].item.id}`}
-              title={data.items[2].item.name}
-              meta={`${data.items[2].item.listen_count} plays`}
-            />
-          </div>
+          {data.items.slice(1).map((i) => (
+            <div className="px-6 pb-6">
+              <MediaItem
+                image={imageUrl(i.item.image, "medium")}
+                imageSize={imageSize}
+                link={`/artist/${i.item.id}`}
+                title={i.item.name}
+                meta={`${i.item.listen_count} plays`}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>

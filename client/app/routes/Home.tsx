@@ -10,6 +10,7 @@ import { useState } from "react";
 import PeriodSelector from "~/components/PeriodSelector";
 import { useAppContext } from "~/providers/AppProvider";
 import TopAlbumsCard from "~/components/TopAlbumsCard";
+import PinnedItemGrid from "~/components/PinnedItemGrid";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Koito" }, { name: "description", content: "Koito" }];
@@ -32,8 +33,9 @@ export default function Home() {
           <TopArtistsCard period={period} />
           <TopAlbumsCard period={period} />
           <TopTracks period={period} limit={8} />
-          {/*<LastPlayed showNowPlaying={true} limit={14} />
-          <TopArtists period={period} limit={10} />
+          <PinnedItemGrid />
+          <LastPlayed showNowPlaying={true} limit={14} />
+          {/*<TopArtists period={period} limit={10} />
           <TopAlbums period={period} limit={10} />*/}
         </div>
       </div>

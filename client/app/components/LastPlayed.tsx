@@ -101,7 +101,7 @@ export default function LastPlays(props: Props) {
     <div className="text-sm sm:text-[15px]">
       <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
       {listens.length < 1 && "Nothing to show"}
-      <table className="table-fixed border-collapse mt-10">
+      <table className="table-fixed border-collapse mt-6">
         <tbody>
           {props.showNowPlaying && npData && npData.currently_playing && (
             <tr className="group hover:bg-[--color-bg-secondary]">

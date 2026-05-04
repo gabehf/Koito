@@ -63,11 +63,14 @@ const TopTracks = (props: Props) => {
 
   return (
     <div>
-      <CardHeader to={`/chart/top-tracks?period=${props.period}${params}`}>
+      <CardHeader
+        isOffset
+        to={`/chart/top-tracks?period=${props.period}${params}`}
+      >
         {header}
       </CardHeader>
       <div className="mt-6">
-        <TopItemList type="track" data={data} separators />
+        <TopItemList ranked type="track" data={data} separators />
         {data.items.length < 1 ? "Nothing to show" : ""}
       </div>
     </div>

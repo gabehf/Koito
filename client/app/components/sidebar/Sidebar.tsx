@@ -4,7 +4,7 @@ import SidebarItem from "./SidebarItem";
 import SidebarSettings from "./SidebarSettings";
 
 export default function Sidebar() {
-  const iconSize = 20;
+  const iconSize = 18;
 
   return (
     <div
@@ -26,12 +26,15 @@ export default function Sidebar() {
             border-(--color-bg-tertiary)
             pt-2
             sm:py-10
-            sm:px-1
+            sm:px-3
             px-4
             bg-(--color-bg)
+            text-(--color-fg-secondary)
         "
     >
       <div className="flex gap-4 sm:flex-col">
+        <SidebarSearch size={iconSize} />
+        <div className="hidden sm:flex"></div>
         <SidebarItem
           space={10}
           to="/"
@@ -41,7 +44,6 @@ export default function Sidebar() {
         >
           <Home size={iconSize} />
         </SidebarItem>
-        <SidebarSearch size={iconSize} />
         <SidebarItem
           space={10}
           to="/rewind"
