@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AsyncButton } from "../components/AsyncButton";
 import AllTimeStats from "~/components/AllTimeStats";
 import ActivityGrid from "~/components/ActivityGrid";
-import LastPlays from "~/components/LastPlays";
+import LastPlayed from "~/components/LastPlayed";
 import TopAlbums from "~/components/TopAlbums";
 import TopArtists from "~/components/TopArtists";
 import TopTracks from "~/components/TopTracks";
@@ -55,7 +55,7 @@ export default function ThemeHelper() {
         <TopArtists period="all_time" limit={homeItems} />
         <TopAlbums period="all_time" limit={homeItems} />
         <TopTracks period="all_time" limit={homeItems} />
-        <LastPlays limit={Math.floor(homeItems * 2.5)} />
+        <LastPlayed limit={Math.floor(homeItems * 2.5)} />
       </div>
       <div className="flex gap-10">
         <div className="flex flex-col items-center gap-3 bg-secondary p-5 rounded-lg">
@@ -77,7 +77,7 @@ export default function ThemeHelper() {
               Logout
             </AsyncButton>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex gap-4">
             <input
               name="koito-update-username"
               type="text"
@@ -88,7 +88,7 @@ export default function ThemeHelper() {
               Submit
             </AsyncButton>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex gap-4">
             <input
               name="koito-update-password"
               type="password"

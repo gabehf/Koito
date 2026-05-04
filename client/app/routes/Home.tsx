@@ -1,6 +1,6 @@
 import type { Route } from "./+types/Home";
 import TopTracks from "~/components/TopTracks";
-import LastPlays from "~/components/LastPlays";
+import LastPlayed from "~/components/LastPlayed";
 import ActivityGrid from "~/components/ActivityGrid";
 import TopAlbums from "~/components/TopAlbums";
 import TopArtists from "~/components/TopArtists";
@@ -30,7 +30,7 @@ export default function Home() {
           <TopArtists period={period} limit={homeItems} />
           <TopAlbums period={period} limit={homeItems} />
           <TopTracks period={period} limit={homeItems} />
-          <LastPlays
+          <LastPlayed
             showNowPlaying={true}
             limit={Math.floor(homeItems * 2.7)}
           />

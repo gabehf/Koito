@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { mergeTracks, type Album, type Track } from "api/api";
-import LastPlays from "~/components/LastPlays";
+import LastPlayed from "~/components/LastPlayed";
 import PeriodSelector from "~/components/PeriodSelector";
 import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
@@ -91,7 +91,7 @@ export default function Track() {
         <PeriodSelector setter={setPeriod} current={period} />
       </div>
       <div className="flex flex-wrap gap-20 mt-10">
-        <LastPlays limit={20} trackId={track.id} />
+        <LastPlayed limit={20} trackId={track.id} />
         <div className="flex flex-col items-start gap-4">
           <ActivityGrid configurable trackId={track.id} />
           <InterestGraph trackId={track.id} />
@@ -100,4 +100,3 @@ export default function Track() {
     </MediaLayout>
   );
 }
-

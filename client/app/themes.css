@@ -1,5 +1,9 @@
 /* Theme Definitions */
 
+:root {
+    --color-border: var(--color-bg-tertiary);
+}
+
 /* Theme Helper Classes */
 
 /* Foreground Text */
