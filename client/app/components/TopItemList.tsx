@@ -77,9 +77,9 @@ function ItemCard({
           <Link to={`/album/${album.id}`}>
             <img
               loading="lazy"
-              src={imageUrl(album.image, "small")}
+              src={imageUrl(album.image, "medium")}
               alt={album.title}
-              className="min-w-[48px]"
+              className="max-w-[56px] rounded-lg border-1 border-(--color-bg-tertiary)"
             />
           </Link>
           <div>
@@ -112,32 +112,44 @@ function ItemCard({
       const track = item as Track;
 
       return (
-        <div style={{ fontSize: 12 }} className={itemClasses}>
-          {ranked && <div className="w-7 text-end">{rank}</div>}
-          <Link to={`/track/${track.id}`}>
-            <img
-              loading="lazy"
-              src={imageUrl(track.image, "small")}
-              alt={track.title}
-              className="min-w-[48px]"
-            />
-          </Link>
-          <div>
-            <Link
-              to={`/track/${track.id}`}
-              className="hover:text-(--color-fg-secondary)"
-            >
-              <span style={{ fontSize: 14 }}>{track.title}</span>
-            </Link>
-            <br />
-            <div>
-              <ArtistLinks
-                artists={track.artists || [{ id: 0, Name: "Unknown Artist" }]}
-              />
-            </div>
-            <div className="color-fg-secondary">{track.listen_count} plays</div>
-          </div>
-        </div>
+        <table style={{ fontSize: 15 }}>
+          <tbody>
+            <tr>
+              <td className="pr-3">
+                {ranked && <div className="w-7 text-end">{rank}</div>}
+              </td>
+              <td className="pr-3 py-2">
+                <Link to={`/track/${track.id}`}>
+                  <img
+                    loading="lazy"
+                    src={imageUrl(track.image, "medium")}
+                    alt={track.title}
+                    className="max-w-[56px] rounded-lg border-1 border-(--color-bg-tertiary)"
+                  />
+                </Link>
+              </td>
+              <td className="min-w-[200px]">
+                <div>
+                  <Link
+                    to={`/track/${track.id}`}
+                    className="hover:text-(--color-fg-secondary)"
+                  >
+                    <span style={{ fontSize: 14 }}>{track.title}</span>
+                  </Link>
+                  <br />
+                  <div>
+                    <ArtistLinks
+                      artists={track.artists || [{ id: 0, Name: "Unknown Artist" }]}
+                    />
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div className="color-fg-secondary text-end">{track.listen_count} plays</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       );
     }
     case "artist": {

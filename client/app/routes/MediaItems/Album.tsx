@@ -81,7 +81,7 @@ export default function Album() {
       }
     >
       <div className="flex flex-wrap gap-20 mt-10">
-        <LastPlayed limit={30} albumId={album.id} />
+        <LastPlayed limit={10} albumId={album.id} />
         <TopTracks limit={12} period={period} albumId={album.id} />
         <div className="flex flex-col items-start gap-4">
           <ActivityGrid configurable albumId={album.id} />
