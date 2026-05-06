@@ -84,6 +84,7 @@ func bindRoutes(
 			r.Post("/merge/tracks", handlers.MergeTracksHandler(db))
 			r.Post("/merge/albums", handlers.MergeReleaseGroupsHandler(db))
 			r.Post("/merge/artists", handlers.MergeArtistsHandler(db))
+			r.Delete("/data", handlers.PurgeAllDataHandler(db))
 			r.Delete("/artist", handlers.DeleteArtistHandler(db))
 			r.Post("/artists/primary", handlers.SetPrimaryArtistHandler(db))
 			r.Delete("/album", handlers.DeleteAlbumHandler(db))

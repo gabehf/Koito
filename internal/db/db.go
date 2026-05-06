@@ -115,4 +115,5 @@ type DB interface {
 	ExportStore
 	Ping(ctx context.Context) error
 	Close(ctx context.Context)
+	PurgeAllData(ctx context.Context) error
 }

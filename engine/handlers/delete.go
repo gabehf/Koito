@@ -163,3 +163,21 @@ func DeleteAlbumHandler(store db.AlbumStore) http.HandlerFunc {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
+
+func PurgeAllDataHandler(store db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		l := logger.FromContext(ctx)
+
+		l.Debug().Msg("PurgeAllDataHandler: Received request to purge all data")
+
+		if err := store.PurgeAllData(ctx); err != nil {
+			l.Err(err).Msg("PurgeAllDataHandler: Failed to purge all data")
+			utils.WriteError(w, "failed to purge data", http.StatusInternalServerError)
+			return
+		}
+
+		l.Debug().Msg("PurgeAllDataHandler: Successfully purged all data")
+		w.WriteHeader(http.StatusNoContent)
+	}
+}

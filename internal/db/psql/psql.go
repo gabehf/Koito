@@ -4,6 +4,7 @@ package psql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -95,6 +96,10 @@ func (d *Psql) Close(ctx context.Context) {
 
 func (d *Psql) Ping(ctx context.Context) error {
 	return d.conn.Ping(ctx)
+}
+
+func (d *Psql) PurgeAllData(_ context.Context) error {
+	return errors.New("PurgeAllData: not implemented for psql")
 }
 
 func stepToInterval(p db.StepInterval) pgtype.Interval {
