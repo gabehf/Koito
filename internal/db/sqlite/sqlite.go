@@ -280,5 +280,26 @@ func cleanOrphanedEntries(ctx context.Context, tx *sql.Tx) error {
 	return nil
 }
 
+func (s *Sqlite) PurgeAllData(ctx context.Context) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("PurgeAllData: BeginTx: %w", err)
+	}
+	defer tx.Rollback()
+	// Order respects foreign-key dependencies; cascades clean up junction and
+	// alias tables automatically.
+	for _, stmt := range []string{
+		`DELETE FROM listens`,
+		`DELETE FROM tracks`,
+		`DELETE FROM releases`,
+		`DELETE FROM artists`,
+	} {
+		if _, err := tx.ExecContext(ctx, stmt); err != nil {
+			return fmt.Errorf("PurgeAllData: %w", err)
+		}
+	}
+	return tx.Commit()
+}
+
 // compile-time assertion that *Sqlite implements db.DB
 var _ db.DB = (*Sqlite)(nil)
