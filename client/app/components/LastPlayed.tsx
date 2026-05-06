@@ -101,11 +101,25 @@ export default function LastPlays(props: Props) {
     <div className="text-sm sm:text-[15px]">
       <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
       {listens.length < 1 && "Nothing to show"}
-      <table className="table-fixed border-collapse mt-6">
+      <table className="table-fixed border-collapse mt-6 w-[350px] sm:w-[428px]">
         <tbody>
           {props.showNowPlaying && npData && npData.currently_playing && (
-            <tr className="group hover:bg-[--color-bg-secondary]">
-              <td>
+            <tr className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0">
+              <td className="py-3 pr-3 w-11">
+                <Link to={`/track/${npData.track.id}`}>
+                  <Image
+                    src={imageUrl(npData.track.image, "small")}
+                    size={32}
+                  />
+                </Link>
+              </td>
+              <td className="w-[150px] sm:w-[275px]">
+                {props.hideArtists ? null : (
+                  <>
+                    <ArtistLinks artists={npData.track.artists} />
+                    {" — "}
+                  </>
+                )}
                 <Link
                   className="hover:text-[--color-fg-secondary]"
                   to={`/track/${npData.track.id}`}
@@ -113,15 +127,11 @@ export default function LastPlays(props: Props) {
                   {npData.track.title}
                 </Link>
               </td>
-              <td className="text-ellipsis overflow-hidden text-center sm:max-w-[600px]">
-                {props.hideArtists ? null : (
-                  <>
-                    <ArtistLinks artists={npData.track.artists} /> –{" "}
-                  </>
-                )}
-              </td>
-              <td className="color-fg-tertiary pr-2 sm:pr-4 text-sm whitespace-nowrap w-0">
-                Now Playing
+              <td className="color-fg-tertiary pr-2 sm:pr-4 text-sm text-end whitespace-nowrap w-[100px]">
+                <div className="sm:-mr-[18px] relative">
+                  <div className="h-1.5 w-1.5 rounded-full bg-(--color-primary) absolute top-1.5 left-3"></div>{" "}
+                  Now Playing
+                </div>
               </td>
             </tr>
           )}
@@ -130,22 +140,22 @@ export default function LastPlays(props: Props) {
               key={`last_listen_${item.time}`}
               className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0"
             >
-              <td className="py-2 pr-3">
+              <td className="py-3 pr-3 w-11">
                 <Link to={`/track/${item.track.id}`}>
                   <Image src={imageUrl(item.track.image, "small")} size={32} />
                 </Link>
               </td>
-              <td className="min-w-[150px] max-w-[190px] sm:max-w-[300px]">
+              <td className="w-[150px] sm:w-[275px]">
+                {props.hideArtists ? null : (
+                  <>
+                    <ArtistLinks artists={item.track.artists} />
+                    {" — "}
+                  </>
+                )}
                 <Link
                   className="hover:text-[--color-fg-secondary]"
                   to={`/track/${item.track.id}`}
                 >
-                  {props.hideArtists ? null : (
-                    <>
-                      <ArtistLinks artists={item.track.artists} />
-                      {" — "}
-                    </>
-                  )}
                   {item.track.title}
                 </Link>
               </td>

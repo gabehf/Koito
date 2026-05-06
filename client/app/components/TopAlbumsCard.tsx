@@ -10,6 +10,7 @@ import Image from "./primitives/Image";
 import CardHeader from "./primitives/CardHeader";
 import ArtistLinks from "./ArtistLinks";
 import MediaItem from "./primitives/MediaItem";
+import { Link } from "react-router";
 
 interface Props {
   period: string;
@@ -19,8 +20,8 @@ const getTopAlbums = (args: { limit: number; period: string; page: number }) =>
   apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top-albums", args);
 
 export default function TopAlbumsCard({ period }: Props) {
-  const numItems = 6;
-  const imageSize = 75;
+  const numItems = 5;
+  const imageSize = 90;
 
   const args = { limit: numItems, period: period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
@@ -46,6 +47,17 @@ export default function TopAlbumsCard({ period }: Props) {
           {header}
         </CardHeader>
         <p className="error">Error: {error.message}</p>
+      </div>
+    );
+  }
+
+  if (!data.items[0]) {
+    return (
+      <div className="w-[348px]">
+        <CardHeader to={`/chart/top-albums?period=${period}`} isOffset>
+          {header}
+        </CardHeader>
+        <p className="ml-6 mt-6">Nothing to show</p>
       </div>
     );
   }
@@ -80,7 +92,11 @@ export default function TopAlbumsCard({ period }: Props) {
             }}
           />
           <div className="absolute bottom-10 left-5">
-            <h2 className="font-medium text-sm">{data.items[0]?.item.title}</h2>
+            <Link to={`/album/${data.items[0].item.id}`}>
+              <h2 className="font-medium text-sm">
+                {data.items[0]?.item.title}
+              </h2>
+            </Link>
             <div>
               <ArtistLinks
                 artists={
@@ -97,7 +113,7 @@ export default function TopAlbumsCard({ period }: Props) {
         </div>
         <div className="flex flex-col items-start">
           {data.items.slice(1).map((i) => (
-            <div className="px-6 pb-6">
+            <div className="px-6 pb-6" key={`top_albums_card_${i.rank}`}>
               <MediaItem
                 image={imageUrl(i.item.image, "medium")}
                 imageSize={imageSize}

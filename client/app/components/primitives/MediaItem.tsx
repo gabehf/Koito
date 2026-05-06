@@ -36,7 +36,7 @@ export default function MediaItem({
         className="flex flex-col items-start"
         style={alignTop ? { marginTop: 6 } : undefined}
       >
-        <div className="line-clamp-3">{title}</div>
+        <div className="line-clamp-2">{title}</div>
         {subtitle !== undefined && (
           <div className="text-[14px]">{subtitle}</div>
         )}

@@ -57,7 +57,7 @@ export default function ArtistAlbums({ artistId, name }: Props) {
               link={`/album/${item.item.id}`}
               alignTop
               title={item.item.title}
-              subtitle={`${item.item.listen_count} plays`}
+              meta={`${item.item.listen_count} plays`}
             />
           </div>
         ))}

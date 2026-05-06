@@ -61,6 +61,20 @@ const TopTracks = (props: Props) => {
   params += props.artistId ? `&artist_id=${props.artistId}` : "";
   params += props.albumId ? `&album_id=${props.albumId}` : "";
 
+  if (!data.items[0]) {
+    return (
+      <div className="w-[348px]">
+        <CardHeader
+          isOffset
+          to={`/chart/top-tracks?period=${props.period}${params}`}
+        >
+          {header}
+        </CardHeader>
+        <p className="ml-6 mt-6">Nothing to show</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <CardHeader
@@ -69,9 +83,8 @@ const TopTracks = (props: Props) => {
       >
         {header}
       </CardHeader>
-      <div className="mt-6">
+      <div className="mt-7">
         <TopItemList ranked type="track" data={data} separators />
-        {data.items.length < 1 ? "Nothing to show" : ""}
       </div>
     </div>
   );

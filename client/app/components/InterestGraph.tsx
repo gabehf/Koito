@@ -3,6 +3,7 @@ import { apiFetch, type InterestBucket } from "api/api";
 import { useTheme } from "~/hooks/useTheme";
 import type { Theme } from "~/styles/themes.css";
 import { Area, AreaChart } from "recharts";
+import CardHeader from "./primitives/CardHeader";
 
 function getPrimaryColor(theme: Theme): string {
   const value = theme.primary;
@@ -50,17 +51,19 @@ export default function InterestGraph({
   const { theme } = useTheme();
   const color = getPrimaryColor(theme);
 
+  const title = "Interest over time";
+
   if (isPending) {
     return (
       <div className="w-[350px] sm:w-[500px]">
-        <h3>Interest over time</h3>
+        <CardHeader>{title}</CardHeader>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[350px] sm:w-[500px]">
-        <h3>Interest over time</h3>
+        <CardHeader>{title}</CardHeader>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -72,7 +75,7 @@ export default function InterestGraph({
 
   return (
     <div className="flex flex-col items-start w-full max-w-[335px] sm:max-w-[500px]">
-      <h3>Interest over time</h3>
+      <CardHeader>{title}</CardHeader>
       <AreaChart
         style={{
           width: "100%",

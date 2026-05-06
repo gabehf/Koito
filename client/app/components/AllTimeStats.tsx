@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch, type Stats } from "api/api";
+import CardHeader from "./primitives/CardHeader";
 
 const getStats = (period: string) =>
   apiFetch<Stats>("/apis/web/v1/stats", { period });
@@ -34,7 +35,7 @@ export default function AllTimeStats() {
 
   return (
     <div>
-      <h3>{header}</h3>
+      <CardHeader>{header}</CardHeader>
       <div>
         <span
           className={numberClasses}

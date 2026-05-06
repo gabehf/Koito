@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import Popup from "./Popup";
-import { useState } from "react";
 import { useTheme } from "~/hooks/useTheme";
 import ActivityOptsSelector from "./ActivityOptsSelector";
 import type { Theme } from "~/styles/themes.css";
 import { apiFetch, type ListenActivityItem } from "api/api";
+import CardHeader from "./primitives/CardHeader";
+import useWindowWidth from "~/hooks/useWindowWidth";
 
 function getPrimaryColor(theme: Theme): string {
   const value = theme.primary;
@@ -40,22 +41,18 @@ const getActivity = (args: {
   track_id: number;
 }) => apiFetch<ListenActivityItem[]>("/apis/web/v1/listen-activity", args);
 
+const NUM_WEEKS = 36;
+
 export default function ActivityGrid({
-  step = "day",
-  range = 182,
   month = 0,
   year = 0,
   artistId = 0,
   albumId = 0,
   trackId = 0,
-  configurable = false,
 }: Props) {
-  const [stepState, setStep] = useState(step);
-  const [rangeState, setRange] = useState(range);
-
   const args = {
-    step: stepState,
-    range: rangeState,
+    step: "day",
+    range: NUM_WEEKS * 7,
     month,
     year,
     artist_id: artistId,
@@ -70,17 +67,21 @@ export default function ActivityGrid({
   const { theme } = useTheme();
   const color = getPrimaryColor(theme);
 
+  const width = useWindowWidth();
+
+  const header = "Activity";
+
   if (isPending) {
     return (
       <div className="w-[350px]">
-        <h3>Activity</h3>
+        <CardHeader>{header}</CardHeader>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
       <div className="w-[350px]">
-        <h3>Activity</h3>
+        <CardHeader>{header}</CardHeader>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -114,87 +115,134 @@ export default function ActivityGrid({
     const adjustment =
       artistId == albumId && albumId == trackId && trackId == 0 ? 10 : 1;
 
-    // automatically adjust the target value based on step
-    // the smartest way to do this would be to have the api return the
-    // highest value in the range. too bad im not smart
-    switch (stepState) {
-      case "day":
-        t = 10 * adjustment;
-        break;
-      case "week":
-        t = 20 * adjustment;
-        break;
-      case "month":
-        t = 50 * adjustment;
-        break;
-      case "year":
-        t = 100 * adjustment;
-        break;
-    }
+    t = 10 * adjustment;
 
     v = Math.min(v, t);
     return ((v - t) / t) * 0.8;
   };
 
-  const CHUNK_SIZE = 26 * 7;
-  const chunks = [];
-
-  for (let i = 0; i < data.length; i += CHUNK_SIZE) {
-    chunks.push(data.slice(i, i + CHUNK_SIZE));
+  // Build a lookup from normalized date key → listen count
+  const listenMap = new Map<string, number>();
+  for (const item of data) {
+    const d = new Date(item.start_time);
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    listenMap.set(key, item.listens);
   }
+
+  // Align the grid to calendar weeks (Monday = row 0, Sunday = row 6).
+  // Column 0 is the oldest week; the last column is the current (partial) week.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysSinceMonday = (today.getDay() + 6) % 7; // Mon=0 … Sun=6
+  const gridStart = new Date(today);
+  gridStart.setDate(
+    gridStart.getDate() - daysSinceMonday - (NUM_WEEKS - 1) * 7
+  );
+
+  const cells: { date: Date; listens: number; isFuture: boolean }[] = [];
+  for (let col = 0; col < NUM_WEEKS; col++) {
+    for (let row = 0; row < 7; row++) {
+      const date = new Date(gridStart);
+      date.setDate(date.getDate() + col * 7 + row);
+      const isFuture = date > today;
+      const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      cells.push({ date, listens: listenMap.get(key) ?? 0, isFuture });
+    }
+  }
+
+  // if window size is small (640px)
+  if (width <= 640) {
+    // remove 10 weeks from data
+    cells.splice(0, 10 * 7 - 1);
+  }
+
+  const CELL_W = "w-[9px] sm:w-[10px]";
+  const CELL_H = "h-[9px] sm:h-[10px]";
+  const CELL_GAP = "gap-[2px] md:gap-[3px]";
+  const CELL_RADIUS = "rounded-[2px]";
+  const DAY_LABELS = ["Mon", "", "Wed", "", "Fri", "", "Sun"];
 
   return (
     <div className="flex flex-col items-start">
-      <h3>Activity</h3>
-      {configurable ? (
-        <ActivityOptsSelector
-          rangeSetter={setRange}
-          currentRange={rangeState}
-          stepSetter={setStep}
-          currentStep={stepState}
-        />
-      ) : null}
-
-      {chunks.map((chunk, index) => (
-        <div
-          key={index}
-          className="w-auto grid grid-flow-col grid-rows-7 gap-[3px] md:gap-[5px] mb-4"
-        >
-          {chunk.map((item) => (
-            <div
-              key={new Date(item.start_time).toString()}
-              className="w-[10px] sm:w-[12px] h-[10px] sm:h-[12px]"
-            >
-              <Popup
-                position="top"
-                space={12}
-                extraClasses="left-2"
-                inner={`${new Date(item.start_time).toLocaleDateString()} ${
-                  item.listens
-                } plays`}
+      <CardHeader isOffset>{header}</CardHeader>
+      <div className="flex flex-col items-center gap-6 pt-4 sm:pt-8 px-4 sm:px-6 pb-4 sm:pb-5 border bg-(--color-bg-secondary) rounded-(--border-radius)">
+        <div className="flex items-start gap-2">
+          <div className={`grid grid-rows-7 ${CELL_GAP}`}>
+            {DAY_LABELS.map((label, i) => (
+              <div
+                key={i}
+                className={`${CELL_H} flex items-center justify-end`}
               >
+                <span className="text-[8px] sm:text-[11px] mt-3 leading-none text-(--color-fg-secondary)">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className={`w-auto grid grid-flow-col grid-rows-7 ${CELL_GAP}`}>
+            {cells.map((cell) => (
+              <div
+                key={cell.date.toISOString()}
+                className={`${CELL_W} ${CELL_H}`}
+              >
+                {cell.isFuture ? (
+                  <div className={`${CELL_W} ${CELL_H} ${CELL_RADIUS}`} />
+                ) : (
+                  <Popup
+                    position="top"
+                    space={12}
+                    extraClasses="left-2"
+                    inner={`${cell.date.toLocaleDateString()} ${
+                      cell.listens
+                    } plays`}
+                  >
+                    <div
+                      style={{
+                        display: "inline-block",
+                        background:
+                          cell.listens > 0
+                            ? LightenDarkenColor(
+                                color,
+                                getDarkenAmount(cell.listens, 100)
+                              )
+                            : "var(--color-bg-secondary)",
+                      }}
+                      className={`${CELL_W} ${CELL_H} ${CELL_RADIUS} ${
+                        cell.listens > 0
+                          ? ""
+                          : "border-[0.5px] border-(--color-bg-tertiary)"
+                      }`}
+                    />
+                  </Popup>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex justify-around w-full">
+          <div className="text-[11px] color-fg-secondary">
+            Streak · <span className="text-(--color-primary)">234</span>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] color-fg-secondary">
+            <div>Less</div>
+            <div className="grid grid-cols-5 gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   style={{
                     display: "inline-block",
-                    background:
-                      item.listens > 0
-                        ? LightenDarkenColor(
-                            color,
-                            getDarkenAmount(item.listens, 100)
-                          )
-                        : "var(--color-bg-secondary)",
+                    background: LightenDarkenColor(
+                      color,
+                      getDarkenAmount(i * 20, 100)
+                    ),
                   }}
-                  className={`w-[10px] sm:w-[12px] h-[10px] sm:h-[12px] rounded-[2px] md:rounded-[3px] ${
-                    item.listens > 0
-                      ? ""
-                      : "border-[0.5px] border-(--color-bg-tertiary)"
-                  }`}
-                ></div>
-              </Popup>
+                  className={`w-[8px] sm:w-[9px] h-[8px] sm:h-[9px] rounded-[3px] ${"border-[0.5px] border-(--color-bg-tertiary)"}`}
+                />
+              ))}
             </div>
-          ))}
+            <div>More</div>
+          </div>
         </div>
-      ))}
+      </div>
     </div>
   );
 }

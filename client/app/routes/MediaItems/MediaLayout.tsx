@@ -69,6 +69,8 @@ export default function MediaLayout(props: Props) {
 
   console.log("MBZ:", props.musicbrainzId);
 
+  const headersizeclass = props.title.length > 28 ? "text-lg" : "text-lg";
+
   return (
     <main
       className="w-full flex flex-col flex-grow"
@@ -84,20 +86,20 @@ export default function MediaLayout(props: Props) {
       <title>{title}</title>
       <meta property="og:title" content={title} />
       <meta name="description" content={title} />
-      <div className="w-19/20 mx-auto pt-12">
-        <div className="flex gap-8 flex-wrap md:flex-nowrap relative">
+      <div className="w-19/20 mx-auto sm:ml-18 pt-12">
+        <div className="flex gap-8 flex-wrap md:flex-nowrap relative mb-6">
           <div className="flex flex-col justify-around">
             <img
               style={{ zIndex: 5 }}
               src={imageUrl(props.img, "large")}
               alt={props.title}
-              className="md:min-w-[385px] w-[220px] h-auto shadow-(--color-shadow) shadow-lg"
+              className="md:min-w-[385px] rounded-(--border-radius) border w-[220px] h-auto"
             />
           </div>
           <div className="flex flex-col items-start">
             <h3>{props.type}</h3>
             <div className="flex">
-              <h1>
+              <h1 className={headersizeclass}>
                 {props.title}
                 <span className="text-xl font-medium text-(--color-fg-secondary)">
                   {" "}

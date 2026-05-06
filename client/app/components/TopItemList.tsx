@@ -44,7 +44,7 @@ export default function TopItemList<T extends Ranked<Item>>({
               key={type + item.item.id}
             />
             {separators && index !== data.items.length - 1 && (
-              <div className="border-b border-(--color-bg-tertiary) mx-6 mt-2" />
+              <div className="border-b border-(--color-bg-tertiary) mt-2" />
             )}
           </div>
         );

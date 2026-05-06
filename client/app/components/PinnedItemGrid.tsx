@@ -2,7 +2,7 @@ import PinnedItem from "./PinnedItem";
 
 export default function PinnedItemGrid() {
   return (
-    <div className="flex flex-wrap justify-center max-w-[750px] gap-10">
+    <div className="flex flex-wrap justify-center gap-8">
       <PinnedItem />
       <PinnedItem />
       <PinnedItem />

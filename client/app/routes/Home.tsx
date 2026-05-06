@@ -21,8 +21,11 @@ export default function Home() {
 
   const { homeItems } = useAppContext();
 
+  const gradientClasses =
+    "bg-linear-to-b to-(--color-bg) from-(--color-bg-secondary) to-60%";
+
   return (
-    <main className="flex flex-grow justify-center pb-4 w-full bg-linear-to-b to-(--color-bg) from-(--color-bg-secondary) to-60%">
+    <main className="flex flex-grow justify-center pb-4 w-full">
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0 sm:mt-20 mt-10 mx-10">
         <div className="flex flex-col md:flex-row gap-10 md:gap-20">
           <AllTimeStats />
@@ -30,10 +33,10 @@ export default function Home() {
         </div>
         <PeriodSelector setter={setPeriod} current={period} />
         <div className="container justify-center flex flex-wrap gap-10">
+          <PinnedItemGrid />
           <TopArtistsCard period={period} />
           <TopAlbumsCard period={period} />
-          <TopTracks period={period} limit={8} />
-          <PinnedItemGrid />
+          <TopTracks period={period} limit={10} />
           <LastPlayed showNowPlaying={true} limit={14} />
           {/*<TopArtists period={period} limit={10} />
           <TopAlbums period={period} limit={10} />*/}
