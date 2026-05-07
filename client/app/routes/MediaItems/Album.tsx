@@ -8,6 +8,7 @@ import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
 import { timeListenedString } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
+import MediaItemNote from "~/components/MediaItemNote";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const res = await fetch(`/apis/web/v1/album/${params.id}`);
@@ -45,7 +46,7 @@ export default function Album() {
         return r;
       }}
       subContent={
-        <div className="flex flex-col gap-2 items-start">
+        <div className="flex flex-col gap-1.5 items-start">
           {album.artists.length > 0 && !album.is_various_artists && (
             <p>
               {

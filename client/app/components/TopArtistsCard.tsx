@@ -91,9 +91,9 @@ export default function TopArtistsCard({ period }: Props) {
           />
           <div className="absolute bottom-10 left-5">
             <Link to={`/artist/${data.items[0].item.id}`}>
-              <h2 className="font-medium text-sm">
+              <h5 className="text-3xl font-semibold">
                 {data.items[0]?.item.name}
-              </h2>
+              </h5>
             </Link>
             <div className="color-fg-secondary">
               {data.items[0]?.item.listen_count} plays

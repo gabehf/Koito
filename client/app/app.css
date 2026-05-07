@@ -91,9 +91,11 @@ select {
   background: var(--color-bg);
 }
 
-/* a {
-  color: var(--color-fg);
+a,
+div {
+  transition: color 0.1s ease;
 }
+/*
 a:hover {
   color: var(--color-link-hover);
 } */
@@ -114,7 +116,6 @@ h3 {
   font-weight: 400;
   font-size: var(--header-md);
   text-transform: uppercase;
-  margin-bottom: 0.5em;
 }
 h4 {
   font-family: "League Spartan";

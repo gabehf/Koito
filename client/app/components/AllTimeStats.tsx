@@ -36,14 +36,14 @@ export default function AllTimeStats() {
   return (
     <div>
       <CardHeader>{header}</CardHeader>
-      <div>
+      <div className="mt-6">
         <span
           className={numberClasses}
           title={Math.floor(data.minutes_listened / 60) + " hours"}
         >
           {data.minutes_listened}
         </span>{" "}
-        Minutes Listened
+        Minutes
       </div>
       <div>
         <span className={numberClasses}>{data.listen_count}</span> Plays

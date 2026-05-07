@@ -27,17 +27,17 @@ export default function Home() {
   return (
     <main className="flex flex-grow justify-center pb-4 w-full">
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0 sm:mt-20 mt-10 mx-10">
-        <div className="flex flex-col md:flex-row gap-10 md:gap-20">
+        <div className="flex flex-col lg:flex-row gap-10 md:gap-20">
           <AllTimeStats />
           <ActivityGrid configurable />
         </div>
         <PeriodSelector setter={setPeriod} current={period} />
         <div className="container justify-center flex flex-wrap gap-10">
-          <PinnedItemGrid />
+          {/*<PinnedItemGrid />*/}
           <TopArtistsCard period={period} />
           <TopAlbumsCard period={period} />
           <TopTracks period={period} limit={10} />
-          <LastPlayed showNowPlaying={true} limit={14} />
+          <LastPlayed showNowPlaying={true} limit={28} />
           {/*<TopArtists period={period} limit={10} />
           <TopAlbums period={period} limit={10} />*/}
         </div>

@@ -23,7 +23,7 @@ export const THEME_KEYS = ["--color"];
 export const themes: Record<string, Theme> = {
   yuu: {
     bg: "#1e1816",
-    bgSecondary: "#2f2623",
+    bgSecondary: "#261F1D",
     bgTertiary: "#453733",
     fg: "#f8f3ec",
     fgSecondary: "#d6ccc2",

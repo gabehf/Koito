@@ -109,13 +109,14 @@ export default function ActivityGrid({
     return rgb;
   }
 
-  const getDarkenAmount = (v: number, t: number): number => {
+  const isAllItems = artistId == albumId && albumId == trackId && trackId == 0;
+
+  const getDarkenAmount = (v: number): number => {
     // really ugly way to just check if this is for all items and not a specific item.
     // is it jsut better to just pass the target in as a var? probably.
-    const adjustment =
-      artistId == albumId && albumId == trackId && trackId == 0 ? 10 : 1;
+    const adjustment = isAllItems ? 10 : 1;
 
-    t = 10 * adjustment;
+    var t = 10 * adjustment;
 
     v = Math.min(v, t);
     return ((v - t) / t) * 0.8;
@@ -165,7 +166,7 @@ export default function ActivityGrid({
   return (
     <div className="flex flex-col items-start">
       <CardHeader isOffset>{header}</CardHeader>
-      <div className="flex flex-col items-center gap-6 pt-4 sm:pt-8 px-4 sm:px-6 pb-4 sm:pb-5 border bg-(--color-bg-secondary) rounded-(--border-radius)">
+      <div className="flex flex-col items-center gap-6 pt-4 sm:pt-6 px-4 sm:px-7 pb-4 sm:pb-5 border bg-(--color-bg-secondary) rounded-(--border-radius)">
         <div className="flex items-start gap-2">
           <div className={`grid grid-rows-7 ${CELL_GAP}`}>
             {DAY_LABELS.map((label, i) => (
@@ -173,7 +174,7 @@ export default function ActivityGrid({
                 key={i}
                 className={`${CELL_H} flex items-center justify-end`}
               >
-                <span className="text-[8px] sm:text-[11px] mt-3 leading-none text-(--color-fg-secondary)">
+                <span className="text-[8px] sm:text-[11px] mt-4 leading-none text-(--color-fg-secondary)">
                   {label}
                 </span>
               </div>
@@ -203,7 +204,7 @@ export default function ActivityGrid({
                           cell.listens > 0
                             ? LightenDarkenColor(
                                 color,
-                                getDarkenAmount(cell.listens, 100)
+                                getDarkenAmount(cell.listens)
                               )
                             : "var(--color-bg-secondary)",
                       }}
@@ -232,7 +233,7 @@ export default function ActivityGrid({
                     display: "inline-block",
                     background: LightenDarkenColor(
                       color,
-                      getDarkenAmount(i * 20, 100)
+                      getDarkenAmount(i * (isAllItems ? 20 : 2))
                     ),
                   }}
                   className={`w-[8px] sm:w-[9px] h-[8px] sm:h-[9px] rounded-[3px] ${"border-[0.5px] border-(--color-bg-tertiary)"}`}

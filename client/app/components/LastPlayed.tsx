@@ -98,10 +98,10 @@ export default function LastPlays(props: Props) {
   params += props.trackId ? `&track_id=${props.trackId}` : "";
 
   return (
-    <div className="text-sm sm:text-[15px]">
+    <div className="text-sm sm:text-[15px] lg:w-17/20 lg:max-w-[1150px]">
       <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
       {listens.length < 1 && "Nothing to show"}
-      <table className="table-fixed border-collapse mt-6 w-[350px] sm:w-[428px]">
+      <table className="table-fixed border-collapse mt-6 w-[350px] sm:w-full">
         <tbody>
           {props.showNowPlaying && npData && npData.currently_playing && (
             <tr className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0">
@@ -145,7 +145,7 @@ export default function LastPlays(props: Props) {
                   <Image src={imageUrl(item.track.image, "small")} size={32} />
                 </Link>
               </td>
-              <td className="w-[150px] sm:w-[275px]">
+              <td className="w-[150px] sm:w-full">
                 {props.hideArtists ? null : (
                   <>
                     <ArtistLinks artists={item.track.artists} />
@@ -153,7 +153,7 @@ export default function LastPlays(props: Props) {
                   </>
                 )}
                 <Link
-                  className="hover:text-[--color-fg-secondary]"
+                  className="hover:text-(--color-fg-secondary)"
                   to={`/track/${item.track.id}`}
                 >
                   {item.track.title}
@@ -181,6 +181,14 @@ export default function LastPlays(props: Props) {
           ))}
         </tbody>
       </table>
+      <div className="w-full flex items-center">
+        <Link
+          to={`/listens?period=all_time${params}`}
+          className="inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"
+        >
+          SEE MORE →
+        </Link>
+      </div>
     </div>
   );
 }

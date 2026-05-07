@@ -36,7 +36,11 @@ export default function MediaItem({
         className="flex flex-col items-start"
         style={alignTop ? { marginTop: 6 } : undefined}
       >
-        <div className="line-clamp-2">{title}</div>
+        <Link to={link} style={{ minWidth: imageSize }}>
+          <div className="line-clamp-2 hover:text-(--color-fg-secondary)">
+            {title}
+          </div>
+        </Link>
         {subtitle !== undefined && (
           <div className="text-[14px]">{subtitle}</div>
         )}

@@ -9,6 +9,7 @@ import ArtistAlbums from "~/components/ArtistAlbums";
 import ActivityGrid from "~/components/ActivityGrid";
 import { timeListenedString } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
+import MediaItemNote from "~/components/MediaItemNote";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const res = await fetch(`/apis/web/v1/artist/${params.id}`);
@@ -51,7 +52,7 @@ export default function Artist() {
         return r;
       }}
       subContent={
-        <div className="flex flex-col gap-2 items-start">
+        <div className="flex flex-col gap-1.5 items-start">
           {artist.listen_count > 0 && (
             <p>
               {artist.listen_count} play{artist.listen_count > 1 ? "s" : ""}
@@ -73,8 +74,8 @@ export default function Artist() {
     >
       <div className="flex flex-col gap-20">
         <div className="flex gap-25 mt-10 flex-wrap">
-          <LastPlayed limit={11} artistId={artist.id} />
           <TopTracks limit={8} period={period} artistId={artist.id} />
+          <LastPlayed limit={11} artistId={artist.id} />
           <div className="flex flex-col items-start gap-10">
             <InterestGraph artistId={artist.id} />
             <ActivityGrid configurable artistId={artist.id} />

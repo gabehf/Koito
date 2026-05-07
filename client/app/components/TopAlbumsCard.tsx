@@ -93,9 +93,9 @@ export default function TopAlbumsCard({ period }: Props) {
           />
           <div className="absolute bottom-10 left-5">
             <Link to={`/album/${data.items[0].item.id}`}>
-              <h2 className="font-medium text-sm">
+              <h5 className="text-3xl font-semibold">
                 {data.items[0]?.item.title}
-              </h2>
+              </h5>
             </Link>
             <div>
               <ArtistLinks
@@ -113,7 +113,10 @@ export default function TopAlbumsCard({ period }: Props) {
         </div>
         <div className="flex flex-col items-start">
           {data.items.slice(1).map((i) => (
-            <div className="px-6 pb-6" key={`top_albums_card_${i.rank}`}>
+            <div
+              className="px-6 pb-6"
+              key={`top_albums_card_${i.rank}_${i.item.title}`}
+            >
               <MediaItem
                 image={imageUrl(i.item.image, "medium")}
                 imageSize={imageSize}
