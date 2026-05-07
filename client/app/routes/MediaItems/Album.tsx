@@ -6,8 +6,9 @@ import LastPlays from "~/components/LastPlays";
 import PeriodSelector from "~/components/PeriodSelector";
 import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
-import { timeListenedString } from "~/utils/utils";
+import { timeListenedString, formatDate } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
+import { useAppContext } from "~/providers/AppProvider";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const res = await fetch(`/apis/web/v1/album?id=${params.id}`);
@@ -21,6 +22,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function Album() {
   const album = useLoaderData() as Album;
   const [period, setPeriod] = useState("week");
+  const { dateFormat } = useAppContext();
 
   console.log(album);
 
@@ -74,7 +76,7 @@ export default function Album() {
           {album.first_listen > 0 && (
             <p title={new Date(album.first_listen * 1000).toLocaleString()}>
               Listening since{" "}
-              {new Date(album.first_listen * 1000).toLocaleDateString()}
+              {formatDate(new Date(album.first_listen * 1000), dateFormat)}
             </p>
           )}
         </div>
@@ -94,3 +96,4 @@ export default function Album() {
     </MediaLayout>
   );
 }
+
