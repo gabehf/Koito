@@ -1,24 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import Popup from "./Popup";
 import { useTheme } from "~/hooks/useTheme";
-import ActivityOptsSelector from "./ActivityOptsSelector";
-import type { Theme } from "~/styles/themes.css";
 import { apiFetch, type ListenActivityItem } from "api/api";
 import CardHeader from "./primitives/CardHeader";
 import useWindowWidth from "~/hooks/useWindowWidth";
+import { blendColors } from "~/utils/utils";
 
-function getPrimaryColor(theme: Theme): string {
-  const value = theme.primary;
-  const rgbMatch = value.match(
-    /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/
-  );
-  if (rgbMatch) {
-    const [, r, g, b] = rgbMatch.map(Number);
-    return "#" + [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
-  }
-
-  return value;
-}
 interface Props {
   step?: string;
   range?: number;
@@ -65,7 +52,8 @@ export default function ActivityGrid({
   });
 
   const { theme } = useTheme();
-  const color = getPrimaryColor(theme);
+  const primarycolor = theme.primary;
+  const bgColor = theme.bgSecondary;
 
   const width = useWindowWidth();
 
@@ -87,39 +75,19 @@ export default function ActivityGrid({
     );
   }
 
-  // from https://css-tricks.com/snippets/javascript/lighten-darken-color/
-  function LightenDarkenColor(hex: string, lum: number) {
-    // validate hex string
-    hex = String(hex).replace(/[^0-9a-f]/gi, "");
-    if (hex.length < 6) {
-      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    }
-    lum = lum || 0;
-
-    // convert to decimal and change luminosity
-    var rgb = "#",
-      c,
-      i;
-    for (i = 0; i < 3; i++) {
-      c = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-      c = Math.round(Math.min(Math.max(0, c + c * lum), 255)).toString(16);
-      rgb += ("00" + c).substring(c.length);
-    }
-
-    return rgb;
+  let target = 100;
+  if (trackId !== 0) {
+    target = 5;
+  } else if (albumId !== 0) {
+    target = 10;
+  } else if (artistId !== 0) {
+    target = 20;
   }
 
-  const isAllItems = artistId == albumId && albumId == trackId && trackId == 0;
-
-  const getDarkenAmount = (v: number): number => {
-    // really ugly way to just check if this is for all items and not a specific item.
-    // is it jsut better to just pass the target in as a var? probably.
-    const adjustment = isAllItems ? 10 : 1;
-
-    var t = 10 * adjustment;
-
+  const getBlendAmount = (v: number, t: number): number => {
     v = Math.min(v, t);
-    return ((v - t) / t) * 0.8;
+
+    return v / t;
   };
 
   // Build a lookup from normalized date key → listen count
@@ -202,9 +170,10 @@ export default function ActivityGrid({
                         display: "inline-block",
                         background:
                           cell.listens > 0
-                            ? LightenDarkenColor(
-                                color,
-                                getDarkenAmount(cell.listens)
+                            ? blendColors(
+                                bgColor,
+                                primarycolor,
+                                getBlendAmount(cell.listens, target)
                               )
                             : "var(--color-bg-secondary)",
                       }}
@@ -231,9 +200,10 @@ export default function ActivityGrid({
                 <div
                   style={{
                     display: "inline-block",
-                    background: LightenDarkenColor(
-                      color,
-                      getDarkenAmount(i * (isAllItems ? 20 : 2))
+                    background: blendColors(
+                      bgColor,
+                      primarycolor,
+                      getBlendAmount(i, 5)
                     ),
                   }}
                   className={`w-[8px] sm:w-[9px] h-[8px] sm:h-[9px] rounded-[3px] ${"border-[0.5px] border-(--color-bg-tertiary)"}`}

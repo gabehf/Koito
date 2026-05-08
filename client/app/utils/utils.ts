@@ -117,5 +117,28 @@ const timeListenedString = (seconds: number) => {
   return `${minutes} minutes listened`;
 };
 
-export { hexToHSL, timeListenedString, getRewindYear, getRewindParams };
+function blendColors(hex1: string, hex2: string, t: number): string {
+  const parse = (h: string): [number, number, number] => [
+    parseInt(h.slice(1, 3), 16),
+    parseInt(h.slice(3, 5), 16),
+    parseInt(h.slice(5, 7), 16),
+  ];
+
+  const [r1, g1, b1] = parse(hex1);
+  const [r2, g2, b2] = parse(hex2);
+
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const b = Math.round(b1 + (b2 - b1) * t);
+
+  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
+export {
+  hexToHSL,
+  timeListenedString,
+  getRewindYear,
+  getRewindParams,
+  blendColors,
+};
 export type { hsl };
