@@ -24,7 +24,10 @@ export default function CardHeader({ isOffset, children, to }: Props) {
     );
   } else {
     return (
-      <h3 style={{ marginLeft: ml || 0 }} className="color-fg-secondary">
+      <h3
+        style={{ marginLeft: ml || 0 }}
+        className="color-fg-secondary inline-block mb-1"
+      >
         {children}
       </h3>
     );

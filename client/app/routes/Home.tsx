@@ -37,9 +37,7 @@ export default function Home() {
           <TopArtistsCard period={period} />
           <TopAlbumsCard period={period} />
           <TopTracks period={period} limit={10} />
-          <LastPlayed showNowPlaying={true} limit={28} />
-          {/*<TopArtists period={period} limit={10} />
-          <TopAlbums period={period} limit={10} />*/}
+          <LastPlayed showNowPlaying={true} limit={28} showSeeMore />
         </div>
       </div>
     </main>

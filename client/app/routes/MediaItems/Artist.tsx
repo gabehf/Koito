@@ -75,7 +75,9 @@ export default function Artist() {
       <div className="flex flex-col gap-20">
         <div className="flex gap-25 mt-10 flex-wrap">
           <TopTracks limit={8} period={period} artistId={artist.id} />
-          <LastPlayed limit={11} artistId={artist.id} />
+          <div className="w-2/5 max-w-[500px]">
+            <LastPlayed limit={11} artistId={artist.id} />
+          </div>
           <div className="flex flex-col items-start gap-10">
             <InterestGraph artistId={artist.id} />
             <ActivityGrid configurable artistId={artist.id} />

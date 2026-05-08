@@ -22,6 +22,7 @@ interface Props {
   trackId?: number;
   hideArtists?: boolean;
   showNowPlaying?: boolean;
+  showSeeMore?: boolean;
 }
 
 const getLastListens = (args: {
@@ -181,14 +182,16 @@ export default function LastPlays(props: Props) {
           ))}
         </tbody>
       </table>
-      <div className="flex items-center w-[350px] sm:w-full">
-        <Link
-          to={`/listens?period=all_time${params}`}
-          className="inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"
-        >
-          SEE MORE →
-        </Link>
-      </div>
+      {props.showSeeMore && (
+        <div className="flex items-center w-[350px] sm:w-full">
+          <Link
+            to={`/listens?period=all_time${params}`}
+            className="inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"
+          >
+            SEE MORE →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

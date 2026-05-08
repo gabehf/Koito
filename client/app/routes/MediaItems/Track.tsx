@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Link, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { mergeTracks, type Album, type Track } from "api/api";
+import { mergeTracks, type Album, type Artist, type Track } from "api/api";
 import LastPlayed from "~/components/LastPlayed";
-import PeriodSelector from "~/components/PeriodSelector";
 import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
 import { timeListenedString } from "~/utils/utils";
@@ -52,7 +50,7 @@ export default function Track() {
         <div className="flex flex-col gap-2 items-start">
           {track.artists.length > 0 && (
             <p>
-              {track.artists.map((artist, i) => (
+              {track.artists.map((artist: Artist, i: number) => (
                 <span key={artist.id}>
                   {i > 0 && ", "}
                   <Link className="hover:underline" to={`/artist/${artist.id}`}>
@@ -88,7 +86,9 @@ export default function Track() {
       }
     >
       <div className="flex flex-wrap gap-20 mt-10">
-        <LastPlayed limit={10} trackId={track.id} />
+        <div className="w-2/5 max-w-[500px]">
+          <LastPlayed limit={10} trackId={track.id} />
+        </div>
         <div className="flex flex-col items-start gap-4">
           <ActivityGrid configurable trackId={track.id} />
           <InterestGraph trackId={track.id} />
