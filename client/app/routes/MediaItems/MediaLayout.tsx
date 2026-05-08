@@ -92,7 +92,7 @@ export default function MediaLayout(props: Props) {
           <div className="flex flex-col justify-around">
             <img
               style={{ zIndex: 5 }}
-              src={imageUrl(props.img, "large")}
+              src={imageUrl(props.img, "xl")}
               alt={props.title}
               className="md:min-w-[385px] rounded-(--border-radius) border w-[220px] h-auto"
             />
