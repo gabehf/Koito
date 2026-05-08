@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import ArtistLinks from "./ArtistLinks";
 import MediaItem from "./primitives/MediaItem";
 import {
-  imageUrl,
   type Album,
   type Artist,
   type Track,
@@ -88,7 +87,7 @@ function ItemCard({
               <td className="pr-3 py-1 w-full">
                 <MediaItem
                   className="gap-2"
-                  image={imageUrl(album.image, "medium")}
+                  image={album.image.medium}
                   link={`/album/${album.id}`}
                   imageSize={56}
                   title={<Link to={`/album/${album.id}`}>{album.title}</Link>}
@@ -132,7 +131,7 @@ function ItemCard({
               <td className="pr-3 py-1 w-full">
                 <MediaItem
                   className="gap-2"
-                  image={imageUrl(track.image, "medium")}
+                  image={track.image.medium}
                   link={`/track/${track.id}`}
                   imageSize={56}
                   title={<Link to={`/track/${track.id}`}>{track.title}</Link>}
@@ -170,7 +169,7 @@ function ItemCard({
               <td className="pr-3 py-1 w-full">
                 <MediaItem
                   className="gap-2"
-                  image={imageUrl(artist.image, "medium")}
+                  image={artist.image.medium}
                   link={`/artist/${artist.id}`}
                   imageSize={56}
                   title={<Link to={`/artist/${artist.id}`}>{artist.name}</Link>}

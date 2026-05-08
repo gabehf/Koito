@@ -119,7 +119,7 @@ func (d *Psql) SearchTracks(ctx context.Context, q string) ([]*models.Track, err
 				ID:    row.ID,
 				MbzID: row.MusicBrainzID,
 				Title: row.Title,
-				Image: row.Image,
+				Image: catalog.BuildImageList(row.Image),
 			}
 			err = json.Unmarshal(row.Artists, &ret[i].Artists)
 			if err != nil {
@@ -141,7 +141,7 @@ func (d *Psql) SearchTracks(ctx context.Context, q string) ([]*models.Track, err
 				ID:    row.ID,
 				MbzID: row.MusicBrainzID,
 				Title: row.Title,
-				Image: row.Image,
+				Image: catalog.BuildImageList(row.Image),
 			}
 			err = json.Unmarshal(row.Artists, &ret[i].Artists)
 			if err != nil {

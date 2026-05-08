@@ -1,6 +1,6 @@
 import Rewind from "~/components/rewind/Rewind";
 import type { Route } from "./+types/Home";
-import { imageUrl, type RewindStats } from "api/api";
+import { type RewindStats } from "api/api";
 import { useEffect, useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
@@ -66,7 +66,7 @@ export default function RewindPage() {
     const img = (stats.top_artists[0] as any)?.item.image;
     if (!img) return;
 
-    average(imageUrl(img, "small"), { amount: 1 }).then((color) => {
+    average(img.small, { amount: 1 }).then((color) => {
       setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
     });
   }, [stats]);

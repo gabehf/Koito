@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
@@ -46,7 +47,7 @@ func (d *Psql) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts) 
 				MbzID:       row.MusicBrainzID,
 				ID:          row.ID,
 				ListenCount: row.ListenCount,
-				Image:       row.Image,
+				Image:       catalog.BuildImageList(row.Image),
 				AlbumID:     row.ReleaseID,
 				Artists:     artists,
 			}
@@ -86,7 +87,7 @@ func (d *Psql) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts) 
 				Title:       row.Title,
 				MbzID:       row.MusicBrainzID,
 				ID:          row.ID,
-				Image:       row.Image,
+				Image:       catalog.BuildImageList(row.Image),
 				ListenCount: row.ListenCount,
 				AlbumID:     row.ReleaseID,
 				Artists:     artists,
@@ -126,7 +127,7 @@ func (d *Psql) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts) 
 				Title:       row.Title,
 				MbzID:       row.MusicBrainzID,
 				ID:          row.ID,
-				Image:       row.Image,
+				Image:       catalog.BuildImageList(row.Image),
 				ListenCount: row.ListenCount,
 				AlbumID:     row.ReleaseID,
 				Artists:     artists,

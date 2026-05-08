@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/google/uuid"
@@ -159,10 +160,11 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		if err != nil {
 			return nil, err
 		}
-		l.Track.Image, err = s.imageForTrack(ctx, l.Track.ID)
+		imgid, err := s.imageForTrack(ctx, l.Track.ID)
 		if err != nil {
 			return nil, err
 		}
+		l.Track.Image = catalog.BuildImageList(imgid)
 		listens = append(listens, l)
 	}
 

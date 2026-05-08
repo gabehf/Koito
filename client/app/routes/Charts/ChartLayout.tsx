@@ -1,7 +1,7 @@
 import { useFetcher, useLocation, useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { average } from "color.js";
-import { imageUrl, type PaginatedResponse } from "api/api";
+import { type PaginatedResponse } from "api/api";
 import PeriodSelector from "~/components/PeriodSelector";
 
 interface ChartLayoutProps<T> {
@@ -43,7 +43,7 @@ export default function ChartLayout<T>({
     const img = (data.items[0] as any)?.item?.image;
     if (!img) return;
 
-    average(imageUrl(img, "small"), { amount: 1 }).then((color) => {
+    average(img.small, { amount: 1 }).then((color) => {
       setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
     });
   }, [data]);

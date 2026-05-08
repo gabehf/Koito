@@ -1,6 +1,5 @@
 import {
   apiFetch,
-  imageUrl,
   type PaginatedResponse,
   type Ranked,
   type Artist,
@@ -68,7 +67,7 @@ export default function TopArtistsCard({ period }: Props) {
       <div className="max-w-[350px] border bg-(--color-bg-secondary) rounded-(--border-radius)">
         <div className="relative">
           <img
-            src={imageUrl(data.items[0]?.item.image, "large")}
+            src={data.items[0]?.item.image?.large}
             style={{
               borderRadius: "var(--border-radius) var(--border-radius) 0 0",
             }}
@@ -104,7 +103,7 @@ export default function TopArtistsCard({ period }: Props) {
           {data.items.slice(1).map((i) => (
             <div className="px-6 pb-6" key={`top_artists_card_${i.rank}`}>
               <MediaItem
-                image={imageUrl(i.item.image, "medium")}
+                image={i.item.image.medium}
                 imageSize={imageSize}
                 link={`/artist/${i.item.id}`}
                 title={i.item.name}

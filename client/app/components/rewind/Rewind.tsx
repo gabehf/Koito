@@ -1,4 +1,4 @@
-import { imageUrl, type RewindStats } from "api/api";
+import { type RewindStats } from "api/api";
 import RewindStatText from "./RewindStatText";
 import { RewindTopItem } from "./RewindTopItem";
 
@@ -23,7 +23,7 @@ export default function Rewind(props: Props) {
       <h2>{props.stats.title}</h2>
       <RewindTopItem
         title="Top Artist"
-        imageSrc={imageUrl(artistimg, "medium")}
+        imageSrc={artistimg?.medium}
         items={props.stats.top_artists}
         getLabel={(a) => a.name}
         includeTime={props.includeTime}
@@ -31,7 +31,7 @@ export default function Rewind(props: Props) {
 
       <RewindTopItem
         title="Top Album"
-        imageSrc={imageUrl(albumimg, "medium")}
+        imageSrc={albumimg?.medium}
         items={props.stats.top_albums}
         getLabel={(a) => a.title}
         includeTime={props.includeTime}
@@ -39,7 +39,7 @@ export default function Rewind(props: Props) {
 
       <RewindTopItem
         title="Top Track"
-        imageSrc={imageUrl(trackimg, "medium")}
+        imageSrc={trackimg?.medium}
         items={props.stats.top_tracks}
         getLabel={(t) => t.title}
         includeTime={props.includeTime}

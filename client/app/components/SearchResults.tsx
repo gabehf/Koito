@@ -1,4 +1,4 @@
-import { imageUrl, type SearchResponse } from "api/api";
+import { type SearchResponse } from "api/api";
 import { useState } from "react";
 import SearchResultItem from "./SearchResultItem";
 import SearchResultSelectorItem from "./SearchResultSelectorItem";
@@ -38,7 +38,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
                   id={artist.id}
                   onClick={() => selectItem(artist.name, artist.id)}
                   text={artist.name}
-                  img={imageUrl(artist.image, "small")}
+                  img={artist.image.small}
                   active={selected === artist.id}
                 />
               ) : (
@@ -46,7 +46,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
                   to={`/artist/${artist.id}`}
                   onClick={() => onSelect(artist.id)}
                   text={artist.name}
-                  img={imageUrl(artist.image, "small")}
+                  img={artist.image.small}
                 />
               )
             )}
@@ -68,7 +68,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
                       ? "Various Artists"
                       : album.artists[0].name
                   }
-                  img={imageUrl(album.image, "small")}
+                  img={album.image.small}
                   active={selected === album.id}
                 />
               ) : (
@@ -81,7 +81,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
                       ? "Various Artists"
                       : album.artists[0].name
                   }
-                  img={imageUrl(album.image, "small")}
+                  img={album.image.small}
                 />
               )
             )}
@@ -99,7 +99,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
                   onClick={() => selectItem(track.title, track.id)}
                   text={track.title}
                   subtext={track.artists.map((a) => a.name).join(", ")}
-                  img={imageUrl(track.image, "small")}
+                  img={track.image.small}
                   active={selected === track.id}
                 />
               ) : (
@@ -108,7 +108,7 @@ export default function SearchResults({ data, onSelect, selectorMode }: Props) {
                   onClick={() => onSelect(track.id)}
                   text={track.title}
                   subtext={track.artists.map((a) => a.name).join(", ")}
-                  img={imageUrl(track.image, "small")}
+                  img={track.image.small}
                 />
               )
             )}

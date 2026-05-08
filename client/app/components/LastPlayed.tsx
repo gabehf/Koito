@@ -6,7 +6,6 @@ import Image from "./primitives/Image";
 import {
   apiFetch,
   deleteListen,
-  imageUrl,
   type Listen,
   type NowPlaying,
   type PaginatedResponse,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { average } from "color.js";
-import { imageUrl, type SearchResponse } from "api/api";
+import { type ImageList, type SearchResponse } from "api/api";
 import ImageDropHandler from "~/components/ImageDropHandler";
 import { Edit, ImageIcon, Merge, Plus, Trash } from "lucide-react";
 import { useAppContext } from "~/providers/AppProvider";
@@ -25,7 +25,7 @@ export type MergeSearchCleanerFunc = (
 interface Props {
   type: "Track" | "Album" | "Artist";
   title: string;
-  img: string;
+  img: ImageList;
   id: number;
   rank: number;
   musicbrainzId: string;
@@ -46,7 +46,7 @@ export default function MediaLayout(props: Props) {
   const { user } = useAppContext();
 
   useEffect(() => {
-    average(imageUrl(props.img, "small"), { amount: 1 }).then((color) => {
+    average(props.img.large, { amount: 1 }).then((color) => {
       setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
     });
   }, [props.img]);
@@ -92,7 +92,7 @@ export default function MediaLayout(props: Props) {
           <div className="flex flex-col justify-around">
             <img
               style={{ zIndex: 5 }}
-              src={imageUrl(props.img, "xl")}
+              src={props.img.xl}
               alt={props.title}
               className="md:min-w-[385px] rounded-(--border-radius) border w-[220px] h-auto"
             />

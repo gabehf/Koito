@@ -345,7 +345,6 @@ export {
   mergeTracks,
   mergeAlbums,
   mergeArtists,
-  imageUrl,
   login,
   logout,
   getCfg,
@@ -366,12 +365,18 @@ export {
   submitListen,
   getRewindStats,
 };
+type ImageList = {
+  small: string;
+  medium: string;
+  large: string;
+  xl: string;
+};
 type Track = {
   id: number;
   title: string;
   artists: SimpleArtists[];
   listen_count: number;
-  image: string;
+  image: ImageList;
   album_id: number;
   musicbrainz_id: string;
   time_listened: number;
@@ -386,7 +391,7 @@ type SimpleTrack = {
 type Artist = {
   id: number;
   name: string;
-  image: string;
+  image: ImageList;
   aliases: string[];
   listen_count: number;
   musicbrainz_id: string;
@@ -398,7 +403,7 @@ type Artist = {
 type Album = {
   id: number;
   title: string;
-  image: string;
+  image: ImageList;
   listen_count: number;
   is_various_artists: boolean;
   artists: SimpleArtists[];
@@ -512,4 +517,5 @@ export type {
   NowPlaying,
   Stats,
   RewindStats,
+  ImageList,
 };

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   apiFetch,
-  imageUrl,
   type PaginatedResponse,
   type Ranked,
   type Album,
@@ -52,7 +51,7 @@ export default function ArtistAlbums({ artistId, name }: Props) {
         {data.items.map((item) => (
           <div className="w-[330px]">
             <MediaItem
-              image={imageUrl(item.item.image, "medium")}
+              image={item.item.image.medium}
               imageSize={125}
               link={`/album/${item.item.id}`}
               alignTop

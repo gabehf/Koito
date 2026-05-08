@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
@@ -56,7 +57,7 @@ func (s *Sqlite) getTrackByID(ctx context.Context, id int32) (*models.Track, err
 		return nil, fmt.Errorf("getTrackByID: %w", err)
 	}
 	track.MbzID = parseNullableUUID(mbzID)
-	track.Image = parseNullableUUID(image)
+	track.Image = catalog.BuildImageList(parseNullableUUID(image))
 
 	artists, err := s.artistsForTrack(ctx, id)
 	if err != nil {
@@ -527,7 +528,7 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 		}
 
 		t.MbzID = parseNullableUUID(mbzID)
-		t.Image = parseNullableUUID(image)
+		t.Image = catalog.BuildImageList(parseNullableUUID(image))
 
 		// N+1 Query (acceptable if volume is low, otherwise consider batching)
 		t.Artists, err = s.artistsForTrack(ctx, t.ID)
@@ -650,7 +651,7 @@ func (s *Sqlite) SearchTracks(ctx context.Context, q string) ([]*models.Track, e
 			return nil, err
 		}
 		t.MbzID = parseNullableUUID(mbzID)
-		t.Image = parseNullableUUID(image)
+		t.Image = catalog.BuildImageList(parseNullableUUID(image))
 		score := fuzzyScore(q, t.Title)
 		if prev, ok := seen[t.ID]; !ok || score > prev {
 			seen[t.ID] = score

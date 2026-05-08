@@ -1,6 +1,5 @@
 import {
   apiFetch,
-  imageUrl,
   type PaginatedResponse,
   type Ranked,
   type Album,
@@ -70,7 +69,7 @@ export default function TopAlbumsCard({ period }: Props) {
       <div className="max-w-[350px] border bg-(--color-bg-secondary) rounded-(--border-radius)">
         <div className="relative">
           <img
-            src={imageUrl(data.items[0]?.item.image, "large")}
+            src={data.items[0]?.item.image?.large}
             style={{
               borderRadius: "var(--border-radius) var(--border-radius) 0 0",
             }}
@@ -118,7 +117,7 @@ export default function TopAlbumsCard({ period }: Props) {
               key={`top_albums_card_${i.rank}_${i.item.title}`}
             >
               <MediaItem
-                image={imageUrl(i.item.image, "medium")}
+                image={i.item.image.medium}
                 imageSize={imageSize}
                 link={`/album/${i.item.id}`}
                 title={i.item.title}
