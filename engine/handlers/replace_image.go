@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/gabehf/koito/internal/catalog"
-	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/logger"
@@ -124,12 +123,7 @@ func ReplaceAlbumImageHandler(store db.AlbumStore) http.HandlerFunc {
 func resolveImage(ctx context.Context, r *http.Request, l *zerolog.Logger) (uuid.UUID, string, error) {
 	id := uuid.New()
 
-	var dlSize catalog.ImageSize
-	if cfg.FullImageCacheEnabled() {
-		dlSize = catalog.ImageSizeFull
-	} else {
-		dlSize = catalog.ImageSizeLarge
-	}
+	var dlSize = catalog.ImageSizeXL
 
 	fileUrl := r.FormValue("image_url")
 	if fileUrl != "" {

@@ -22,10 +22,10 @@ import (
 func ImageHandler(store db.ImageStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := logger.FromContext(r.Context())
+		imageIdStr := chi.URLParam(r, "image_id")
 		size := chi.URLParam(r, "size")
-		filename := chi.URLParam(r, "filename")
 
-		l.Debug().Msgf("ImageHandler: Received request to retrieve image with size '%s' and filename '%s'", size, filename)
+		l.Debug().Msgf("ImageHandler: Received request to retrieve image with size '%s' and id '%s'", size, imageIdStr)
 
 		imageSize, err := catalog.ParseImageSize(size)
 		if err != nil {
@@ -34,25 +34,26 @@ func ImageHandler(store db.ImageStore) http.HandlerFunc {
 			return
 		}
 
-		imgid, err := uuid.Parse(filename)
+		imgid, err := uuid.Parse(imageIdStr)
 		if err != nil {
-			l.Debug().Msg("ImageHandler: Invalid image filename, serving default image")
+			l.Debug().Msg("ImageHandler: Invalid image id, serving default image")
 			serveDefaultImage(w, r, imageSize)
 			return
 		}
 
-		desiredImgPath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, size, filepath.Clean(filename))
+		desiredImgPath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, imageIdStr[:2], imageIdStr, filepath.Clean(size)+".webp")
 
 		if _, err := os.Stat(desiredImgPath); os.IsNotExist(err) {
 			l.Debug().Msg("ImageHandler: Image not found in desired size, attempting to retrieve source image")
 
-			fullSizePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, string(catalog.ImageSizeFull), filepath.Clean(filename))
-			largeSizePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, string(catalog.ImageSizeLarge), filepath.Clean(filename))
+			fullSizePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, imageIdStr[:2], imageIdStr, "full.webp")
+			xlSizePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, imageIdStr[:2], imageIdStr, "1000x1000.webp")
 
 			// this if statement flow is terrible but whatever
+
 			var sourcePath string
 			if _, err = os.Stat(fullSizePath); os.IsNotExist(err) {
-				if _, err = os.Stat(largeSizePath); os.IsNotExist(err) {
+				if _, err = os.Stat(xlSizePath); os.IsNotExist(err) {
 					l.Warn().Msgf("ImageHandler: Could not find requested image %s. Attempting to download from source", imgid.String())
 					sourcePath, err = downloadMissingImage(r.Context(), store, imgid)
 					if err != nil {
@@ -64,7 +65,7 @@ func ImageHandler(store db.ImageStore) http.HandlerFunc {
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				} else {
-					sourcePath = largeSizePath
+					sourcePath = xlSizePath
 				}
 			} else if err != nil {
 				l.Err(err).Msg("ImageHandler: Failed to access source image file at full size")
@@ -154,19 +155,22 @@ func serveDefaultImage(w http.ResponseWriter, r *http.Request, size catalog.Imag
 
 // finds the item associated with the image id, downloads it, and saves it in the source path, returning the path to the image
 func downloadMissingImage(ctx context.Context, store db.ImageStore, id uuid.UUID) (string, error) {
+	l := logger.FromContext(ctx)
 	src, err := store.GetImageSource(ctx, id)
 	if err != nil {
 		return "", fmt.Errorf("downloadMissingImage: %w", err)
 	}
 	if src == catalog.ImageSourceUserUpload {
-		return "", fmt.Errorf("downloadMissingImage: user uploaded image is missing")
+		uploadedPath := path.Join(cfg.ConfigDir(), catalog.ImageCacheDir, id.String()[:2], id.String(), "full.webp")
+		l.Debug().Msgf("Looking for uploaded image at path: %s", uploadedPath)
+		_, err := os.Stat(uploadedPath)
+		if err != nil {
+			return "", fmt.Errorf("downloadMissingImage: user uploaded image is missing")
+		} else {
+			return uploadedPath, nil
+		}
 	}
-	var size catalog.ImageSize
-	if cfg.FullImageCacheEnabled() {
-		size = catalog.ImageSizeFull
-	} else {
-		size = catalog.ImageSizeLarge
-	}
+	size := catalog.ImageSizeXL
 	err = catalog.DownloadAndCacheImage(ctx, id, src, size)
 	if err != nil {
 		return "", fmt.Errorf("downloadMissingImage: %w", err)

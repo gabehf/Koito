@@ -23,11 +23,11 @@ import (
 type ImageSize string
 
 const (
-	ImageSizeSmall  ImageSize = "small"
-	ImageSizeMedium ImageSize = "medium"
-	ImageSizeLarge  ImageSize = "large"
-	// imageSizeXL     ImageSize = "xl"
-	ImageSizeFull ImageSize = "full"
+	ImageSizeSmall  ImageSize = "128x128"
+	ImageSizeMedium ImageSize = "256x256"
+	ImageSizeLarge  ImageSize = "500x500"
+	ImageSizeXL     ImageSize = "1000x1000"
+	ImageSizeFull   ImageSize = "full"
 
 	ImageCacheDir = "image_cache"
 )
@@ -43,30 +43,31 @@ func ImageSourceSize() (size ImageSize) {
 
 func ParseImageSize(size string) (ImageSize, error) {
 	switch strings.ToLower(size) {
-	case "small":
+	case "128x128":
 		return ImageSizeSmall, nil
-	case "medium":
+	case "256x256":
 		return ImageSizeMedium, nil
-	case "large":
+	case "500x500":
 		return ImageSizeLarge, nil
-	// case "xl":
-	// 	return imageSizeXL, nil
+	case "1000x1000":
+		return ImageSizeXL, nil
 	case "full":
 		return ImageSizeFull, nil
 	default:
 		return "", fmt.Errorf("unknown image size: %s", size)
 	}
 }
+
 func GetImageSize(size ImageSize) int {
 	var px int
 	switch size {
-	case "small":
-		px = 48
-	case "medium":
+	case "128x128":
+		px = 128
+	case "256x256":
 		px = 256
-	case "large":
+	case "500x500":
 		px = 500
-	case "xl":
+	case "1000x1000":
 		px = 1000
 	}
 	return px
@@ -109,15 +110,7 @@ func DownloadAndCacheImage(ctx context.Context, id uuid.UUID, url string, size I
 func CompressAndSaveImage(ctx context.Context, filename string, size ImageSize, body io.Reader) error {
 	l := logger.FromContext(ctx)
 
-	if size == ImageSizeFull {
-		err := saveImage(filename, size, body)
-		if err != nil {
-			return fmt.Errorf("CompressAndSaveImage: %w", err)
-		}
-		return nil
-	}
-
-	l.Debug().Msg("Creating resized image")
+	l.Debug().Msgf("Creating resized image at size %s", size)
 	compressed, err := compressImage(size, body)
 	if err != nil {
 		return fmt.Errorf("CompressAndSaveImage: %w", err)
@@ -130,19 +123,20 @@ func CompressAndSaveImage(ctx context.Context, filename string, size ImageSize, 
 	return nil
 }
 
-// SaveImage saves an image to the image_cache/{size} folder
+// SaveImage saves an image to the filename[:2]/filename/{size}.webp path
 func saveImage(filename string, size ImageSize, data io.Reader) error {
 	configDir := cfg.ConfigDir()
 	cacheDir := filepath.Join(configDir, ImageCacheDir)
+	fileDir := filepath.Join(cacheDir, filename[:2], filename)
 
 	// Ensure the cache directory exists
-	err := os.MkdirAll(filepath.Join(cacheDir, string(size)), 0744)
+	err := os.MkdirAll(fileDir, 0744)
 	if err != nil {
 		return fmt.Errorf("saveImage: failed to create full image cache directory: %w", err)
 	}
 
 	// Create a file in the cache directory
-	imagePath := filepath.Join(cacheDir, string(size), filename)
+	imagePath := filepath.Join(fileDir, string(size)+".webp")
 	file, err := os.Create(imagePath)
 	if err != nil {
 		return fmt.Errorf("saveImage: failed to create image file: %w", err)
@@ -164,6 +158,15 @@ func compressImage(size ImageSize, data io.Reader) (io.Reader, error) {
 		return nil, fmt.Errorf("compressImage: io.ReadAll: %w", err)
 	}
 	px := GetImageSize(size)
+
+	if size == ImageSizeFull {
+		ogsize, err := bimg.Size(imgBytes)
+		if err != nil {
+			return nil, fmt.Errorf("compressImage: bimg.Size: %w", err)
+		}
+		px = ogsize.Width
+	}
+
 	// Resize with bimg
 	imgBytes, err = bimg.NewImage(imgBytes).Process(bimg.Options{
 		Width:         px,
