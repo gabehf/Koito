@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/gabehf/koito/internal/catalog"
-	"github.com/gabehf/koito/internal/cfg"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,10 +36,10 @@ func TestImageLifecycle(t *testing.T) {
 
 	// ensure download is correct
 
-	imagePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, "full", imgID.String())
+	imagePath := catalog.BuildImagePath(imgID, catalog.ImageSizeFull)
 	_, err = os.Stat(imagePath)
 	assert.NoError(t, err)
-	imagePath = filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, "medium", imgID.String())
+	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeMedium)
 	_, err = os.Stat(imagePath)
 	assert.NoError(t, err)
 
@@ -48,12 +47,12 @@ func TestImageLifecycle(t *testing.T) {
 
 	// ensure delete works
 
-	imagePath = filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, "full", imgID.String())
+	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeFull)
 	_, err = os.Stat(imagePath)
-	assert.Error(t, err)
-	imagePath = filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, "medium", imgID.String())
+	assert.ErrorIs(t, err, os.ErrNotExist)
+	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeMedium)
 	_, err = os.Stat(imagePath)
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, os.ErrNotExist)
 
 	// re-download for prune
 
@@ -66,10 +65,10 @@ func TestImageLifecycle(t *testing.T) {
 
 	// ensure prune works
 
-	imagePath = filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, "full", imgID.String())
+	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeFull)
 	_, err = os.Stat(imagePath)
-	assert.Error(t, err)
-	imagePath = filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, "medium", imgID.String())
+	assert.ErrorIs(t, err, os.ErrNotExist)
+	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeMedium)
 	_, err = os.Stat(imagePath)
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }

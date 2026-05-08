@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/repository"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -28,7 +29,7 @@ func (d *Psql) SearchArtists(ctx context.Context, q string) ([]*models.Artist, e
 				ID:    row.ID,
 				MbzID: row.MusicBrainzID,
 				Name:  row.Name,
-				Image: row.Image,
+				Image: catalog.BuildImageList(row.Image),
 			}
 		}
 		return ret, nil
@@ -46,7 +47,7 @@ func (d *Psql) SearchArtists(ctx context.Context, q string) ([]*models.Artist, e
 				ID:    row.ID,
 				MbzID: row.MusicBrainzID,
 				Name:  row.Name,
-				Image: row.Image,
+				Image: catalog.BuildImageList(row.Image),
 			}
 		}
 		return ret, nil
@@ -69,7 +70,7 @@ func (d *Psql) SearchAlbums(ctx context.Context, q string) ([]*models.Album, err
 				MbzID:          row.MusicBrainzID,
 				Title:          row.Title,
 				VariousArtists: row.VariousArtists,
-				Image:          row.Image,
+				Image:          catalog.BuildImageList(row.Image),
 			}
 			err = json.Unmarshal(row.Artists, &ret[i].Artists)
 			if err != nil {
@@ -92,7 +93,7 @@ func (d *Psql) SearchAlbums(ctx context.Context, q string) ([]*models.Album, err
 				MbzID:          row.MusicBrainzID,
 				Title:          row.Title,
 				VariousArtists: row.VariousArtists,
-				Image:          row.Image,
+				Image:          catalog.BuildImageList(row.Image),
 			}
 			err = json.Unmarshal(row.Artists, &ret[i].Artists)
 			if err != nil {

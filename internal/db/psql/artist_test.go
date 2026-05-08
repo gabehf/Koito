@@ -132,7 +132,7 @@ func TestUpdateArtist(t *testing.T) {
 
 	result, err := store.GetArtist(ctx, db.GetArtistOpts{ID: artist.ID})
 	require.NoError(t, err)
-	assert.Equal(t, imgid, *result.Image)
+	assert.Contains(t, result.Image.Small, imgid.String())
 
 	truncateTestData(t)
 }

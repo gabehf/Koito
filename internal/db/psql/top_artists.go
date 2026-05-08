@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
@@ -34,7 +35,7 @@ func (d *Psql) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpts)
 			Name:        row.Name,
 			MbzID:       row.MusicBrainzID,
 			ID:          row.ID,
-			Image:       row.Image,
+			Image:       catalog.BuildImageList(row.Image),
 			ListenCount: row.ListenCount,
 		}
 		rgs[i].Item = t

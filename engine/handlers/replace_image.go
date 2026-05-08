@@ -58,8 +58,8 @@ func ReplaceArtistImageHandler(store db.ArtistStore) http.HandlerFunc {
 			return
 		}
 
-		if artist.Image != nil {
-			if err = catalog.DeleteImage(*artist.Image); err != nil {
+		if artist.Image.Small != "" {
+			if err = catalog.DeleteImage(*parseOldImage(artist.Image.Small)); err != nil {
 				l.Err(err).Msg("ReplaceArtistImageHandler: Failed to delete old image file")
 				utils.WriteError(w, "could not delete old image file", http.StatusInternalServerError)
 				return
@@ -106,8 +106,8 @@ func ReplaceAlbumImageHandler(store db.AlbumStore) http.HandlerFunc {
 			return
 		}
 
-		if album.Image != nil {
-			if err = catalog.DeleteImage(*album.Image); err != nil {
+		if album.Image.Small != "" {
+			if err = catalog.DeleteImage(*parseOldImage(album.Image.Small)); err != nil {
 				l.Err(err).Msg("ReplaceAlbumImageHandler: Failed to delete old image file")
 				utils.WriteError(w, "could not delete old image file", http.StatusInternalServerError)
 				return
@@ -163,9 +163,22 @@ func resolveImage(ctx context.Context, r *http.Request, l *zerolog.Logger) (uuid
 	}
 
 	l.Debug().Msg("resolveImage: Saving image to cache")
-	if err := catalog.CompressAndSaveImage(ctx, id.String(), dlSize, file); err != nil {
+	if err := catalog.CompressAndSaveImage(ctx, id, dlSize, file); err != nil {
 		l.Err(err).Msg("resolveImage: Could not save file")
 		return uuid.UUID{}, "", fmt.Errorf("could not save file")
 	}
 	return id, catalog.ImageSourceUserUpload, nil
+}
+
+// parses the image id from /images/{uuid}/size.webp style links
+func parseOldImage(link string) *uuid.UUID {
+	ss := strings.Split(link, "/")
+	if len(ss) < 4 {
+		return nil
+	}
+	if parsed, err := uuid.Parse(ss[2]); err != nil {
+		return nil
+	} else {
+		return &parsed
+	}
 }

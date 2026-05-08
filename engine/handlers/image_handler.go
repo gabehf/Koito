@@ -41,13 +41,13 @@ func ImageHandler(store db.ImageStore) http.HandlerFunc {
 			return
 		}
 
-		desiredImgPath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, imageIdStr[:2], imageIdStr, filepath.Clean(size)+".webp")
+		desiredImgPath := catalog.BuildImagePath(imgid, imageSize)
 
 		if _, err := os.Stat(desiredImgPath); os.IsNotExist(err) {
 			l.Debug().Msg("ImageHandler: Image not found in desired size, attempting to retrieve source image")
 
-			fullSizePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, imageIdStr[:2], imageIdStr, "full.webp")
-			xlSizePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, imageIdStr[:2], imageIdStr, "1000x1000.webp")
+			fullSizePath := catalog.BuildImagePath(imgid, catalog.ImageSizeFull)
+			xlSizePath := catalog.BuildImagePath(imgid, catalog.ImageSizeXL)
 
 			// this if statement flow is terrible but whatever
 
@@ -84,7 +84,7 @@ func ImageHandler(store db.ImageStore) http.HandlerFunc {
 				return
 			}
 
-			err = catalog.CompressAndSaveImage(r.Context(), imgid.String(), imageSize, bytes.NewReader(imageBuf))
+			err = catalog.CompressAndSaveImage(r.Context(), imgid, imageSize, bytes.NewReader(imageBuf))
 			if err != nil {
 				l.Err(err).Msg("ImageHandler: Failed to save compressed image to cache")
 			}
@@ -105,10 +105,10 @@ func serveDefaultImage(w http.ResponseWriter, r *http.Request, size catalog.Imag
 
 	l.Debug().Msgf("serveDefaultImage: Serving default image at size '%s'", size)
 
-	defaultImagePath := filepath.Join(cfg.ConfigDir(), catalog.ImageCacheDir, string(size), "default_img")
+	defaultImagePath := catalog.BuildImagePath(uuid.Nil, size)
 	if _, err := os.Stat(defaultImagePath); os.IsNotExist(err) {
 		l.Debug().Msg("serveDefaultImage: Default image does not exist in cache at desired size")
-		defaultImagePath := filepath.Join(catalog.SourceImageDir(), "default_img")
+		defaultImagePath := catalog.BuildImagePath(uuid.Nil, catalog.ImageSizeFull)
 		if _, err = os.Stat(defaultImagePath); os.IsNotExist(err) {
 			l.Debug().Msg("serveDefaultImage: Default image does not exist in source directory, attempting to move...")
 			err = os.MkdirAll(filepath.Dir(defaultImagePath), 0744)
@@ -137,7 +137,7 @@ func serveDefaultImage(w http.ResponseWriter, r *http.Request, size catalog.Imag
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		err = catalog.CompressAndSaveImage(r.Context(), "default_img", size, file)
+		err = catalog.CompressAndSaveImage(r.Context(), uuid.Nil, size, file)
 		if err != nil {
 			l.Err(err).Msg("serveDefaultImage: Error when caching default image at desired size")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -161,7 +161,7 @@ func downloadMissingImage(ctx context.Context, store db.ImageStore, id uuid.UUID
 		return "", fmt.Errorf("downloadMissingImage: %w", err)
 	}
 	if src == catalog.ImageSourceUserUpload {
-		uploadedPath := path.Join(cfg.ConfigDir(), catalog.ImageCacheDir, id.String()[:2], id.String(), "full.webp")
+		uploadedPath := catalog.BuildImagePath(id, catalog.ImageSizeFull)
 		l.Debug().Msgf("Looking for uploaded image at path: %s", uploadedPath)
 		_, err := os.Stat(uploadedPath)
 		if err != nil {

@@ -6,7 +6,7 @@ type Album struct {
 	ID             int32          `json:"id"`
 	MbzID          *uuid.UUID     `json:"musicbrainz_id"`
 	Title          string         `json:"title"`
-	Image          *uuid.UUID     `json:"image"`
+	Image          ImageList      `json:"image"`
 	Artists        []SimpleArtist `json:"artists"`
 	VariousArtists bool           `json:"is_various_artists"`
 	ListenCount    int64          `json:"listen_count"`
