@@ -170,7 +170,7 @@ export default function LastPlays(props: Props) {
               <td className="pr-2 align-middle hidden sm:table">
                 <button
                   onClick={() => handleDelete(item)}
-                  className="absolute top-3.5 -right-5 opacity-0 group-hover:opacity-100 transition-opacity text-(--color-fg-tertiary) hover:text-(--color-error)"
+                  className="absolute top-1/2 -translate-y-1/2 -right-5 opacity-0 group-hover:opacity-100 transition-opacity text-(--color-fg-tertiary) hover:text-(--color-error)"
                   aria-label="Delete"
                   hidden={user === null || user === undefined}
                 >
