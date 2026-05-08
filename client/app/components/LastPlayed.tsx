@@ -91,6 +91,21 @@ export default function LastPlays(props: Props) {
     );
   }
 
+  const showNP = (): boolean => {
+    if (!props.showNowPlaying || !npData?.currently_playing) return false;
+
+    const { albumId, artistId, trackId } = props;
+    const track = npData.track;
+
+    if (!albumId && !artistId && !trackId) return true;
+
+    if (albumId) return track.album_id === albumId;
+    if (artistId) return track.artists.some((a) => a.id === artistId);
+    if (trackId) return track.id === trackId;
+
+    return false;
+  };
+
   const listens = items ?? data.items;
 
   let params = "";
@@ -104,7 +119,7 @@ export default function LastPlays(props: Props) {
       {listens.length < 1 && "Nothing to show"}
       <table className="table-fixed border-collapse mt-6 w-[350px] sm:w-full">
         <tbody>
-          {props.showNowPlaying && npData && npData.currently_playing && (
+          {npData && showNP() && (
             <tr className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0">
               <td className="py-3 pr-3 w-11">
                 <Link to={`/track/${npData.track.id}`}>

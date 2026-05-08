@@ -87,7 +87,7 @@ export default function Track() {
     >
       <div className="flex gap-25 mt-10 flex-wrap max-w-[1000px]">
         <div className="w-2/5 max-w-[400px]">
-          <LastPlayed limit={11} trackId={track.id} />
+          <LastPlayed limit={11} trackId={track.id} showNowPlaying />
         </div>
         <div className="flex flex-col xl:flex-row gap-10">
           <ActivityGrid configurable trackId={track.id} />
