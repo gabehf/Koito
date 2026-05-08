@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "./Image";
 import { Link } from "react-router";
 

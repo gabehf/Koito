@@ -76,7 +76,7 @@ const TopTracks = (props: Props) => {
   }
 
   return (
-    <div>
+    <div className="w-[350px] md:w-full max-w-[725px] xl:max-w-[350px]">
       <CardHeader
         isOffset
         to={`/chart/top-tracks?period=${props.period}${params}`}

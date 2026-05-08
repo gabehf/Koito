@@ -98,7 +98,7 @@ export default function LastPlays(props: Props) {
   params += props.trackId ? `&track_id=${props.trackId}` : "";
 
   return (
-    <div className="text-sm sm:text-[15px] lg:w-17/20 lg:max-w-[1150px]">
+    <div className="w-[350px] md:w-full max-w-[725px] xl:max-w-[1100px]">
       <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
       {listens.length < 1 && "Nothing to show"}
       <table className="table-fixed border-collapse mt-6 w-[350px] sm:w-full">
@@ -113,7 +113,7 @@ export default function LastPlays(props: Props) {
                   />
                 </Link>
               </td>
-              <td className="w-[150px] sm:w-[275px]">
+              <td className="w-[150px] sm:w-full">
                 {props.hideArtists ? null : (
                   <>
                     <ArtistLinks artists={npData.track.artists} />
@@ -181,7 +181,7 @@ export default function LastPlays(props: Props) {
           ))}
         </tbody>
       </table>
-      <div className="w-full flex items-center">
+      <div className="flex items-center w-[350px] sm:w-full">
         <Link
           to={`/listens?period=all_time${params}`}
           className="inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"

@@ -8,6 +8,8 @@ import TopArtists from "~/components/TopArtists";
 import TopTracks from "~/components/TopTracks";
 import { useTheme } from "~/hooks/useTheme";
 import { type Theme } from "~/styles/themes.css";
+import TopArtistsCard from "~/components/TopArtistsCard";
+import TopAlbumsCard from "~/components/TopAlbumsCard";
 
 export default function ThemeHelper() {
   const initialTheme = {
@@ -43,7 +45,7 @@ export default function ThemeHelper() {
     }
   };
 
-  const homeItems = 3;
+  const homeItems = 10;
 
   return (
     <div className="mt-10 flex flex-col gap-10 items-center">
@@ -51,11 +53,13 @@ export default function ThemeHelper() {
         <AllTimeStats />
         <ActivityGrid />
       </div>
-      <div className="flex flex-wrap 2xl:gap-20 xl:gap-10 justify-around gap-5">
-        <TopArtists period="all_time" limit={homeItems} />
-        <TopAlbums period="all_time" limit={homeItems} />
+      <div className="container justify-center flex flex-wrap gap-10">
+        {/*<TopArtists period="all_time" limit={homeItems} />
+        <TopAlbums period="all_time" limit={homeItems} />*/}
+        <TopArtistsCard period="all_time" />
+        <TopAlbumsCard period="all_time" />
         <TopTracks period="all_time" limit={homeItems} />
-        <LastPlayed limit={Math.floor(homeItems * 2.5)} />
+        <LastPlayed limit={5} />
       </div>
       <div className="flex gap-10">
         <div className="flex flex-col items-center gap-3 bg-secondary p-5 rounded-lg">
@@ -77,7 +81,7 @@ export default function ThemeHelper() {
               Logout
             </AsyncButton>
           </div>
-          <div className="flex flex gap-4">
+          <div className="flex gap-4">
             <input
               name="koito-update-username"
               type="text"
@@ -88,7 +92,7 @@ export default function ThemeHelper() {
               Submit
             </AsyncButton>
           </div>
-          <div className="flex flex gap-4">
+          <div className="flex gap-4">
             <input
               name="koito-update-password"
               type="password"

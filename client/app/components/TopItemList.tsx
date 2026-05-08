@@ -127,7 +127,7 @@ function ItemCard({
                   </div>
                 </td>
               )}
-              <td className="pr-3 py-1 w-[250px] sm:w-[325px]">
+              <td className="pr-3 py-1 w-full">
                 <MediaItem
                   className="gap-2"
                   image={imageUrl(track.image, "medium")}

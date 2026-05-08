@@ -67,7 +67,7 @@ export default function RewindPage() {
     if (!img) return;
 
     average(imageUrl(img, "small"), { amount: 1 }).then((color) => {
-      setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.4)`);
+      setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
     });
   }, [stats]);
 
