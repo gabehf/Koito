@@ -5,6 +5,7 @@ ENV VITE_KOITO_VERSION=$KOITO_VERSION
 ENV BUILD_TARGET=docker
 
 WORKDIR /client
+RUN npm install -g yarn
 COPY ./client/package.json ./client/yarn.lock ./
 RUN yarn install
 COPY ./client .
