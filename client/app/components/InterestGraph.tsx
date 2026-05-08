@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch, type InterestBucket } from "api/api";
 import { useTheme } from "~/hooks/useTheme";
 import type { Theme } from "~/styles/themes.css";
-import { Area, AreaChart } from "recharts";
+import { Area, AreaChart, Label, XAxis } from "recharts";
 import CardHeader from "./primitives/CardHeader";
 
 function getPrimaryColor(theme: Theme): string {
@@ -74,14 +74,14 @@ export default function InterestGraph({
   // so I think I just have to remove it for now.
 
   return (
-    <div className="flex flex-col items-start w-full max-w-[335px] sm:max-w-[500px]">
+    <div className="flex flex-col items-start w-[335px] sm:w-[440px] text-[12px]">
       <CardHeader>{title}</CardHeader>
       <AreaChart
         style={{
           width: "100%",
-          aspectRatio: 3.5,
           maxWidth: 440,
           overflow: "visible",
+          height: "170px",
         }}
         data={data}
         margin={{ top: 15, bottom: 20 }}

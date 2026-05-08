@@ -69,7 +69,8 @@ export default function MediaLayout(props: Props) {
 
   console.log("MBZ:", props.musicbrainzId);
 
-  const headersizeclass = props.title.length > 28 ? "text-lg" : "text-lg";
+  const headersizeclass =
+    props.title.length > 28 ? "text-2xl lg:text-5xl" : "text-3xl lg:text-7xl";
 
   return (
     <main
@@ -99,17 +100,16 @@ export default function MediaLayout(props: Props) {
           <div className="flex flex-col items-start">
             <h3>{props.type}</h3>
             <div className="flex">
-              <h1 className={headersizeclass}>
+              <h5 className={`mt-4 mb-3 font-semibold ${headersizeclass}`}>
                 {props.title}
-                <span className="text-xl font-medium text-(--color-fg-secondary)">
-                  {" "}
+                <span className="text-xl font-medium text-(--color-fg-secondary) pl-2">
                   {props.rank !== 0 && "#" + props.rank}
                 </span>
-              </h1>
+              </h5>
             </div>
             {props.subContent}
           </div>
-          <div className="absolute left-1 sm:right-1 sm:left-auto -top-9 sm:top-1 flex gap-3 items-center">
+          <div className="absolute left-1 sm:right-10 sm:left-auto -top-9 sm:top-0 flex gap-3 items-center">
             {props.musicbrainzId && (
               <Link
                 title="View on MusicBrainz"

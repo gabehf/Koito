@@ -85,11 +85,11 @@ export default function Track() {
         </div>
       }
     >
-      <div className="flex flex-wrap gap-20 mt-10">
-        <div className="w-2/5 max-w-[500px]">
-          <LastPlayed limit={10} trackId={track.id} />
+      <div className="flex gap-25 mt-10 flex-wrap max-w-[1000px]">
+        <div className="w-2/5 max-w-[400px]">
+          <LastPlayed limit={11} trackId={track.id} />
         </div>
-        <div className="flex flex-col items-start gap-4">
+        <div className="flex flex-col xl:flex-row gap-10">
           <ActivityGrid configurable trackId={track.id} />
           <InterestGraph trackId={track.id} />
         </div>

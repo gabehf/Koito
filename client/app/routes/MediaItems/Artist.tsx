@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { useLoaderData, type LoaderFunctionArgs } from "react-router";
 import TopTracks from "~/components/TopTracks";
 import { mergeArtists, type Artist } from "api/api";
 import LastPlayed from "~/components/LastPlayed";
-import PeriodSelector from "~/components/PeriodSelector";
 import MediaLayout from "./MediaLayout";
 import ArtistAlbums from "~/components/ArtistAlbums";
 import ActivityGrid from "~/components/ActivityGrid";
@@ -74,13 +72,13 @@ export default function Artist() {
     >
       <div className="flex flex-col gap-20">
         <div className="flex gap-25 mt-10 flex-wrap">
-          <TopTracks limit={8} period={period} artistId={artist.id} />
-          <div className="w-2/5 max-w-[500px]">
+          <div className="w-2/5 max-w-[400px]">
             <LastPlayed limit={11} artistId={artist.id} />
           </div>
-          <div className="flex flex-col items-start gap-10">
-            <InterestGraph artistId={artist.id} />
+          <TopTracks limit={8} period={period} artistId={artist.id} />
+          <div className="flex flex-col xl:flex-row gap-10">
             <ActivityGrid configurable artistId={artist.id} />
+            <InterestGraph artistId={artist.id} />
           </div>
         </div>
         <ArtistAlbums period={period} artistId={artist.id} name={artist.name} />
