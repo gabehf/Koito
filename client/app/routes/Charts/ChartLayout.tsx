@@ -210,7 +210,7 @@ export default function ChartLayout<T>({
       <title>{pgTitle}</title>
       <meta property="og:title" content={pgTitle} />
       <meta name="description" content={pgTitle} />
-      <div className="w-19/20 sm:17/20 mx-auto pt-6 sm:pt-12">
+      <div className="w-19/20 mx-auto sm:ml-18 pt-12">
         <h1>{title}</h1>
         <div className="flex flex-col items-start md:flex-row sm:items-center gap-4">
           <PeriodSelector

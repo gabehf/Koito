@@ -71,42 +71,44 @@ function ItemCard({
       const album = item as Album;
 
       return (
-        <div style={{ fontSize: 12 }} className={itemClasses}>
-          {ranked && (
-            <div className="w-7 color-fg-secondary text-end">{rank}</div>
-          )}
-          <Link to={`/album/${album.id}`}>
-            <img
-              loading="lazy"
-              src={imageUrl(album.image, "medium")}
-              alt={album.title}
-              className="max-w-[56px] rounded-lg border-1 border-(--color-bg-tertiary)"
-            />
-          </Link>
-          <div>
-            <Link
-              to={`/album/${album.id}`}
-              className="hover:text-(--color-fg-secondary)"
-            >
-              <span style={{ fontSize: 14 }}>{album.title}</span>
-            </Link>
-            <br />
-            {album.is_various_artists ? (
-              <span className="color-fg-secondary">Various Artists</span>
-            ) : (
-              <div>
-                <ArtistLinks
-                  artists={
-                    album.artists
-                      ? [album.artists[0]]
-                      : [{ id: 0, name: "Unknown Artist" }]
+        <table className="sm:text-[15px] text-[13px] border-collapse">
+          <tbody>
+            <tr>
+              {ranked && (
+                <td className="pr-3">
+                  <div
+                    className={`color-fg-secondary text-end ${
+                      rank === 1 && "color-primary"
+                    }`}
+                  >
+                    {rank.toString().padStart(2, "0")}
+                  </div>
+                </td>
+              )}
+              <td className="pr-3 py-1 w-full">
+                <MediaItem
+                  className="gap-2"
+                  image={imageUrl(album.image, "medium")}
+                  link={`/album/${album.id}`}
+                  imageSize={56}
+                  title={<Link to={`/album/${album.id}`}>{album.title}</Link>}
+                  meta={
+                    album.is_various_artists ? (
+                      "Various Artists"
+                    ) : (
+                      <ArtistLinks artists={[album.artists[0]]} />
+                    )
                   }
                 />
-              </div>
-            )}
-            <div className="color-fg-secondary">{album.listen_count} plays</div>
-          </div>
-        </div>
+              </td>
+              <td className="min-w-[75px]">
+                <div className="color-fg-secondary text-end">
+                  {album.listen_count} plays
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       );
     }
     case "track": {
@@ -149,29 +151,39 @@ function ItemCard({
     }
     case "artist": {
       const artist = item as Artist;
+
       return (
-        <div style={{ fontSize: 12 }} className={itemClasses}>
-          {ranked && <div className="w-7 text-end">{rank}</div>}
-          <Link
-            className={
-              itemClasses + " mt-1 mb-[6px] hover:text-(--color-fg-secondary)"
-            }
-            to={`/artist/${artist.id}`}
-          >
-            <img
-              loading="lazy"
-              src={imageUrl(artist.image, "small")}
-              alt={artist.name}
-              className="min-w-[48px]"
-            />
-            <div>
-              <span style={{ fontSize: 14 }}>{artist.name}</span>
-              <div className="color-fg-secondary">
-                {artist.listen_count} plays
-              </div>
-            </div>
-          </Link>
-        </div>
+        <table className="sm:text-[15px] text-[13px] border-collapse">
+          <tbody>
+            <tr>
+              {ranked && (
+                <td className="pr-3">
+                  <div
+                    className={`color-fg-secondary text-end ${
+                      rank === 1 && "color-primary"
+                    }`}
+                  >
+                    {rank.toString().padStart(2, "0")}
+                  </div>
+                </td>
+              )}
+              <td className="pr-3 py-1 w-full">
+                <MediaItem
+                  className="gap-2"
+                  image={imageUrl(artist.image, "medium")}
+                  link={`/artist/${artist.id}`}
+                  imageSize={56}
+                  title={<Link to={`/artist/${artist.id}`}>{artist.name}</Link>}
+                />
+              </td>
+              <td className="min-w-[75px]">
+                <div className="color-fg-secondary text-end">
+                  {artist.listen_count} plays
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       );
     }
   }

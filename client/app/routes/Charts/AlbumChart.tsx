@@ -30,7 +30,7 @@ export default function AlbumChart() {
       initialData={initialData}
       endpoint="chart/top/albums"
       render={({ data, page, onNext, onPrev }) => (
-        <div className="flex flex-col gap-5 w-full">
+        <div className="flex flex-col gap-5 text-sm md:text-[16px] w-11/12 max-w-[1000px]">
           <div className="flex gap-15 mx-auto">
             <button className="default" onClick={onPrev} disabled={page <= 1}>
               Prev
@@ -47,7 +47,7 @@ export default function AlbumChart() {
             ranked
             separators
             data={data}
-            className="w-11/12 sm:w-[600px]"
+            className="w-full"
             type="album"
           />
           <div className="flex gap-15 mx-auto">

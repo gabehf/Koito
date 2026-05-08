@@ -14,6 +14,7 @@ import {
 import { Link } from "react-router";
 import { useAppContext } from "~/providers/AppProvider";
 import CardHeader from "./primitives/CardHeader";
+import ListensTable from "./ListensTable";
 
 interface Props {
   limit: number;
@@ -114,89 +115,20 @@ export default function LastPlays(props: Props) {
   params += props.trackId ? `&track_id=${props.trackId}` : "";
 
   return (
-    <div className="w-[350px] md:w-full max-w-[725px] xl:max-w-[1100px]">
+    <div className="text-[13px] sm:text-[15px] w-[350px] md:w-full max-w-[725px] xl:max-w-[1100px]">
       <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
       {listens.length < 1 && "Nothing to show"}
-      <table className="table-fixed border-collapse mt-6 w-[350px] sm:w-full">
-        <tbody>
-          {npData && showNP() && (
-            <tr className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0">
-              <td className="py-3 pr-3 w-11">
-                <Link to={`/track/${npData.track.id}`}>
-                  <Image
-                    src={imageUrl(npData.track.image, "small")}
-                    size={32}
-                  />
-                </Link>
-              </td>
-              <td className="w-[150px] sm:w-full">
-                {props.hideArtists ? null : (
-                  <>
-                    <ArtistLinks artists={npData.track.artists} />
-                    {" — "}
-                  </>
-                )}
-                <Link
-                  className="hover:text-[--color-fg-secondary]"
-                  to={`/track/${npData.track.id}`}
-                >
-                  {npData.track.title}
-                </Link>
-              </td>
-              <td className="color-fg-tertiary pr-2 sm:pr-4 text-sm text-end whitespace-nowrap w-[100px]">
-                <div className="sm:-mr-[18px] relative">
-                  <div className="h-1.5 w-1.5 rounded-full bg-(--color-primary) absolute top-1.5 left-3"></div>{" "}
-                  Now Playing
-                </div>
-              </td>
-            </tr>
-          )}
-          {listens.map((item) => (
-            <tr
-              key={`last_listen_${item.time}`}
-              className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0"
-            >
-              <td className="py-3 pr-3 w-11">
-                <Link to={`/track/${item.track.id}`}>
-                  <Image src={imageUrl(item.track.image, "small")} size={32} />
-                </Link>
-              </td>
-              <td className="w-[150px] sm:w-full">
-                {props.hideArtists ? null : (
-                  <>
-                    <ArtistLinks artists={item.track.artists} />
-                    {" — "}
-                  </>
-                )}
-                <Link
-                  className="hover:text-(--color-fg-secondary)"
-                  to={`/track/${item.track.id}`}
-                >
-                  {item.track.title}
-                </Link>
-              </td>
-              <td
-                className="color-fg-tertiary pr-2 sm:pr-4 text-sm text-end whitespace-nowrap w-[100px]"
-                title={new Date(item.time).toString()}
-              >
-                <p className="sm:-mr-[18px]">
-                  {timeSince(new Date(item.time))}
-                </p>
-              </td>
-              <td className="pr-2 align-middle hidden sm:table">
-                <button
-                  onClick={() => handleDelete(item)}
-                  className="absolute top-1/2 -translate-y-1/2 -right-5 opacity-0 group-hover:opacity-100 transition-opacity text-(--color-fg-tertiary) hover:text-(--color-error)"
-                  aria-label="Delete"
-                  hidden={user === null || user === undefined}
-                >
-                  ×
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {listens.length < 1 ? (
+        "Nothing to show"
+      ) : (
+        <ListensTable
+          listens={listens}
+          npData={npData}
+          showNP={showNP()}
+          hideArtists={props.hideArtists}
+          onDelete={handleDelete}
+        />
+      )}
       {props.showSeeMore && (
         <div className="flex items-center w-[350px] sm:w-full">
           <Link
