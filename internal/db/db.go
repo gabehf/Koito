@@ -99,6 +99,7 @@ type UserStore interface {
 type ImageStore interface {
 	ImageHasAssociation(ctx context.Context, image uuid.UUID) (bool, error)
 	GetImageSource(ctx context.Context, image uuid.UUID) (string, error)
+	GetUserUploadedImageIDs(ctx context.Context) ([]uuid.UUID, error)
 }
 
 type ExportStore interface {

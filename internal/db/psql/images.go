@@ -96,3 +96,7 @@ func (d *Psql) ArtistsWithoutImages(ctx context.Context, from int32) ([]*models.
 	}
 	return ret, nil
 }
+
+func (d *Psql) GetUserUploadedImageIDs(ctx context.Context) ([]uuid.UUID, error) {
+	return nil, fmt.Errorf("GetUserUploadedImageIDs: not implemented for psql")
+}

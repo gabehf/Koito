@@ -362,3 +362,90 @@ func BuildImageList(imageid *uuid.UUID) models.ImageList {
 func BuildImagePath(imageid uuid.UUID, size ImageSize) string {
 	return path.Join(cfg.ConfigDir(), ImageCacheDir, imageid.String()[:2], imageid.String(), string(size)+".webp")
 }
+
+func MigrateImageCache(ctx context.Context, store db.ImageStore) error {
+	l := logger.FromContext(ctx)
+	cacheDir := path.Join(cfg.ConfigDir(), ImageCacheDir)
+
+	legacyLargeDir := path.Join(cacheDir, "large")
+	if _, err := os.Stat(legacyLargeDir); os.IsNotExist(err) {
+		return nil // nothing to migrate
+	}
+
+	uploadedImages, err := store.GetUserUploadedImageIDs(ctx)
+	if err != nil {
+		return fmt.Errorf("MigrateImageCache: failed to fetch uploaded image IDs: %w", err)
+	}
+
+	l.Debug().Msgf("MigrateImageCache: %d user uploaded images must be migrated", len(uploadedImages))
+	l.Debug().Any("UUIDs", uploadedImages).Msg("Image IDs to be migrated")
+
+	count := 0
+
+	migrated := make(map[uuid.UUID]bool, len(uploadedImages))
+	for _, id := range uploadedImages {
+		migrated[id] = false
+	}
+
+	dirs := []string{"full", "large", "medium", "small"}
+
+	for _, dir := range dirs {
+		dirPath := path.Join(cacheDir, dir)
+		entries, err := os.ReadDir(dirPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return fmt.Errorf("MigrateImageCache: failed to read directory %s: %w", dirPath, err)
+		}
+
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+
+			filename := entry.Name()
+			filePath := path.Join(dirPath, entry.Name())
+
+			if filename == "default_img" {
+				if err := os.Remove(filePath); err != nil {
+					l.Err(err).Msgf("MigrateImageCache: failed to remove default_img file %s", filePath)
+				}
+				continue
+			}
+
+			imageid, err := uuid.Parse(filename)
+			if err != nil {
+				l.Err(err).Msgf("MigrateImageCache: found non-uuid filename '%s', this must be removed manually", filePath)
+			}
+
+			alreadyMigrated, isUploaded := migrated[imageid]
+			if isUploaded && !alreadyMigrated {
+				destPath := BuildImagePath(imageid, ImageSizeSource)
+				if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+					l.Err(err).Msgf("MigrateImageCache: failed to create destination dir for %s", destPath)
+				} else if err := os.Rename(filePath, destPath); err != nil {
+					l.Err(err).Msgf("MigrateImageCache: failed to migrate image %s to %s", filePath, destPath)
+				} else {
+					migrated[imageid] = true
+					count++
+				}
+			} else {
+				if err := os.Remove(filePath); err != nil {
+					l.Err(err).Msgf("MigrateImageCache: failed to remove file %s", filePath)
+				}
+			}
+		}
+	}
+
+	for _, dir := range dirs {
+		dirPath := path.Join(cacheDir, dir)
+		if err := os.Remove(dirPath); err != nil && !os.IsNotExist(err) {
+			l.Err(err).Msgf("MigrateImageCache: failed to remove directory %s, it must be removed manually", dirPath)
+		}
+	}
+
+	l.Info().Msgf("MigrateImageCache: %d user uploaded images were migrated", count)
+
+	return nil
+}

@@ -39,3 +39,42 @@ func (s *Sqlite) GetImageSource(ctx context.Context, image uuid.UUID) (string, e
 	}
 	return src.String, nil
 }
+
+func (s *Sqlite) GetUserUploadedImageIDs(ctx context.Context) ([]uuid.UUID, error) {
+	ret := make([]uuid.UUID, 0)
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT image FROM artists WHERE image_source = 'User Upload' AND image IS NOT NULL`)
+	if err != nil {
+		return nil, fmt.Errorf("GetUserUploadedImageIDs: %w", err)
+	}
+	for rows.Next() {
+		var imgidstr string
+		err := rows.Scan(&imgidstr)
+		if err != nil {
+			return nil, fmt.Errorf("GetUserUploadedImageIDs: rows.Scan: %w", err)
+		}
+		imgid, err := uuid.Parse(imgidstr)
+		if err != nil {
+			return nil, fmt.Errorf("GetUserUploadedImageIDs: uuid.Parse: %w", err)
+		}
+		ret = append(ret, imgid)
+	}
+	rows, err = s.db.QueryContext(ctx, `
+		SELECT image FROM releases WHERE image_source = 'User Upload' AND image IS NOT NULL`)
+	if err != nil {
+		return nil, fmt.Errorf("GetUserUploadedImageIDs: %w", err)
+	}
+	for rows.Next() {
+		var imgidstr string
+		err := rows.Scan(&imgidstr)
+		if err != nil {
+			return nil, fmt.Errorf("GetUserUploadedImageIDs: rows.Scan: %w", err)
+		}
+		imgid, err := uuid.Parse(imgidstr)
+		if err != nil {
+			return nil, fmt.Errorf("GetUserUploadedImageIDs: uuid.Parse: %w", err)
+		}
+		ret = append(ret, imgid)
+	}
+	return ret, nil
+}
