@@ -81,10 +81,6 @@ export default function TopArtistsCard({ period }: Props) {
           <div
             className="absolute inset-0 to-50% bg-gradient-to-t from-(--color-bg-secondary) to-transparent"
             style={{
-              backdropFilter: "blur(6px)",
-              WebkitBackdropFilter: "blur(6px)",
-              maskImage: "linear-gradient(to top, black, transparent)",
-              WebkitMaskImage: "linear-gradient(to top, black, transparent)",
               borderRadius: "var(--border-radius) var(--border-radius) 0 0",
             }}
           />

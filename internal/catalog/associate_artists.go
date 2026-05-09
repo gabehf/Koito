@@ -132,14 +132,8 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 			if imgErr == nil && imgUrl != "" {
 				imgid = uuid.New()
 				if !opts.SkipCacheImage {
-					var size ImageSize
-					if cfg.FullImageCacheEnabled() {
-						size = ImageSizeFull
-					} else {
-						size = ImageSizeLarge
-					}
 					l.Debug().Msg("Downloading artist image from source...")
-					err = DownloadAndCacheImage(ctx, imgid, imgUrl, size)
+					err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
 					if err != nil {
 						l.Err(err).Msg("Failed to cache image")
 					}
@@ -251,14 +245,8 @@ func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []st
 	if err == nil && imgUrl != "" {
 		imgid = uuid.New()
 		if !opts.SkipCacheImage {
-			var size ImageSize
-			if cfg.FullImageCacheEnabled() {
-				size = ImageSizeFull
-			} else {
-				size = ImageSizeLarge
-			}
 			l.Debug().Msg("Downloading artist image from source...")
-			err = DownloadAndCacheImage(ctx, imgid, imgUrl, size)
+			err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
 			if err != nil {
 				l.Err(err).Msg("Failed to cache image")
 			}
@@ -306,14 +294,8 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 			if err == nil && imgUrl != "" {
 				imgid = uuid.New()
 				if !opts.SkipCacheImage {
-					var size ImageSize
-					if cfg.FullImageCacheEnabled() {
-						size = ImageSizeFull
-					} else {
-						size = ImageSizeLarge
-					}
 					l.Debug().Msg("Downloading artist image from source...")
-					err = DownloadAndCacheImage(ctx, imgid, imgUrl, size)
+					err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
 					if err != nil {
 						l.Err(err).Msg("Failed to cache image")
 					}

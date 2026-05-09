@@ -29,14 +29,14 @@ func TestImageLifecycle(t *testing.T) {
 
 	imgID := uuid.New()
 
-	err = catalog.DownloadAndCacheImage(context.Background(), imgID, server.URL, catalog.ImageSizeFull)
+	err = catalog.DownloadAndCacheImage(context.Background(), imgID, server.URL, catalog.ImageSizeSource)
 	require.NoError(t, err)
 	err = catalog.DownloadAndCacheImage(context.Background(), imgID, server.URL, catalog.ImageSizeMedium)
 	require.NoError(t, err)
 
 	// ensure download is correct
 
-	imagePath := catalog.BuildImagePath(imgID, catalog.ImageSizeFull)
+	imagePath := catalog.BuildImagePath(imgID, catalog.ImageSizeSource)
 	_, err = os.Stat(imagePath)
 	assert.NoError(t, err)
 	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeMedium)
@@ -47,7 +47,7 @@ func TestImageLifecycle(t *testing.T) {
 
 	// ensure delete works
 
-	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeFull)
+	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeSource)
 	_, err = os.Stat(imagePath)
 	assert.ErrorIs(t, err, os.ErrNotExist)
 	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeMedium)
@@ -56,7 +56,7 @@ func TestImageLifecycle(t *testing.T) {
 
 	// re-download for prune
 
-	err = catalog.DownloadAndCacheImage(context.Background(), imgID, server.URL, catalog.ImageSizeFull)
+	err = catalog.DownloadAndCacheImage(context.Background(), imgID, server.URL, catalog.ImageSizeSource)
 	require.NoError(t, err)
 	err = catalog.DownloadAndCacheImage(context.Background(), imgID, server.URL, catalog.ImageSizeMedium)
 	require.NoError(t, err)
@@ -65,7 +65,7 @@ func TestImageLifecycle(t *testing.T) {
 
 	// ensure prune works
 
-	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeFull)
+	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeSource)
 	_, err = os.Stat(imagePath)
 	assert.ErrorIs(t, err, os.ErrNotExist)
 	imagePath = catalog.BuildImagePath(imgID, catalog.ImageSizeMedium)

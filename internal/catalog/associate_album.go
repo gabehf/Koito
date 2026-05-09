@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/logger"
@@ -132,14 +131,8 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, o
 		if err == nil && imgUrl != "" {
 			imgid = uuid.New()
 			if !opts.SkipCacheImage {
-				var size ImageSize
-				if cfg.FullImageCacheEnabled() {
-					size = ImageSizeFull
-				} else {
-					size = ImageSizeLarge
-				}
 				l.Debug().Msg("Downloading album image from source...")
-				err = DownloadAndCacheImage(ctx, imgid, imgUrl, size)
+				err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
 				if err != nil {
 					l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
 				}
@@ -224,14 +217,8 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 		if err == nil && imgUrl != "" {
 			imgid = uuid.New()
 			if !opts.SkipCacheImage {
-				var size ImageSize
-				if cfg.FullImageCacheEnabled() {
-					size = ImageSizeFull
-				} else {
-					size = ImageSizeLarge
-				}
 				l.Debug().Msg("Downloading album image from source...")
-				err = DownloadAndCacheImage(ctx, imgid, imgUrl, size)
+				err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
 				if err != nil {
 					l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
 				}

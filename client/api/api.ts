@@ -366,10 +366,10 @@ export {
   getRewindStats,
 };
 type ImageList = {
+  xs: string;
   small: string;
   medium: string;
   large: string;
-  xl: string;
 };
 type Track = {
   id: number;

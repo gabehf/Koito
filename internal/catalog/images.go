@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
@@ -21,59 +20,7 @@ import (
 	"github.com/h2non/bimg"
 )
 
-type ImageSize string
-
-const (
-	ImageSizeSmall  ImageSize = "128x128"
-	ImageSizeMedium ImageSize = "256x256"
-	ImageSizeLarge  ImageSize = "500x500"
-	ImageSizeXL     ImageSize = "1000x1000"
-	ImageSizeFull   ImageSize = "full"
-
-	ImageCacheDir = "image_cache"
-)
-
-func ParseImageSize(size string) (ImageSize, error) {
-	switch strings.ToLower(size) {
-	case "128x128":
-		return ImageSizeSmall, nil
-	case "256x256":
-		return ImageSizeMedium, nil
-	case "500x500":
-		return ImageSizeLarge, nil
-	case "1000x1000":
-		return ImageSizeXL, nil
-	case "full":
-		return ImageSizeFull, nil
-	default:
-		return "", fmt.Errorf("unknown image size: %s", size)
-	}
-}
-
-func GetImageSize(size ImageSize) int {
-	var px int
-	switch size {
-	case "128x128":
-		px = 128
-	case "256x256":
-		px = 256
-	case "500x500":
-		px = 500
-	case "1000x1000":
-		px = 1000
-	}
-	return px
-}
-
-func SourceImageDir() string {
-	if cfg.FullImageCacheEnabled() {
-		return path.Join(cfg.ConfigDir(), ImageCacheDir, "full")
-	} else {
-		return path.Join(cfg.ConfigDir(), ImageCacheDir, "large")
-	}
-}
-
-// DownloadAndCacheImage downloads an image from the given URL, then calls CompressAndSaveImage.
+// DownloadAndCacheImage downloads an image from the given URL, then saves it to the cache at source quality.
 func DownloadAndCacheImage(ctx context.Context, id uuid.UUID, url string, size ImageSize) error {
 	l := logger.FromContext(ctx)
 	err := images.ValidateImageURL(url)
@@ -99,10 +46,12 @@ func DownloadAndCacheImage(ctx context.Context, id uuid.UUID, url string, size I
 }
 
 // Compresses an image to the specified size, then saves it to the correct cache folder.
+// If called with ImageSizeSource, losslessly compresses the image and caches it at source
+// resolution or 1000x1000, whichever is smaller.
 func CompressAndSaveImage(ctx context.Context, imgid uuid.UUID, size ImageSize, body io.Reader) error {
 	l := logger.FromContext(ctx)
 
-	l.Debug().Msgf("Creating resized image at size %s", size)
+	l.Debug().Msgf("Creating resized image at size %d x %d", size.Width(), size.Width())
 	compressed, err := compressImage(size, body)
 	if err != nil {
 		return fmt.Errorf("CompressAndSaveImage: %w", err)
@@ -146,14 +95,20 @@ func compressImage(size ImageSize, data io.Reader) (io.Reader, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compressImage: io.ReadAll: %w", err)
 	}
-	px := GetImageSize(size)
+	px := size.Width()
 
-	if size == ImageSizeFull {
+	if size == ImageSizeSource {
 		ogsize, err := bimg.Size(imgBytes)
 		if err != nil {
 			return nil, fmt.Errorf("compressImage: bimg.Size: %w", err)
 		}
-		px = min(ogsize.Width, ogsize.Height)
+		tmpx := min(ogsize.Width, ogsize.Height)
+		px = min(tmpx, ImageSizeSource.Width())
+	}
+
+	quality := 85
+	if size == ImageSizeSource {
+		quality = 100
 	}
 
 	// Resize with bimg
@@ -161,7 +116,7 @@ func compressImage(size ImageSize, data io.Reader) (io.Reader, error) {
 		Width:         px,
 		Height:        px,
 		Crop:          true,
-		Quality:       85,
+		Quality:       quality,
 		StripMetadata: true,
 		Type:          bimg.WEBP,
 	})
@@ -176,14 +131,14 @@ func compressImage(size ImageSize, data io.Reader) (io.Reader, error) {
 
 func DeleteImage(filename uuid.UUID) error {
 
-	err := os.Remove(BuildImagePath(filename, ImageSizeFull))
+	err := os.Remove(BuildImagePath(filename, ImageSizeSource))
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("DeleteImage: %w", err)
 	}
-	err = os.Remove(BuildImagePath(filename, ImageSizeXL))
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("DeleteImage: %w", err)
-	}
+	// err = os.Remove(BuildImagePath(filename, ImageSizeXL))
+	// if err != nil && !os.IsNotExist(err) {
+	// 	return fmt.Errorf("DeleteImage: %w", err)
+	// }
 	err = os.Remove(BuildImagePath(filename, ImageSizeLarge))
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("DeleteImage: %w", err)
@@ -193,6 +148,10 @@ func DeleteImage(filename uuid.UUID) error {
 		return fmt.Errorf("DeleteImage: %w", err)
 	}
 	err = os.Remove(BuildImagePath(filename, ImageSizeSmall))
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("DeleteImage: %w", err)
+	}
+	err = os.Remove(BuildImagePath(filename, ImageSizeXS))
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("DeleteImage: %w", err)
 	}
@@ -260,43 +219,6 @@ func PruneOrphanedImages(ctx context.Context, store db.ImageStore) error {
 
 	l.Info().Msgf("Purged %d images", count)
 	return nil
-}
-
-// returns the number of pruned images
-// unused due to new caching structure for images
-func pruneDirImgs(ctx context.Context, store db.ImageStore, path string, memo map[string]bool) (int, error) {
-	l := logger.FromContext(ctx)
-	count := 0
-	files, err := os.ReadDir(path)
-	if err != nil {
-		l.Info().Msgf("Failed to read from directory %s; skipping for prune", path)
-		files = []os.DirEntry{}
-	}
-	for _, file := range files {
-		fn := file.Name()
-		imageid, err := uuid.Parse(fn)
-		if err != nil {
-			l.Debug().Msgf("Filename does not appear to be UUID: %s", fn)
-			continue
-		}
-		exists, err := store.ImageHasAssociation(ctx, imageid)
-		if err != nil {
-			return 0, fmt.Errorf("pruneDirImages: %w", err)
-		} else if exists {
-			continue
-		}
-		// image does not have association
-		l.Debug().Msgf("Deleting image: %s", imageid)
-		err = DeleteImage(imageid)
-		if err != nil {
-			l.Err(err).Msg("Error purging orphaned images")
-		}
-		if memo != nil {
-			memo[fn] = true
-		}
-		count++
-	}
-	return count, nil
 }
 
 func FetchMissingArtistImages(ctx context.Context, store db.ArtistStore) error {
@@ -428,10 +350,11 @@ func BuildImageList(imageid *uuid.UUID) models.ImageList {
 		return models.ImageList{}
 	} else {
 		return models.ImageList{
+			XS:     fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeXS),
 			Small:  fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeSmall),
 			Medium: fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeMedium),
 			Large:  fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeLarge),
-			XL:     fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeXL),
+			// XL:     fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeXL),
 		}
 	}
 }

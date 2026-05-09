@@ -46,7 +46,7 @@ export default function MediaLayout(props: Props) {
   const { user } = useAppContext();
 
   useEffect(() => {
-    average(props.img.large, { amount: 1 }).then((color) => {
+    average(props.img.xs, { amount: 1 }).then((color) => {
       setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
     });
   }, [props.img]);
@@ -88,19 +88,21 @@ export default function MediaLayout(props: Props) {
       <meta property="og:title" content={title} />
       <meta name="description" content={title} />
       <div className="w-19/20 mx-auto sm:ml-18 pt-12">
-        <div className="flex gap-8 flex-wrap md:flex-nowrap relative mb-6">
+        <div className="flex gap-8 flex-wrap md:flex-nowrap relative sm:mb-6">
           <div className="flex flex-col justify-around">
             <img
               style={{ zIndex: 5 }}
-              src={props.img.xl}
+              src={props.img.large}
               alt={props.title}
-              className="md:min-w-[385px] rounded-(--border-radius) border w-[220px] h-auto"
+              className="md:min-w-[385px] rounded-(--border-radius) border w-[280px] h-auto"
             />
           </div>
           <div className="flex flex-col items-start">
             <h3>{props.type}</h3>
             <div className="flex">
-              <h5 className={`mt-4 mb-3 font-semibold ${headersizeclass}`}>
+              <h5
+                className={`mt-2 sm:mt-4 mb-1 sm:mb-3 font-semibold ${headersizeclass}`}
+              >
                 {props.title}
                 <span className="text-xl font-medium text-(--color-fg-secondary) pl-2">
                   {props.rank !== 0 && "#" + props.rank}

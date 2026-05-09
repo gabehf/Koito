@@ -42,10 +42,12 @@ export default function MediaItem({
           </div>
         </Link>
         {subtitle !== undefined && (
-          <div className="text-[14px]">{subtitle}</div>
+          <div className="text-[12px] sm:text-[14px]">{subtitle}</div>
         )}
         {meta !== undefined && (
-          <div className="color-fg-secondary text-[14px]">{meta}</div>
+          <div className="color-fg-secondary text-[12px] sm:text-[14px]">
+            {meta}
+          </div>
         )}
       </div>
     </div>

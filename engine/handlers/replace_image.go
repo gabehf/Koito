@@ -123,7 +123,7 @@ func ReplaceAlbumImageHandler(store db.AlbumStore) http.HandlerFunc {
 func resolveImage(ctx context.Context, r *http.Request, l *zerolog.Logger) (uuid.UUID, string, error) {
 	id := uuid.New()
 
-	var dlSize = catalog.ImageSizeXL
+	var dlSize = catalog.ImageSizeSource
 
 	fileUrl := r.FormValue("image_url")
 	if fileUrl != "" {

@@ -12,7 +12,7 @@ export default function CardHeader({ isOffset, children, to }: Props) {
     return (
       <Link
         to={to}
-        className="text-(--color-fg-secondary) hover:text-(--color-fg) inline-block mb-1 group"
+        className="text-(--color-fg-secondary) hover:text-(--color-fg) inline-block sm:mb-1 group"
       >
         <h3 style={{ marginLeft: ml || 0 }} className="hover:cursor-pointer">
           {children}
@@ -26,7 +26,7 @@ export default function CardHeader({ isOffset, children, to }: Props) {
     return (
       <h3
         style={{ marginLeft: ml || 0 }}
-        className="color-fg-secondary inline-block mb-1"
+        className="color-fg-secondary inline-block sm:mb-1"
       >
         {children}
       </h3>
