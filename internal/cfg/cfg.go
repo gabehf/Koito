@@ -63,7 +63,6 @@ type config struct {
 	musicBrainzRateLimit   int
 	logLevel               int
 	structuredLogging      bool
-	enableFullImageCache   bool
 	lbzRelayEnabled        bool
 	lbzRelayUrl            string
 	lbzRelayToken          string
@@ -160,7 +159,6 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg.structuredLogging = parseBool(getenv(ENABLE_STRUCTURED_LOGGING_ENV))
 	cfg.fetchImageDuringImport = parseBool(getenv(FETCH_IMAGES_DURING_IMPORT_ENV))
 
-	cfg.enableFullImageCache = parseBool(getenv(ENABLE_FULL_IMAGE_CACHE_ENV))
 	cfg.disableDeezer = parseBool(getenv(DISABLE_DEEZER_ENV))
 	cfg.disableCAA = parseBool(getenv(DISABLE_COVER_ART_ARCHIVE_ENV))
 	cfg.disableMusicBrainz = parseBool(getenv(DISABLE_MUSICBRAINZ_ENV))

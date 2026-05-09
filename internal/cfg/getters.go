@@ -96,12 +96,6 @@ func DefaultTheme() string {
 	return globalConfig.defaultTheme
 }
 
-func FullImageCacheEnabled() bool {
-	lock.RLock()
-	defer lock.RUnlock()
-	return globalConfig.enableFullImageCache
-}
-
 func DeezerDisabled() bool {
 	lock.RLock()
 	defer lock.RUnlock()
