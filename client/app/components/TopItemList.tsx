@@ -98,6 +98,7 @@ function ItemCard({
                       <ArtistLinks artists={[album.artists[0]]} />
                     )
                   }
+                  lazy
                 />
               </td>
               <td className="min-w-[75px]">
@@ -136,6 +137,7 @@ function ItemCard({
                   imageSize={56}
                   title={<Link to={`/track/${track.id}`}>{track.title}</Link>}
                   subtitle={<ArtistLinks artists={track.artists} />}
+                  lazy
                 />
               </td>
               <td className="min-w-[75px]">
@@ -173,6 +175,7 @@ function ItemCard({
                   link={`/artist/${artist.id}`}
                   imageSize={56}
                   title={<Link to={`/artist/${artist.id}`}>{artist.name}</Link>}
+                  lazy
                 />
               </td>
               <td className="min-w-[75px]">

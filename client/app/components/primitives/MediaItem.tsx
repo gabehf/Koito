@@ -11,6 +11,7 @@ interface Props {
   meta?: ReactNode;
   className?: string;
   alignTop?: boolean;
+  lazy?: boolean;
 }
 
 export default function MediaItem({
@@ -22,6 +23,7 @@ export default function MediaItem({
   meta,
   className,
   alignTop,
+  lazy,
 }: Props) {
   return (
     <div
@@ -30,7 +32,7 @@ export default function MediaItem({
       }`}
     >
       <Link to={link} style={{ minWidth: imageSize }}>
-        <Image src={image} size={imageSize} />
+        <Image src={image} size={imageSize} lazy={lazy} />
       </Link>
       <div
         className="flex flex-col items-start"

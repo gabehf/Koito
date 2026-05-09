@@ -2,6 +2,7 @@ interface Props {
   size: number;
   src: string;
   className?: string;
+  lazy?: boolean;
 }
 
 export default function ActivityGrid(props: Props) {
@@ -12,6 +13,7 @@ export default function ActivityGrid(props: Props) {
         src={props.src}
         className={classes}
         style={{ height: props.size, width: props.size }}
+        loading={props.lazy ? "lazy" : undefined}
       />
     </>
   );
