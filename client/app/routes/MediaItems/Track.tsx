@@ -53,8 +53,10 @@ export default function Track() {
               By{" "}
               {track.artists.map((artist: Artist, i: number) => (
                 <span key={artist.id}>
-                  {i > 0 && ", "}
-                  {i === track.artists.length - 1 ? "and " : ""}
+                  {i > 0 && i !== track.artists.length - 1 && ", "}
+                  {i === track.artists.length - 1 && track.artists.length > 1
+                    ? " and "
+                    : ""}
                   <Link className="hover:underline" to={`/artist/${artist.id}`}>
                     {artist.name}
                   </Link>
