@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import Popup from "./Popup";
-import { useTheme } from "~/hooks/useTheme";
 import { apiFetch, type ListenActivityItem } from "api/api";
 import CardHeader from "./primitives/CardHeader";
 import useWindowWidth from "~/hooks/useWindowWidth";
-import { blendColors } from "~/utils/utils";
 
 interface Props {
   step?: string;
@@ -51,10 +49,6 @@ export default function ActivityGrid({
     queryFn: () => getActivity(args),
   });
 
-  const { theme } = useTheme();
-  const primarycolor = theme.primary;
-  const bgColor = theme.bgSecondary;
-
   const width = useWindowWidth();
 
   const header = "Activity";
@@ -86,8 +80,7 @@ export default function ActivityGrid({
 
   const getBlendAmount = (v: number, t: number): number => {
     v = Math.min(v, t);
-
-    return v / t;
+    return 0.1 + (v / t) * 0.9;
   };
 
   // Build a lookup from normalized date key → listen count
@@ -170,12 +163,9 @@ export default function ActivityGrid({
                         display: "inline-block",
                         background:
                           cell.listens > 0
-                            ? blendColors(
-                                bgColor,
-                                primarycolor,
-                                getBlendAmount(cell.listens, target)
-                              )
+                            ? "var(--color-primary)"
                             : "var(--color-bg-secondary)",
+                        opacity: getBlendAmount(cell.listens, target),
                       }}
                       className={`${CELL_W} ${CELL_H} ${CELL_RADIUS} ${
                         cell.listens > 0
@@ -200,11 +190,8 @@ export default function ActivityGrid({
                 <div
                   style={{
                     display: "inline-block",
-                    background: blendColors(
-                      bgColor,
-                      primarycolor,
-                      getBlendAmount(i, 5)
-                    ),
+                    background: "var(--color-primary)",
+                    opacity: getBlendAmount(i, 5),
                   }}
                   className={`w-[8px] sm:w-[9px] h-[8px] sm:h-[9px] rounded-[3px] ${"border-[0.5px] border-(--color-bg-tertiary)"}`}
                 />
