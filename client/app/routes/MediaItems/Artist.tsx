@@ -71,7 +71,7 @@ export default function Artist() {
       }
     >
       <div className="flex flex-col gap-20">
-        <div className="flex gap-25 mt-10 flex-wrap">
+        <div className="flex gap-10 md:gap-25 mt-10 flex-wrap">
           <div className="w-2/5 max-w-[400px]">
             <LastPlayed limit={11} artistId={artist.id} showNowPlaying />
           </div>

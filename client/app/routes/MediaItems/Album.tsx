@@ -79,7 +79,7 @@ export default function Album() {
         </div>
       }
     >
-      <div className="flex gap-25 mt-10 flex-wrap">
+      <div className="flex gap-10 md:gap-25 mt-10 flex-wrap">
         <div className="w-2/5 max-w-[400px]">
           <LastPlayed limit={11} albumId={album.id} showNowPlaying />
         </div>
