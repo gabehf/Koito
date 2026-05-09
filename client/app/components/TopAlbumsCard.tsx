@@ -73,6 +73,8 @@ export default function TopAlbumsCard({ period }: Props) {
             style={{
               borderRadius: "var(--border-radius) var(--border-radius) 0 0",
             }}
+            width={350}
+            height={350}
           />
           <div
             className="absolute inset-0 bg-gradient-to-t to-50% from-(--color-bg-secondary) to-transparent"
