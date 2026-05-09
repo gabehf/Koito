@@ -165,12 +165,15 @@ export default function ActivityGrid({
                           cell.listens > 0
                             ? "var(--color-primary)"
                             : "var(--color-bg-secondary)",
-                        opacity: getBlendAmount(cell.listens, target),
+                        opacity:
+                          cell.listens > 0
+                            ? getBlendAmount(cell.listens, target)
+                            : 1,
                       }}
                       className={`${CELL_W} ${CELL_H} ${CELL_RADIUS} ${
                         cell.listens > 0
                           ? ""
-                          : "border-[0.5px] border-(--color-bg-tertiary)"
+                          : "border-[1px] border-(--color-bg-tertiary)"
                       }`}
                     />
                   </Popup>
