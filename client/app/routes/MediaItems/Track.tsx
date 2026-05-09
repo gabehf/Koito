@@ -41,7 +41,7 @@ export default function Track() {
         r.artists = [];
         for (let i = 0; i < r.tracks.length; i++) {
           if (r.tracks[i].id === id) {
-            delete r.tracks[i];
+            r.tracks.splice(i, 1);
           }
         }
         return r;

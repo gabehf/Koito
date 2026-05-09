@@ -38,7 +38,7 @@ export default function Album() {
         r.tracks = [];
         for (let i = 0; i < r.albums.length; i++) {
           if (r.albums[i].id === id) {
-            delete r.albums[i];
+            r.albums.splice(i, 1);
           }
         }
         return r;
