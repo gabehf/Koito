@@ -2,6 +2,7 @@ import { useDeferredValue, useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { search, type SearchResponse } from "api/api";
 import SearchResults from "../SearchResults";
+import SubHeader from "../primitives/SubHeader";
 
 interface Props {
   open: boolean;
@@ -29,7 +30,7 @@ export default function SearchModal({ open, setOpen }: Props) {
 
   return (
     <Modal isOpen={open} onClose={closeSearchModal}>
-      <h3>Search</h3>
+      <SubHeader>Search</SubHeader>
       <div className="flex flex-col items-center">
         <input
           type="text"

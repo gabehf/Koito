@@ -7,6 +7,7 @@ import type {
   MergeSearchCleanerFunc,
 } from "~/routes/MediaItems/MediaLayout";
 import { useNavigate } from "react-router";
+import SubHeader from "../primitives/SubHeader";
 
 interface Props {
   open: boolean;
@@ -83,7 +84,7 @@ export default function MergeModal(props: Props) {
 
   return (
     <Modal isOpen={props.open} onClose={closeMergeModal}>
-      <h3>Merge {props.type}s</h3>
+      <SubHeader>Merge {props.type}s</SubHeader>
       <div className="flex flex-col items-center">
         <input
           type="text"

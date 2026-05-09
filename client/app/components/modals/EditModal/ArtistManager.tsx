@@ -4,6 +4,7 @@ import { Trash } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AsyncButton } from "../../AsyncButton";
 import ComboBox from "~/components/ComboBox";
+import SubHeader from "~/components/primitives/SubHeader";
 
 interface Props {
   type: string;
@@ -111,7 +112,7 @@ export default function ArtistManager({ type, id }: Props) {
 
   return (
     <div className="w-full">
-      <h3>Artist Manager</h3>
+      <SubHeader>Artist Manager</SubHeader>
       <div className="flex flex-col gap-4">
         {displayData.map((v) => (
           <div className="flex gap-2">

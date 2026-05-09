@@ -1,6 +1,7 @@
 import { updateMbzId } from "api/api";
 import { useState } from "react";
 import { AsyncButton } from "~/components/AsyncButton";
+import SubHeader from "~/components/primitives/SubHeader";
 
 interface Props {
   type: string;
@@ -32,7 +33,7 @@ export default function UpdateMbzID({ type, id }: Props) {
 
   return (
     <div className="w-full">
-      <h3>Update MusicBrainz ID</h3>
+      <SubHeader>Update MusicBrainz ID</SubHeader>
       <div className="flex gap-2 w-3/5">
         <input
           type="text"

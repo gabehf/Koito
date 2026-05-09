@@ -9,6 +9,7 @@ import {
 import { AsyncButton } from "../../AsyncButton";
 import { useEffect, useState } from "react";
 import { Trash } from "lucide-react";
+import SubHeader from "~/components/primitives/SubHeader";
 
 interface Props {
   type: string;
@@ -96,7 +97,7 @@ export default function AliasManager({ type, id }: Props) {
 
   return (
     <div className="w-full">
-      <h3>Alias Manager</h3>
+      <SubHeader>Alias Manager</SubHeader>
       <div className="flex flex-col gap-4">
         {displayData.map((v) => (
           <div className="flex gap-2">

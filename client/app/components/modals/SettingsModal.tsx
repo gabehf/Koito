@@ -18,17 +18,20 @@ export default function SettingsModal({ open, setOpen }: Props) {
   const { user, updateAvailable } = useAppContext();
 
   const triggerClasses =
-    "px-4 py-2 w-full hover-bg-secondary rounded-md text-start data-[state=active]:bg-[var(--color-bg-secondary)]";
-  const contentClasses = "w-full px-2 mt-8 sm:mt-0 sm:px-10 overflow-y-auto";
+    "px-1 sm:px-4 py-2 w-full hover-bg-secondary " +
+    "rounded-md text-start border-(--color-border) " +
+    "data-[state=active]:bg-[var(--color-bg-secondary)] data-[state=active]:border";
+  const contentClasses =
+    "w-full px-2 mt-8 sm:mt-4 sm:px-10 overflow-y-auto sm:mx-3";
 
   return (
-    <Modal h={700} isOpen={open} onClose={() => setOpen(false)} maxW={900}>
+    <Modal h={700} isOpen={open} onClose={() => setOpen(false)} maxW={1000}>
       <Tabs
         defaultValue="Appearance"
-        orientation="vertical" // still vertical, but layout is responsive via Tailwind
+        orientation="vertical"
         className="flex flex-col sm:flex-row h-full"
       >
-        <TabsList className="flex flex-row sm:flex-col gap-1 w-full sm:max-w-1/4 rounded-md bg p-2">
+        <TabsList className="flex flex-col gap-1 mx-auto w-17/20 sm:max-w-1/4 rounded-md bg p-2 border">
           <TabsTrigger className={triggerClasses} value="Appearance">
             Appearance
           </TabsTrigger>

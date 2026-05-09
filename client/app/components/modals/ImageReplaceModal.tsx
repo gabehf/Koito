@@ -3,6 +3,7 @@ import { Modal } from "./Modal";
 import { replaceImage, search, type SearchResponse } from "api/api";
 import SearchResults from "../SearchResults";
 import { AsyncButton } from "../AsyncButton";
+import SubHeader from "../primitives/SubHeader";
 
 interface Props {
   type: string;
@@ -49,7 +50,7 @@ export default function ImageReplaceModal({
 
   return (
     <Modal isOpen={open} onClose={closeModal}>
-      <h3>Replace Image</h3>
+      <SubHeader>Replace Image</SubHeader>
       <div className="flex flex-col items-center">
         <input
           type="text"
@@ -72,8 +73,8 @@ export default function ImageReplaceModal({
           ""
         )}
         {type === "Album" && musicbrainzId ? (
-          <>
-            <h3 className="mt-5">Suggested Image (Click to Apply)</h3>
+          <div className="flex flex-col items-center mt-6">
+            <SubHeader>Suggested Image (Click to Apply)</SubHeader>
             <button
               className="mt-4"
               disabled={loading}
@@ -96,13 +97,13 @@ export default function ImageReplaceModal({
                   src={`https://coverartarchive.org/release/${musicbrainzId}/front`}
                   onLoad={() => setSuggestedImgLoading(false)}
                   onError={() => setSuggestedImgLoading(false)}
-                  className={`block w-[130px] h-auto ${
+                  className={`block w-[150px] h-auto ${
                     suggestedImgLoading ? "opacity-0" : "opacity-100"
                   } transition-opacity duration-300`}
                 />
               </div>
             </button>
-          </>
+          </div>
         ) : (
           ""
         )}
