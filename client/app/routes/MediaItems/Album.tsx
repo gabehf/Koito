@@ -47,6 +47,7 @@ export default function Album() {
         <div className="flex flex-col gap-1.5 items-start">
           {album.artists.length > 0 && !album.is_various_artists && (
             <p>
+              By{" "}
               {
                 <span key={album.artists[0].id}>
                   <Link
@@ -59,7 +60,7 @@ export default function Album() {
               }
             </p>
           )}
-          {album.is_various_artists && <p>Various Artists</p>}
+          {album.is_various_artists && <p>By Various Artists</p>}
           {album.listen_count !== 0 && (
             <p>
               {album.listen_count} play{album.listen_count > 1 ? "s" : ""}

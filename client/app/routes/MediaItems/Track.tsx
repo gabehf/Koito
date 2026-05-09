@@ -50,9 +50,11 @@ export default function Track() {
         <div className="flex flex-col gap-2 items-start">
           {track.artists.length > 0 && (
             <p>
+              By{" "}
               {track.artists.map((artist: Artist, i: number) => (
                 <span key={artist.id}>
                   {i > 0 && ", "}
+                  {i === track.artists.length - 1 ? "and " : ""}
                   <Link className="hover:underline" to={`/artist/${artist.id}`}>
                     {artist.name}
                   </Link>
