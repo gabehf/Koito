@@ -3,13 +3,19 @@ import { Link } from "react-router";
 interface Props {
   to?: string;
   isOffset?: boolean;
+  className?: string;
   children: React.ReactNode;
 }
 
-export default function SubHeader({ isOffset, children, to }: Props) {
+export default function SubHeader({
+  isOffset,
+  children,
+  to,
+  className,
+}: Props) {
   const ml = isOffset ? 24 : 0;
 
-  const classNames = "text-(--color-fg-secondary) inline-block sm:mb-3 mb-2";
+  const classNames = `text-(--color-fg-secondary) inline-block sm:mb-3 mb-2 ${className}`;
 
   if (to) {
     return (

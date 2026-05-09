@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { replaceImage, search, type SearchResponse } from "api/api";
-import SearchResults from "../SearchResults";
+import SearchResults from "./SearchModal/SearchResults";
 import { AsyncButton } from "../AsyncButton";
 import SubHeader from "../primitives/SubHeader";
 

@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import Image from "./primitives/Image";
 
 interface Props {
   id: number;
@@ -12,13 +13,13 @@ interface Props {
 export default function SearchResultSelectorItem(props: Props) {
   return (
     <button
-      className="px-3 py-2 flex gap-3 items-center hover:text-(--color-fg-secondary) hover:cursor-pointer w-full"
+      className="px-3 py-4 flex gap-3 items-center hover:text-(--color-fg-secondary) rounded-(--border-radius) hover:cursor-pointer w-full"
       style={{
         border: props.active ? "1px solid var(--color-fg-tertiary" : "",
       }}
       onClick={props.onClick}
     >
-      <img src={props.img} alt={props.text} />
+      <Image src={props.img} size={75} />
       <div className="flex justify-between items-center w-full">
         <div className="flex flex-col items-start text-start">
           {props.text}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import SidebarItem from "./SidebarItem";
 import { Search } from "lucide-react";
-import SearchModal from "../modals/SearchModal";
+import SearchModal from "../modals/SearchModal/SearchModal";
 
 interface Props {
   size: number;

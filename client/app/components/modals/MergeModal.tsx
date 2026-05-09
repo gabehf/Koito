@@ -1,7 +1,7 @@
 import { useDeferredValue, useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { search, type SearchResponse } from "api/api";
-import SearchResults from "../SearchResults";
+import SearchResults from "./SearchModal/SearchResults";
 import type {
   MergeFunc,
   MergeSearchCleanerFunc,
