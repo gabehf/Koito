@@ -226,7 +226,7 @@ func Run(
 
 	l.Debug().Msg("Engine: Setting up HTTP server")
 
-	if len(cfg.AllowedHosts()) > 0 {
+	if len(cfg.AllowedHosts()) != 1 || cfg.AllowedHosts()[0] != "" {
 		l.Info().Msg("Engine: The environment variable " + cfg.ALLOWED_HOSTS_ENV + " is no longer used and can be removed.")
 	}
 
