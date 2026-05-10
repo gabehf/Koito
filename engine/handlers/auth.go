@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gabehf/koito/engine/middleware"
@@ -20,21 +19,18 @@ func LoginHandler(store db.UserStore) http.HandlerFunc {
 
 		l.Debug().Msg("LoginHandler: Received request")
 
-		if err := r.ParseForm(); err != nil {
-			l.Debug().AnErr("error", err).Msg("LoginHandler: Failed to parse form")
-			utils.WriteError(w, "invalid request format", http.StatusBadRequest)
-			return
-		}
-
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-		if username == "" || password == "" {
-			l.Debug().Msg("LoginHandler: Missing credentials")
+		body, err := utils.DecodeBody[struct {
+			Username   string `json:"username"`
+			Password   string `json:"password"`
+			RememberMe bool   `json:"remember_me"`
+		}](r)
+		if err != nil || body.Username == "" || body.Password == "" {
+			l.Debug().Msg("LoginHandler: Missing or invalid credentials")
 			utils.WriteError(w, "username and password required", http.StatusBadRequest)
 			return
 		}
 
-		user, err := store.GetUserByUsername(ctx, username)
+		user, err := store.GetUserByUsername(ctx, body.Username)
 		if err != nil {
 			l.Error().Err(err).Msg("LoginHandler: Database error fetching user")
 			utils.WriteError(w, "authentication failed", http.StatusInternalServerError)
@@ -46,18 +42,18 @@ func LoginHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		if err := bcrypt.CompareHashAndPassword(user.Password, []byte(password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword(user.Password, []byte(body.Password)); err != nil {
 			l.Debug().Msg("LoginHandler: Invalid password")
 			utils.WriteError(w, "invalid credentials", http.StatusUnauthorized)
 			return
 		}
 
 		expiresAt := time.Now().Add(24 * time.Hour)
-		if strings.ToLower(r.FormValue("remember_me")) == "true" {
+		if body.RememberMe {
 			expiresAt = time.Now().Add(30 * 24 * time.Hour)
 		}
 
-		session, err := store.SaveSession(ctx, user.ID, expiresAt, r.FormValue("remember_me") == "true")
+		session, err := store.SaveSession(ctx, user.ID, expiresAt, body.RememberMe)
 		if err != nil {
 			l.Error().Err(err).Msg("LoginHandler: Failed to create session")
 			utils.WriteError(w, "authentication failed", http.StatusInternalServerError)
@@ -141,29 +137,33 @@ func UpdateUserHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		if err := r.ParseForm(); err != nil {
-			l.Error().Err(err).Msg("UpdateUserHandler: Invalid form data")
+		body, err := utils.DecodeBody[struct {
+			Username *string `json:"username"`
+			Password *string `json:"password"`
+		}](r)
+		if err != nil {
+			l.Debug().Msg("UpdateUserHandler: Invalid request body")
 			utils.WriteError(w, "invalid request", http.StatusBadRequest)
 			return
 		}
 
-		opts := db.UpdateUserOpts{ID: user.ID}
-		if username := r.FormValue("username"); username != "" {
-			opts.Username = username
-		}
-		if password := r.FormValue("password"); password != "" {
-			opts.Password = password
-		}
-
-		if opts.Username == "" && opts.Password == "" {
+		if body.Username == nil && body.Password == nil {
 			l.Debug().Msg("UpdateUserHandler: No update parameters provided")
 			utils.WriteError(w, "no changes specified", http.StatusBadRequest)
 			return
 		}
 
+		opts := db.UpdateUserOpts{ID: user.ID}
+		if body.Username != nil {
+			opts.Username = *body.Username
+		}
+		if body.Password != nil {
+			opts.Password = *body.Password
+		}
+
 		if err := store.UpdateUser(ctx, opts); err != nil {
 			l.Error().Err(err).Msg("UpdateUserHandler: Update failed")
-			utils.WriteError(w, "update failed", http.StatusBadRequest)
+			utils.WriteError(w, "update failed", http.StatusInternalServerError)
 			return
 		}
 

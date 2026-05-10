@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gabehf/koito/engine/middleware"
 	"github.com/gabehf/koito/internal/db"
@@ -15,8 +14,6 @@ func GenerateApiKeyHandler(store db.UserStore) http.HandlerFunc {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
 
-		l.Debug().Msg("GenerateApiKeyHandler: Received request")
-
 		user := middleware.GetUserFromContext(ctx)
 		if user == nil {
 			l.Debug().Msg("GenerateApiKeyHandler: Invalid user context")
@@ -24,15 +21,11 @@ func GenerateApiKeyHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		if err := r.ParseForm(); err != nil {
-			l.Debug().AnErr("error", err).Msg("GenerateApiKeyHandler: Failed to parse form")
-			utils.WriteError(w, "invalid request", http.StatusBadRequest)
-			return
-		}
-
-		label := r.FormValue("label")
-		if label == "" {
-			l.Debug().Msg("GenerateApiKeyHandler: Missing label parameter")
+		body, err := utils.DecodeBody[struct {
+			Label string `json:"label"`
+		}](r)
+		if err != nil || body.Label == "" {
+			l.Debug().Msg("GenerateApiKeyHandler: Invalid or missing label in request body")
 			utils.WriteError(w, "label is required", http.StatusBadRequest)
 			return
 		}
@@ -47,7 +40,7 @@ func GenerateApiKeyHandler(store db.UserStore) http.HandlerFunc {
 		key, err := store.SaveApiKey(ctx, db.SaveApiKeyOpts{
 			UserID: user.ID,
 			Key:    apiKey,
-			Label:  label,
+			Label:  body.Label,
 		})
 		if err != nil {
 			l.Error().Err(err).Msg("GenerateApiKeyHandler: Failed to save API key")
@@ -65,8 +58,6 @@ func DeleteApiKeyHandler(store db.UserStore) http.HandlerFunc {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
 
-		l.Debug().Msg("DeleteApiKeyHandler: Received request")
-
 		user := middleware.GetUserFromContext(ctx)
 		if user == nil {
 			l.Debug().Msg("DeleteApiKeyHandler: Invalid user context")
@@ -74,21 +65,14 @@ func DeleteApiKeyHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		idStr := r.URL.Query().Get("id")
-		if idStr == "" {
-			l.Debug().Msg("DeleteApiKeyHandler: Missing id parameter")
-			utils.WriteError(w, "id is required", http.StatusBadRequest)
-			return
-		}
-
-		apiKeyID, err := strconv.Atoi(idStr)
+		apiKeyID, err := utils.ParseIDParam(r, "id")
 		if err != nil {
 			l.Debug().AnErr("error", err).Msg("DeleteApiKeyHandler: Invalid API key ID")
 			utils.WriteError(w, "invalid id", http.StatusBadRequest)
 			return
 		}
 
-		if err := store.DeleteApiKey(ctx, int32(apiKeyID)); err != nil {
+		if err := store.DeleteApiKey(ctx, apiKeyID); err != nil {
 			l.Error().Err(err).Msg("DeleteApiKeyHandler: Failed to delete API key")
 			utils.WriteError(w, "failed to delete api key", http.StatusInternalServerError)
 			return
@@ -103,8 +87,6 @@ func GetApiKeysHandler(store db.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
-
-		l.Debug().Msg("GetApiKeysHandler: Received request")
 
 		user := middleware.GetUserFromContext(ctx)
 		if user == nil {
@@ -130,8 +112,6 @@ func UpdateApiKeyLabelHandler(store db.UserStore) http.HandlerFunc {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
 
-		l.Debug().Msg("UpdateApiKeyLabelHandler: Received request")
-
 		user := middleware.GetUserFromContext(ctx)
 		if user == nil {
 			l.Debug().Msg("UpdateApiKeyLabelHandler: Invalid user context")
@@ -139,38 +119,26 @@ func UpdateApiKeyLabelHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		err := r.ParseForm()
-		if err != nil {
-			l.Debug().Msg("UpdateApiKeyLabelHandler: Failed to parse form")
-			utils.WriteError(w, "form is invalid", http.StatusBadRequest)
-			return
-		}
-
-		idStr := r.FormValue("id")
-		if idStr == "" {
-			l.Debug().Msg("UpdateApiKeyLabelHandler: Missing id parameter")
-			utils.WriteError(w, "id is required", http.StatusBadRequest)
-			return
-		}
-
-		apiKeyID, err := strconv.Atoi(idStr)
+		apiKeyID, err := utils.ParseIDParam(r, "id")
 		if err != nil {
 			l.Debug().AnErr("error", err).Msg("UpdateApiKeyLabelHandler: Invalid API key ID")
 			utils.WriteError(w, "invalid id", http.StatusBadRequest)
 			return
 		}
 
-		label := r.FormValue("label")
-		if label == "" {
-			l.Debug().Msg("UpdateApiKeyLabelHandler: Missing label parameter")
+		body, err := utils.DecodeBody[struct {
+			Label string `json:"label"`
+		}](r)
+		if err != nil || body.Label == "" {
+			l.Debug().Msg("UpdateApiKeyLabelHandler: Invalid or missing label in request body")
 			utils.WriteError(w, "label is required", http.StatusBadRequest)
 			return
 		}
 
 		if err := store.UpdateApiKeyLabel(ctx, db.UpdateApiKeyLabelOpts{
 			UserID: user.ID,
-			ID:     int32(apiKeyID),
-			Label:  label,
+			ID:     apiKeyID,
+			Label:  body.Label,
 		}); err != nil {
 			l.Error().Err(err).Msg("UpdateApiKeyLabelHandler: Failed to update API key label")
 			utils.WriteError(w, "failed to update api key label", http.StatusInternalServerError)
@@ -178,6 +146,6 @@ func UpdateApiKeyLabelHandler(store db.UserStore) http.HandlerFunc {
 		}
 
 		l.Debug().Msgf("UpdateApiKeyLabelHandler: Successfully updated label for API key ID %d", apiKeyID)
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
