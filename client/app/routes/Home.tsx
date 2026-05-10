@@ -2,8 +2,6 @@ import type { Route } from "./+types/Home";
 import TopTracks from "~/components/TopTracks";
 import LastPlayed from "~/components/LastPlayed";
 import ActivityGrid from "~/components/ActivityGrid";
-import TopAlbums from "~/components/TopAlbums";
-import TopArtists from "~/components/TopArtists";
 import TopArtistsCard from "~/components/TopArtistsCard";
 import AllTimeStats from "~/components/AllTimeStats";
 import { useState } from "react";
@@ -26,7 +24,7 @@ export default function Home() {
 
   return (
     <main className="flex flex-grow justify-center pb-4 w-full">
-      <div className="flex-1 flex flex-col items-center gap-10 md:gap-16 min-h-0 sm:mt-20 mt-10 mx-10">
+      <div className="flex-1 flex flex-col items-center gap-10 md:gap-16 min-h-0 sm:mt-20 mt-8 mx-10">
         <div className="flex flex-col lg:flex-row gap-10 md:gap-20">
           <AllTimeStats />
           <ActivityGrid configurable />

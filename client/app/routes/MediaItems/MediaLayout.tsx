@@ -69,6 +69,9 @@ export default function MediaLayout(props: Props) {
 
   console.log("MBZ:", props.musicbrainzId);
 
+  const mobileTopMarginClass =
+    user || props.musicbrainzId != null ? "mt-12" : "mt-4";
+
   const headersizeclass =
     props.title.length > 28 ? "text-2xl lg:text-5xl" : "text-3xl lg:text-7xl";
 
@@ -87,7 +90,9 @@ export default function MediaLayout(props: Props) {
       <title>{title}</title>
       <meta property="og:title" content={title} />
       <meta name="description" content={title} />
-      <div className="mx-auto w-19/20 sm:w-auto sm:ml-18 pt-12">
+      <div
+        className={`mx-auto w-19/20 sm:w-auto sm:ml-18 ${mobileTopMarginClass} sm:mt-12`}
+      >
         <div className="flex gap-8 flex-wrap md:flex-nowrap relative sm:mb-6">
           <div className="flex flex-col justify-around">
             <img

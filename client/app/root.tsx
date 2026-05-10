@@ -119,7 +119,7 @@ export function ErrorBoundary() {
         <Sidebar />
         <div className="flex">
           <div className="w-full flex flex-col">
-            <main className="pt-16 p-4 mx-auto flex-grow">
+            <main className="pt-16 p-4 w-4/5 min-w-[350px] mx-auto flex-grow">
               <div className="md:flex gap-4">
                 <img className="w-[200px] rounded mb-3" src="../yuu.jpg" />
                 <div>

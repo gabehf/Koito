@@ -84,7 +84,7 @@ export default function InterestGraph({
           height: "170px",
         }}
         data={data}
-        margin={{ top: 15, bottom: 20 }}
+        margin={{ top: 30, bottom: 25 }}
       >
         <defs>
           <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">

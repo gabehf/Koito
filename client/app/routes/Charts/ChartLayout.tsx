@@ -196,7 +196,7 @@ export default function ChartLayout<T>({
       day: "numeric",
     });
 
-    return `${formatter.format(from)} - ${formatter.format(to)}`;
+    return `${formatter.format(from)} – ${formatter.format(to)}`;
   };
 
   return (
@@ -210,15 +210,15 @@ export default function ChartLayout<T>({
       <title>{pgTitle}</title>
       <meta property="og:title" content={pgTitle} />
       <meta name="description" content={pgTitle} />
-      <div className="w-19/20 mx-auto sm:ml-18 pt-12">
+      <div className="w-19/20 mx-auto sm:ml-18 mt-6 sm:mt-12">
         <h1>{title}</h1>
-        <div className="flex flex-col items-start md:flex-row sm:items-center gap-4">
+        <div className="flex flex-col items-start md:flex-row sm:items-center gap-2 sm:gap-4">
           <PeriodSelector
             current={period}
             setter={handleSetPeriod}
             disableCache
           />
-          <div className="flex gap-5">
+          <div className="flex gap-3">
             <select
               value={year ?? ""}
               onChange={(e) => handleSetYear(e.target.value)}
