@@ -16,7 +16,7 @@ interface Props {
 const TopTracks = (props: Props) => {
   const { isPending, isError, data, error } = useQuery({
     queryKey: [
-      "top-tracks",
+      "top/tracks",
       {
         limit: props.limit,
         period: props.period,
@@ -54,7 +54,7 @@ const TopTracks = (props: Props) => {
   return (
     <div>
       <h3 className="hover:underline">
-        <Link to={`/chart/top-tracks?period=${props.period}${params}`}>
+        <Link to={`/chart/top/tracks?period=${props.period}${params}`}>
           {header}
         </Link>
       </h3>

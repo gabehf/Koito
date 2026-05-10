@@ -88,32 +88,32 @@ func bindRoutes(
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Authenticate(db, middleware.AuthModeSessionOrAPIKey))
 
-			r.Delete("/artist/{id}", handlers.DeleteArtistHandler(db))                         // done
-			r.Delete("/artist/{id}/aliases", handlers.DeleteArtistAliasHandler(db))            // done
-			r.Post("/artist/{id}/merge", handlers.MergeArtistsHandler(db))                     // done
-			r.Post("/artist/{id}/aliases", handlers.CreateArtistAliasHandler(db))              // done
-			r.Patch("/artist/{id}", handlers.UpdateArtistHandler(db))                          // done
-			r.Patch("/artist/{id}/image", handlers.ReplaceArtistImageHandler(db))              // done
-			r.Patch("/artist/{id}/aliases/primary", handlers.SetPrimaryArtistAliasHandler(db)) // done
+			r.Delete("/artist/{id}", handlers.DeleteArtistHandler(db))
+			r.Delete("/artist/{id}/aliases", handlers.DeleteArtistAliasHandler(db))
+			r.Post("/artist/{id}/merge", handlers.MergeArtistsHandler(db))
+			r.Post("/artist/{id}/aliases", handlers.CreateArtistAliasHandler(db))
+			r.Patch("/artist/{id}", handlers.UpdateArtistHandler(db))
+			r.Patch("/artist/{id}/image", handlers.ReplaceArtistImageHandler(db))
+			r.Patch("/artist/{id}/aliases/primary", handlers.SetPrimaryArtistAliasHandler(db))
 
-			r.Delete("/album/{id}", handlers.DeleteAlbumHandler(db))                             // done
-			r.Delete("/album/{id}/aliases", handlers.DeleteAlbumAliasHandler(db))                // done
-			r.Post("/album/{id}/merge", handlers.MergeAlbumsHandler(db))                         // done
-			r.Post("/album/{id}/aliases", handlers.CreateAlbumAliasHandler(db))                  // done
-			r.Patch("/album/{id}", handlers.UpdateAlbumHandler(db))                              // done
-			r.Patch("/album/{id}/image", handlers.ReplaceAlbumImageHandler(db))                  // done
-			r.Patch("/album/{id}/aliases/primary", handlers.SetPrimaryAlbumAliasHandler(db))     // done
-			r.Patch("/album/{id}/artist/{artist_id}", handlers.SetPrimaryAlbumArtistHandler(db)) // done
+			r.Delete("/album/{id}", handlers.DeleteAlbumHandler(db))
+			r.Delete("/album/{id}/aliases", handlers.DeleteAlbumAliasHandler(db))
+			r.Post("/album/{id}/merge", handlers.MergeAlbumsHandler(db))
+			r.Post("/album/{id}/aliases", handlers.CreateAlbumAliasHandler(db))
+			r.Patch("/album/{id}", handlers.UpdateAlbumHandler(db))
+			r.Patch("/album/{id}/image", handlers.ReplaceAlbumImageHandler(db))
+			r.Patch("/album/{id}/aliases/primary", handlers.SetPrimaryAlbumAliasHandler(db))
+			r.Patch("/album/{id}/artists/{artist_id}", handlers.SetPrimaryAlbumArtistHandler(db))
 
-			r.Delete("/track/{id}", handlers.DeleteTrackHandler(db))                              // done
-			r.Delete("/track/{id}/aliases", handlers.DeleteTrackAliasHandler(db))                 // done
-			r.Delete("/track/{id}/artists/{artist_id}", handlers.DeleteTrackArtistHandler(db))    // done
-			r.Post("/track/{id}/merge", handlers.MergeTracksHandler(db))                          // done
-			r.Post("/track/{id}/aliases", handlers.CreateTrackAliasHandler(db))                   // done
-			r.Post("/track/{id}/artists", handlers.AddTrackArtistsHandler(db))                    // done
-			r.Patch("/track/{id}", handlers.UpdateTrackHandler(db))                               // done
-			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))      // done
-			r.Patch("/track/{id}/artists/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db)) // done
+			r.Delete("/track/{id}", handlers.DeleteTrackHandler(db))
+			r.Delete("/track/{id}/aliases", handlers.DeleteTrackAliasHandler(db))
+			r.Delete("/track/{id}/artists/{artist_id}", handlers.DeleteTrackArtistHandler(db))
+			r.Post("/track/{id}/merge", handlers.MergeTracksHandler(db))
+			r.Post("/track/{id}/aliases", handlers.CreateTrackAliasHandler(db))
+			r.Post("/track/{id}/artists", handlers.AddTrackArtistsHandler(db))
+			r.Patch("/track/{id}", handlers.UpdateTrackHandler(db))
+			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))
+			r.Patch("/track/{id}/artists/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db))
 
 			r.Post("/listen", handlers.SubmitListenWithIDHandler(db))
 			r.Delete("/listen", handlers.DeleteListenHandler(db))

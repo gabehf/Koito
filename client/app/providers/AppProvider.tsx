@@ -50,7 +50,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
 
   useEffect(() => {
-    fetch("/apis/web/v1/user/me")
+    fetch("/apis/web/v1/user")
       .then((res) => res.json())
       .then((data) => {
         data.error ? setUser(null) : setUser(data);

@@ -28,9 +28,8 @@ export default function ImageReplaceModal({
     setLoading(true);
     setError("");
     const formData = new FormData();
-    formData.set(`${type.toLowerCase()}_id`, id.toString());
     formData.set("image_url", url);
-    replaceImage(formData)
+    replaceImage(type.toLowerCase(), id.toString(), formData)
       .then((r) => {
         if (r.status >= 200 && r.status < 300) {
           window.location.reload();

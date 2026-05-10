@@ -40,8 +40,12 @@ export default function SetVariousArtists({ id }: Props) {
   const updateVA = (val: boolean) => {
     setErr("");
     setSuccess("");
-    fetch(`/apis/web/v1/album?id=${id}&is_various_artists=${val}`, {
+    fetch(`/apis/web/v1/album/${id}`, {
       method: "PATCH",
+      body: JSON.stringify({ is_various_artists: val }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     }).then((r) => {
       if (r.ok) {
         setSuccess("Successfully updated album");

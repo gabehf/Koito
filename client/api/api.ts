@@ -49,7 +49,7 @@ async function getLastListens(
 async function getTopTracks(
   args: getItemsArgs
 ): Promise<PaginatedResponse<Ranked<Track>>> {
-  let url = `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&page=${args.page}`;
+  let url = `/apis/web/v1/top/tracks?period=${args.period}&limit=${args.limit}&page=${args.page}`;
 
   if (args.artist_id) url += `&artist_id=${args.artist_id}`;
   else if (args.album_id) url += `&album_id=${args.album_id}`;
@@ -61,7 +61,7 @@ async function getTopTracks(
 async function getTopAlbums(
   args: getItemsArgs
 ): Promise<PaginatedResponse<Ranked<Album>>> {
-  let url = `/apis/web/v1/top-albums?period=${args.period}&limit=${args.limit}&page=${args.page}`;
+  let url = `/apis/web/v1/top/albums?period=${args.period}&limit=${args.limit}&page=${args.page}`;
   if (args.artist_id) url += `&artist_id=${args.artist_id}`;
 
   const r = await fetch(url);
@@ -71,7 +71,7 @@ async function getTopAlbums(
 async function getTopArtists(
   args: getItemsArgs
 ): Promise<PaginatedResponse<Ranked<Artist>>> {
-  const url = `/apis/web/v1/top-artists?period=${args.period}&limit=${args.limit}&page=${args.page}`;
+  const url = `/apis/web/v1/top/artists?period=${args.period}&limit=${args.limit}&page=${args.page}`;
   const r = await fetch(url);
   return handleJson<PaginatedResponse<Ranked<Artist>>>(r);
 }
@@ -86,9 +86,10 @@ async function getActivity(
 }
 
 async function getInterest(args: getInterestArgs): Promise<InterestBucket[]> {
-  const r = await fetch(
-    `/apis/web/v1/interest?buckets=${args.buckets}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
-  );
+  let uri = `track/${args.track_id}`;
+  if (args.album_id) uri = `album/${args.album_id}`;
+  if (args.artist_id) uri = `artist/${args.artist_id}`;
+  const r = await fetch(`/apis/web/v1/${uri}/interest?buckets=${args.buckets}`);
   return handleJson<InterestBucket[]>(r);
 }
 
@@ -111,16 +112,21 @@ function imageUrl(id: string, size: string) {
   }
   return `/images/${size}/${id}`;
 }
-function replaceImage(form: FormData): Promise<Response> {
-  return fetch(`/apis/web/v1/replace-image`, {
-    method: "POST",
+function replaceImage(
+  type: string,
+  id: string,
+  form: FormData
+): Promise<Response> {
+  return fetch(`/apis/web/v1/${type}/${id}/image`, {
+    method: "PATCH",
     body: form,
   });
 }
 
 function mergeTracks(from: number, to: number): Promise<Response> {
-  return fetch(`/apis/web/v1/merge/tracks?from_id=${from}&to_id=${to}`, {
+  return fetch(`/apis/web/v1/track/${to}/merge`, {
     method: "POST",
+    body: JSON.stringify({ merge_from_id: from }),
   });
 }
 function mergeAlbums(
@@ -128,24 +134,20 @@ function mergeAlbums(
   to: number,
   replaceImage: boolean
 ): Promise<Response> {
-  return fetch(
-    `/apis/web/v1/merge/albums?from_id=${from}&to_id=${to}&replace_image=${replaceImage}`,
-    {
-      method: "POST",
-    }
-  );
+  return fetch(`/apis/web/v1/album/${to}/merge`, {
+    method: "POST",
+    body: JSON.stringify({ merge_from_id: from, replace_image: replaceImage }),
+  });
 }
 function mergeArtists(
   from: number,
   to: number,
   replaceImage: boolean
 ): Promise<Response> {
-  return fetch(
-    `/apis/web/v1/merge/artists?from_id=${from}&to_id=${to}&replace_image=${replaceImage}`,
-    {
-      method: "POST",
-    }
-  );
+  return fetch(`/apis/web/v1/artist/${to}/merge`, {
+    method: "POST",
+    body: JSON.stringify({ merge_from_id: from, replace_image: replaceImage }),
+  });
 }
 function login(
   username: string,
@@ -226,7 +228,7 @@ function updateApiKeyLabel(id: number, label: string): Promise<Response> {
 }
 
 function deleteItem(itemType: string, id: number): Promise<Response> {
-  return fetch(`/apis/web/v1/${itemType}?id=${id}`, {
+  return fetch(`/apis/web/v1/${itemType}/${id}`, {
     method: "DELETE",
   });
 }
@@ -240,7 +242,7 @@ function updateUser(username: string, password: string) {
   });
 }
 function getAliases(type: string, id: number): Promise<Alias[]> {
-  return fetch(`/apis/web/v1/aliases?${type}_id=${id}`).then(
+  return fetch(`/apis/web/v1/${type}/${id}/aliases`).then(
     (r) => r.json() as Promise<Alias[]>
   );
 }
@@ -249,12 +251,9 @@ function createAlias(
   id: number,
   alias: string
 ): Promise<Response> {
-  const form = new URLSearchParams();
-  form.append(`${type}_id`, String(id));
-  form.append("alias", alias);
-  return fetch(`/apis/web/v1/aliases`, {
+  return fetch(`/apis/web/v1/${type}/${id}/aliases`, {
     method: "POST",
-    body: form,
+    body: JSON.stringify({ alias: alias }),
   });
 }
 function deleteAlias(
@@ -262,12 +261,9 @@ function deleteAlias(
   id: number,
   alias: string
 ): Promise<Response> {
-  const form = new URLSearchParams();
-  form.append(`${type}_id`, String(id));
-  form.append("alias", alias);
-  return fetch(`/apis/web/v1/aliases/delete`, {
-    method: "POST",
-    body: form,
+  return fetch(`/apis/web/v1/${type}/${id}/aliases`, {
+    method: "DELETE",
+    body: JSON.stringify({ alias: alias }),
   });
 }
 function setPrimaryAlias(
@@ -275,12 +271,9 @@ function setPrimaryAlias(
   id: number,
   alias: string
 ): Promise<Response> {
-  const form = new URLSearchParams();
-  form.append(`${type}_id`, String(id));
-  form.append("alias", alias);
-  return fetch(`/apis/web/v1/aliases/primary`, {
-    method: "POST",
-    body: form,
+  return fetch(`/apis/web/v1/${type}/${id}/aliases/primary`, {
+    method: "PATCH",
+    body: JSON.stringify({ alias: alias }),
   });
 }
 function updateMbzId(
@@ -288,16 +281,13 @@ function updateMbzId(
   id: number,
   mbzid: string
 ): Promise<Response> {
-  const form = new URLSearchParams();
-  form.append(`${type}_id`, String(id));
-  form.append("mbz_id", mbzid);
-  return fetch(`/apis/web/v1/mbzid`, {
+  return fetch(`/apis/web/v1/${type}/${id}`, {
     method: "PATCH",
-    body: form,
+    body: JSON.stringify({ mbid: mbzid }),
   });
 }
 function getAlbum(id: number): Promise<Album> {
-  return fetch(`/apis/web/v1/album?id=${id}`).then(
+  return fetch(`/apis/web/v1/album/${id}`).then(
     (r) => r.json() as Promise<Album>
   );
 }

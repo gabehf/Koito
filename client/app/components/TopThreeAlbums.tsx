@@ -12,7 +12,7 @@ interface Props {
 export default function TopThreeAlbums(props: Props) {
   const { isPending, isError, data, error } = useQuery({
     queryKey: [
-      "top-albums",
+      "top/albums",
       { limit: 3, period: props.period, artist_id: props.artistId, page: 0 },
     ],
     queryFn: ({ queryKey }) => getTopAlbums(queryKey[1] as getItemsArgs),

@@ -20,9 +20,9 @@ export default function ArtistManager({ type, id }: Props) {
   const { isPending, isError, data, error } = useQuery({
     queryKey: ["get-artists-" + type.toLowerCase(), { id: id }],
     queryFn: () => {
-      return fetch(
-        "/apis/web/v1/artists?" + type.toLowerCase() + "_id=" + id
-      ).then((r) => r.json()) as Promise<Artist[]>;
+      return fetch(`/apis/web/v1/${type.toLowerCase()}/${id}/artists`).then(
+        (r) => r.json()
+      ) as Promise<Artist[]>;
     },
   });
 
@@ -49,17 +49,13 @@ export default function ArtistManager({ type, id }: Props) {
   const handleSetPrimary = (artist: Artist, val: boolean) => {
     setError(undefined);
     setLoading(true);
-    fetch(
-      `/apis/web/v1/artists/primary?artist_id=${
-        artist.id
-      }&${type.toLowerCase()}_id=${id}&is_primary=${val}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
-    ).then(async (r) => {
+    fetch(`/apis/web/v1/${type.toLowerCase()}/${id}/artists/${artist.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_primary: val }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(async (r) => {
       if (r.ok) {
         await queryClient.invalidateQueries({
           queryKey: ["get-artists-" + type.toLowerCase(), { id: id }],
@@ -77,12 +73,13 @@ export default function ArtistManager({ type, id }: Props) {
       setError("no artist selected");
       return;
     }
-    const form = new URLSearchParams();
-    form.append("add_artist", String(addArtistTarget.id));
     setLoading(true);
-    fetch(`/apis/web/v1/${type}?id=${id}`, {
-      method: "PATCH",
-      body: form,
+    fetch(`/apis/web/v1/${type}/${id}/artists`, {
+      method: "POST",
+      body: JSON.stringify({ artist_ids: [addArtistTarget.id] }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     }).then(async (r) => {
       if (r.ok) {
         await queryClient.invalidateQueries({
@@ -98,11 +95,8 @@ export default function ArtistManager({ type, id }: Props) {
   const handleDeleteArtist = (artist: number) => {
     setError(undefined);
     setLoading(true);
-    const form = new URLSearchParams();
-    form.append("remove_artist", String(artist));
-    fetch(`/apis/web/v1/${type}?id=${id}`, {
-      method: "PATCH",
-      body: form,
+    fetch(`/apis/web/v1/${type}/${id}/artists/${artist}`, {
+      method: "DELETE",
     }).then(async (r) => {
       if (r.ok) {
         await queryClient.invalidateQueries({
