@@ -105,15 +105,15 @@ func bindRoutes(
 			r.Patch("/album/{id}/aliases/primary", handlers.SetPrimaryAlbumAliasHandler(db))     // done
 			r.Patch("/album/{id}/artist/{artist_id}", handlers.SetPrimaryAlbumArtistHandler(db)) // done
 
-			r.Delete("/track/{id}", handlers.DeleteTrackHandler(db))                             // done
-			r.Delete("/track/{id}/aliases", handlers.DeleteTrackAliasHandler(db))                // done
-			r.Delete("/track/{id}/artists/{artist_id}", handlers.DeleteTrackArtistHandler(db))   // done
-			r.Post("/track/{id}/merge", handlers.MergeTracksHandler(db))                         // done
-			r.Post("/track/{id}/aliases", handlers.CreateTrackAliasHandler(db))                  // done
-			r.Post("/track/{id}/artists", handlers.AddTrackArtistsHandler(db))                   // done
-			r.Patch("/track/{id}", handlers.UpdateTrackHandler(db))                              // done
-			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))     // done
-			r.Patch("/track/{id}/artist/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db)) // done
+			r.Delete("/track/{id}", handlers.DeleteTrackHandler(db))                              // done
+			r.Delete("/track/{id}/aliases", handlers.DeleteTrackAliasHandler(db))                 // done
+			r.Delete("/track/{id}/artists/{artist_id}", handlers.DeleteTrackArtistHandler(db))    // done
+			r.Post("/track/{id}/merge", handlers.MergeTracksHandler(db))                          // done
+			r.Post("/track/{id}/aliases", handlers.CreateTrackAliasHandler(db))                   // done
+			r.Post("/track/{id}/artists", handlers.AddTrackArtistsHandler(db))                    // done
+			r.Patch("/track/{id}", handlers.UpdateTrackHandler(db))                               // done
+			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))      // done
+			r.Patch("/track/{id}/artists/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db)) // done
 
 			r.Post("/listen", handlers.SubmitListenWithIDHandler(db))
 			r.Delete("/listen", handlers.DeleteListenHandler(db))
