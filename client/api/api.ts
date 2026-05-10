@@ -154,13 +154,16 @@ function login(
   password: string,
   remember: boolean
 ): Promise<Response> {
-  const form = new URLSearchParams();
-  form.append("username", username);
-  form.append("password", password);
-  form.append("remember_me", String(remember));
   return fetch(`/apis/web/v1/login`, {
     method: "POST",
-    body: form,
+    body: JSON.stringify({
+      username: username,
+      password: password,
+      remember_me: remember,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 }
 function logout(): Promise<Response> {
@@ -191,11 +194,12 @@ function getApiKeys(): Promise<ApiKey[]> {
   );
 }
 const createApiKey = async (label: string): Promise<ApiKey> => {
-  const form = new URLSearchParams();
-  form.append("label", label);
   const r = await fetch(`/apis/web/v1/user/apikeys`, {
     method: "POST",
-    body: form,
+    body: JSON.stringify({ label: label }),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
   if (!r.ok) {
     let errorMessage = `error: ${r.status}`;
@@ -213,17 +217,17 @@ const createApiKey = async (label: string): Promise<ApiKey> => {
   return data;
 };
 function deleteApiKey(id: number): Promise<Response> {
-  return fetch(`/apis/web/v1/user/apikeys?id=${id}`, {
+  return fetch(`/apis/web/v1/user/apikeys/${id}`, {
     method: "DELETE",
   });
 }
 function updateApiKeyLabel(id: number, label: string): Promise<Response> {
-  const form = new URLSearchParams();
-  form.append("id", String(id));
-  form.append("label", label);
-  return fetch(`/apis/web/v1/user/apikeys`, {
+  return fetch(`/apis/web/v1/user/apikeys/${id}`, {
     method: "PATCH",
-    body: form,
+    body: JSON.stringify({ label: label }),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 }
 
@@ -238,7 +242,10 @@ function updateUser(username: string, password: string) {
   form.append("password", password);
   return fetch(`/apis/web/v1/user`, {
     method: "PATCH",
-    body: form,
+    body: JSON.stringify({ username: username, password: password }),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 }
 function getAliases(type: string, id: number): Promise<Alias[]> {
