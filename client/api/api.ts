@@ -177,14 +177,18 @@ function getCfg(): Promise<Config> {
 }
 
 function submitListen(id: string, ts: Date): Promise<Response> {
-  const form = new URLSearchParams();
-  form.append("track_id", id);
   const ms = new Date(ts).getTime();
   const unix = Math.floor(ms / 1000);
-  form.append("unix", unix.toString());
-  return fetch(`/apis/web/v1/listen`, {
+  return fetch(`/apis/web/v1/listens`, {
     method: "POST",
-    body: form,
+    body: JSON.stringify({
+      track_id: Number(id),
+      unix: unix,
+      client: "Koito Web UI",
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 }
 

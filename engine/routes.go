@@ -115,8 +115,8 @@ func bindRoutes(
 			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))
 			r.Patch("/track/{id}/artists/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db))
 
-			r.Post("/listen", handlers.SubmitListenWithIDHandler(db))
-			r.Delete("/listen", handlers.DeleteListenHandler(db))
+			r.Post("/listens", handlers.SubmitListenWithIDHandler(db))
+			r.Delete("/listens", handlers.DeleteListenHandler(db))
 
 			r.Get("/user/apikeys", handlers.GetApiKeysHandler(db))
 			r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
