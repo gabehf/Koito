@@ -39,21 +39,30 @@ func bindRoutes(
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Authenticate(db, middleware.AuthModeLoginGate))
-			r.Get("/artist", handlers.GetArtistHandler(db))
-			r.Get("/artists", handlers.GetArtistsForItemHandler(db))
-			r.Get("/album", handlers.GetAlbumHandler(db))
-			r.Get("/track", handlers.GetTrackHandler(db))
-			r.Get("/top-tracks", handlers.GetTopTracksHandler(db))
-			r.Get("/top-albums", handlers.GetTopAlbumsHandler(db))
-			r.Get("/top-artists", handlers.GetTopArtistsHandler(db))
+			r.Get("/artist/{id}", handlers.GetArtistHandler(db))                  // done
+			r.Get("/artist/{id}/aliases", handlers.GetArtistAliasesHandler(db))   // done
+			r.Get("/artist/{id}/interest", handlers.GetArtistInterestHandler(db)) // done
+
+			r.Get("/album/{id}", handlers.GetAlbumHandler(db))                   // done
+			r.Get("/album/{id}/artists", handlers.GetArtistsForAlbumHandler(db)) // done
+			r.Get("/album/{id}/aliases", handlers.GetAlbumAliasesHandler(db))    // done
+			r.Get("/album/{id}/interest", handlers.GetAlbumInterestHandler(db))  // done
+
+			r.Get("/track/{id}", handlers.GetTrackHandler(db))                   // done
+			r.Get("/track/{id}/artists", handlers.GetArtistsForTrackHandler(db)) // done
+			r.Get("/track/{id}/aliases", handlers.GetTrackAliasesHandler(db))    // done
+			r.Get("/track/{id}/interest", handlers.GetTrackInterestHandler(db))  // done
+
+			r.Get("/top/tracks", handlers.GetTopTracksHandler(db))
+			r.Get("/top/albums", handlers.GetTopAlbumsHandler(db))
+			r.Get("/top/artists", handlers.GetTopArtistsHandler(db))
+
 			r.Get("/listens", handlers.GetListensHandler(db))
 			r.Get("/listen-activity", handlers.GetListenActivityHandler(db))
 			r.Get("/now-playing", handlers.NowPlayingHandler(db))
 			r.Get("/stats", handlers.StatsHandler(db))
 			r.Get("/search", handlers.SearchHandler(db))
-			r.Get("/aliases", handlers.GetAliasesHandler(db))
 			r.Get("/summary", handlers.SummaryHandler(db))
-			r.Get("/interest", handlers.GetInterestHandler(db))
 		})
 		r.Post("/logout", handlers.LogoutHandler(db))
 		if !cfg.RateLimitDisabled() {
@@ -78,30 +87,47 @@ func bindRoutes(
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Authenticate(db, middleware.AuthModeSessionOrAPIKey))
-			r.Get("/export", handlers.ExportHandler(db))
-			r.Post("/replace-image", handlers.ReplaceImageHandler(db))
-			r.Patch("/album", handlers.UpdateAlbumHandler(db))
-			r.Post("/merge/tracks", handlers.MergeTracksHandler(db))
-			r.Post("/merge/albums", handlers.MergeReleaseGroupsHandler(db))
-			r.Post("/merge/artists", handlers.MergeArtistsHandler(db))
-			r.Delete("/data", handlers.PurgeAllDataHandler(db))
-			r.Delete("/artist", handlers.DeleteArtistHandler(db))
-			r.Post("/artists/primary", handlers.SetPrimaryArtistHandler(db))
-			r.Delete("/album", handlers.DeleteAlbumHandler(db))
-			r.Delete("/track", handlers.DeleteTrackHandler(db))
-			r.Patch("/track", handlers.UpdateTrackHandler(db))
+
+			r.Delete("/artist/{id}", handlers.DeleteArtistHandler(db))                         // done
+			r.Delete("/artist/{id}/aliases", handlers.DeleteArtistAliasHandler(db))            // done
+			r.Post("/artist/{id}/merge", handlers.MergeArtistsHandler(db))                     // done
+			r.Post("/artist/{id}/aliases", handlers.CreateArtistAliasHandler(db))              // done
+			r.Patch("/artist/{id}", handlers.UpdateArtistHandler(db))                          // done
+			r.Patch("/artist/{id}/image", handlers.ReplaceArtistImageHandler(db))              // done
+			r.Patch("/artist/{id}/aliases/primary", handlers.SetPrimaryArtistAliasHandler(db)) // done
+
+			r.Delete("/album/{id}", handlers.DeleteAlbumHandler(db))                             // done
+			r.Delete("/album/{id}/aliases", handlers.DeleteAlbumAliasHandler(db))                // done
+			r.Post("/album/{id}/merge", handlers.MergeAlbumsHandler(db))                         // done
+			r.Post("/album/{id}/aliases", handlers.CreateAlbumAliasHandler(db))                  // done
+			r.Patch("/album/{id}", handlers.UpdateAlbumHandler(db))                              // done
+			r.Patch("/album/{id}/image", handlers.ReplaceAlbumImageHandler(db))                  // done
+			r.Patch("/album/{id}/aliases/primary", handlers.SetPrimaryAlbumAliasHandler(db))     // done
+			r.Patch("/album/{id}/artist/{artist_id}", handlers.SetPrimaryAlbumArtistHandler(db)) // done
+
+			r.Delete("/track/{id}", handlers.DeleteTrackHandler(db))                             // done
+			r.Delete("/track/{id}/aliases", handlers.DeleteTrackAliasHandler(db))                // done
+			r.Delete("/track/{id}/artists/{artist_id}", handlers.DeleteTrackArtistHandler(db))   // done
+			r.Post("/track/{id}/merge", handlers.MergeTracksHandler(db))                         // done
+			r.Post("/track/{id}/aliases", handlers.CreateTrackAliasHandler(db))                  // done
+			r.Post("/track/{id}/artists", handlers.AddTrackArtistsHandler(db))                   // done
+			r.Patch("/track/{id}", handlers.UpdateTrackHandler(db))                              // done
+			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))     // done
+			r.Patch("/track/{id}/artist/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db)) // done
+
 			r.Post("/listen", handlers.SubmitListenWithIDHandler(db))
 			r.Delete("/listen", handlers.DeleteListenHandler(db))
-			r.Post("/aliases", handlers.CreateAliasHandler(db))
-			r.Post("/aliases/delete", handlers.DeleteAliasHandler(db))
-			r.Post("/aliases/primary", handlers.SetPrimaryAliasHandler(db))
-			r.Patch("/mbzid", handlers.UpdateMbzIdHandler(db))
+
 			r.Get("/user/apikeys", handlers.GetApiKeysHandler(db))
 			r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
 			r.Patch("/user/apikeys", handlers.UpdateApiKeyLabelHandler(db))
 			r.Delete("/user/apikeys", handlers.DeleteApiKeyHandler(db))
-			r.Get("/user/me", handlers.MeHandler())
+
+			r.Get("/user", handlers.MeHandler())
 			r.Patch("/user", handlers.UpdateUserHandler(db))
+
+			r.Get("/export", handlers.ExportHandler(db))
+			r.Delete("/data", handlers.PurgeAllDataHandler(db))
 		})
 	})
 

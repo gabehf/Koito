@@ -9,11 +9,13 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/models"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -340,4 +342,27 @@ func FlattenAliases(aliases []models.Alias) []string {
 		ret[i] = aliases[i].Alias
 	}
 	return ret
+}
+
+func ParseIDParam(r *http.Request, param string) (int32, error) {
+	idStr := chi.URLParam(r, param)
+	if idStr == "" {
+		return 0, fmt.Errorf("ParseIDParam: required parameter %s not provided", param)
+	}
+	i64, err := strconv.ParseInt(idStr, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("ParseIDParam: parameter %s must be an integer", param)
+	}
+	i32 := int32(i64)
+	return i32, nil
+}
+
+// DecodeBody decodes a JSON request body into the given type.
+// Returns an error if the body is malformed or cannot be decoded.
+func DecodeBody[T any](r *http.Request) (T, error) {
+	var body T
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return body, err
+	}
+	return body, nil
 }
