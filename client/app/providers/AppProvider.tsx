@@ -1,11 +1,19 @@
 import { getCfg, type User } from "api/api";
 import { createContext, useContext, useEffect, useState } from "react";
+import pkg from "../../package.json";
+import semver from "semver";
+
+function isNewerVersion(current: string, latest: string): boolean {
+  return semver.gt(latest, current);
+}
 
 interface AppContextType {
   user: User | null | undefined;
   configurableHomeActivity: boolean;
   homeItems: number;
   defaultTheme: string;
+  currentVersion: string;
+  updateAvailable: boolean;
   setConfigurableHomeActivity: (value: boolean) => void;
   setHomeItems: (value: number) => void;
   setUsername: (value: string) => void;
@@ -37,6 +45,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setUser({ ...user, username: value });
   };
 
+  const currentVersion = import.meta.env.VITE_KOITO_VERSION || pkg.version;
+
+  const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
+
   useEffect(() => {
     fetch("/apis/web/v1/user/me")
       .then((res) => res.json())
@@ -58,6 +70,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, []);
 
+  useEffect(() => {
+    fetch("https://api.github.com/repos/gabehf/koito/releases/latest")
+      .then((r) => r.json())
+      .then((r) => {
+        setUpdateAvailable(isNewerVersion(currentVersion, r.tag_name));
+      })
+      .catch((err) => console.log(err));
+  }, []);
+
   // Block rendering the app until config is loaded
   if (user === undefined || defaultTheme === undefined) {
     return null;
@@ -68,6 +89,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     configurableHomeActivity,
     homeItems,
     defaultTheme,
+    currentVersion,
+    updateAvailable,
     setConfigurableHomeActivity,
     setHomeItems,
     setUsername,

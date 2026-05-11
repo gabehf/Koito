@@ -2,7 +2,6 @@ import { ExternalLink, History, Home, Info } from "lucide-react";
 import SidebarSearch from "./SidebarSearch";
 import SidebarItem from "./SidebarItem";
 import SidebarSettings from "./SidebarSettings";
-import { getRewindParams, getRewindYear } from "~/utils/utils";
 
 export default function Sidebar() {
   const iconSize = 20;
@@ -64,7 +63,7 @@ export default function Sidebar() {
           onClick={() => {}}
           modal={<></>}
         >
-          <Info size={iconSize} />
+          <Info size={iconSize} className="relative" />
         </SidebarItem>
         <SidebarSettings size={iconSize} />
       </div>
