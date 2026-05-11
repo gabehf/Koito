@@ -44,7 +44,7 @@ export default function PeriodSelector({
   }, []);
 
   return (
-    <div className="flex gap-2 grow-0 text-sm sm:text-[16px] px-3 sm:px-6 py-2 border bg-(--color-bg-secondary) rounded-(--border-radius)">
+    <div className="flex gap-2 grow-0 text-sm sm:text-[16px] px-3 sm:px-6 py-2 card">
       {periods.map((p, i) => (
         <div key={`period_setter_${p}`}>
           <button

@@ -91,7 +91,7 @@ export default function MediaLayout(props: Props) {
       <meta property="og:title" content={title} />
       <meta name="description" content={title} />
       <div
-        className={`mx-auto w-19/20 sm:w-auto sm:ml-18 ${mobileTopMarginClass} sm:mt-12`}
+        className={`mx-auto w-19/20 sm:ml-10 ${mobileTopMarginClass} sm:mt-12`}
       >
         <div className="flex gap-8 flex-wrap md:flex-nowrap relative sm:mb-6">
           <div className="flex flex-col justify-around">

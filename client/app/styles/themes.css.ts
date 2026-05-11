@@ -103,7 +103,7 @@ export const themes: Record<string, Theme> = {
   },
   black: {
     bg: "#000000",
-    bgSecondary: "#0e0e0e",
+    bgSecondary: "#0A0A0A",
     bgTertiary: "#2a2a2a",
     fg: "#dddddd",
     fgSecondary: "#aaaaaa",

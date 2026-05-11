@@ -62,7 +62,7 @@ export default function InterestGraph({
     );
   } else if (isError) {
     return (
-      <div className="w-[350px] sm:w-[500px]">
+      <div className="w-[350px] sm:w-[550px]">
         <CardHeader>{title}</CardHeader>
         <p className="error">Error: {error.message}</p>
       </div>
@@ -74,46 +74,48 @@ export default function InterestGraph({
   // so I think I just have to remove it for now.
 
   return (
-    <div className="flex flex-col items-start w-[335px] sm:w-[440px] text-[12px]">
-      <CardHeader>{title}</CardHeader>
-      <AreaChart
-        style={{
-          width: "100%",
-          maxWidth: 440,
-          overflow: "visible",
-          height: "170px",
-        }}
-        data={data}
-        margin={{ top: 30, bottom: 25 }}
-      >
-        <defs>
-          <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={color} stopOpacity={0.5} />
-            <stop offset="95%" stopColor={color} stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <Area
-          dataKey="listen_count"
-          type="natural"
-          stroke="none"
-          fill="url(#colorGradient)"
-          animationDuration={0}
-          animationEasing="ease-in-out"
-          activeDot={false}
-        />
-        <Area
-          dataKey="listen_count"
-          type="natural"
-          stroke={color}
-          fill="none"
-          strokeWidth={2}
-          animationDuration={0}
-          animationEasing="ease-in-out"
-          dot={false}
-          activeDot={false}
-          style={{ filter: `drop-shadow(0px 0px 0px ${color})` }}
-        />
-      </AreaChart>
+    <div className="flex flex-col items-start">
+      <CardHeader isOffset>{title}</CardHeader>
+      <div className="flex flex-col items-center w-[350px] sm:w-[550px] text-[12px] p-6 card">
+        <AreaChart
+          style={{
+            width: "100%",
+            maxWidth: 450,
+            overflow: "visible",
+            height: "120px",
+          }}
+          data={data}
+          margin={{ top: 20, bottom: 15 }}
+        >
+          <defs>
+            <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.5} />
+              <stop offset="95%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            dataKey="listen_count"
+            type="natural"
+            stroke="none"
+            fill="url(#colorGradient)"
+            animationDuration={0}
+            animationEasing="ease-in-out"
+            activeDot={false}
+          />
+          <Area
+            dataKey="listen_count"
+            type="natural"
+            stroke={color}
+            fill="none"
+            strokeWidth={2}
+            animationDuration={0}
+            animationEasing="ease-in-out"
+            dot={false}
+            activeDot={false}
+            style={{ filter: `drop-shadow(0px 0px 0px ${color})` }}
+          />
+        </AreaChart>
+      </div>
     </div>
   );
 }

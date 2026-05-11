@@ -127,7 +127,7 @@ export default function ActivityGrid({
   return (
     <div className="flex flex-col items-start">
       <CardHeader isOffset>{header}</CardHeader>
-      <div className="flex flex-col items-center gap-6 pt-4 sm:pt-6 px-4 sm:px-7 pb-4 sm:pb-5 border bg-(--color-bg-secondary) rounded-(--border-radius)">
+      <div className="flex flex-col items-center gap-6 pt-4 sm:pt-6 px-4 sm:px-7 pb-4 sm:pb-5 card">
         <div className="flex items-start gap-2">
           <div className={`grid grid-rows-7 ${CELL_GAP}`}>
             {DAY_LABELS.map((label, i) => (

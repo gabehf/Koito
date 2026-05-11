@@ -66,7 +66,7 @@ export default function TopAlbumsCard({ period }: Props) {
       <CardHeader to={`/chart/top-albums?period=${period}`} isOffset>
         {header}
       </CardHeader>
-      <div className="max-w-[350px] border bg-(--color-bg-secondary) rounded-(--border-radius)">
+      <div className="max-w-[350px] card">
         <div className="relative">
           <img
             src={data.items[0]?.item.image?.large}

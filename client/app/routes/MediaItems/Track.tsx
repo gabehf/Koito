@@ -89,13 +89,15 @@ export default function Track() {
         </div>
       }
     >
-      <div className="flex gap-10 md:gap-25 mt-10 flex-wrap max-w-[1000px]">
-        <div className="min-w-[350px] w-2/5 max-w-[400px]">
-          <LastPlayed limit={11} trackId={track.id} showNowPlaying />
-        </div>
-        <div className="flex flex-col xl:flex-row gap-10">
-          <ActivityGrid configurable trackId={track.id} />
-          <InterestGraph trackId={track.id} />
+      <div className="flex flex-col gap-20">
+        <div className="flex gap-10 md:gap-25 mt-10 flex-wrap items-center">
+          <div className="min-w-[350px] w-2/5 max-w-[400px]">
+            <LastPlayed limit={11} trackId={track.id} showNowPlaying />
+          </div>
+          <div className="flex flex-col gap-10">
+            <InterestGraph trackId={track.id} />
+            <ActivityGrid configurable trackId={track.id} />
+          </div>
         </div>
       </div>
     </MediaLayout>
