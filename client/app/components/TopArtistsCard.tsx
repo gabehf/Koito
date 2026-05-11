@@ -99,7 +99,10 @@ export default function TopArtistsCard({ period }: Props) {
         </div>
         <div className="flex flex-col items-start">
           {data.items.slice(1).map((i) => (
-            <div className="px-6 pb-6" key={`top_artists_card_${i.rank}`}>
+            <div
+              className="px-6 pb-6"
+              key={`top_artists_card_${i.rank}_${i.item.name}`}
+            >
               <MediaItem
                 image={i.item.image}
                 size="md"

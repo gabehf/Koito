@@ -28,6 +28,8 @@ export default function TopArtists(props: Props) {
 
   const header = "Top artists";
 
+  const slug = `/chart/top-artists?period=${props.period}&limit=${props.limit}`;
+
   if (isPending) {
     return (
       <div className="w-[300px]">
@@ -54,7 +56,7 @@ export default function TopArtists(props: Props) {
         <Link to={`/chart/top/artists?period=${props.period}`}>{header}</Link>
       </h3>
       <div className="max-w-[300px]">
-        <TopItemList type="artist" data={data} />
+        <TopItemList type="artist" data={data} slug={slug} />
         {data.items.length < 1 ? "Nothing to show" : ""}
       </div>
     </div>

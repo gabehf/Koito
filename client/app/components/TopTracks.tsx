@@ -42,14 +42,14 @@ const TopTracks = (props: Props) => {
 
   if (isPending) {
     return (
-      <div className="w-[300px]">
+      <div className="w-[450px]">
         <h3>{header}</h3>
         <p>Loading...</p>
       </div>
     );
   } else if (isError) {
     return (
-      <div className="w-[300px]">
+      <div className="w-[450px]">
         <h3>{header}</h3>
         <p className="error">Error: {error.message}</p>
       </div>
@@ -61,9 +61,11 @@ const TopTracks = (props: Props) => {
   params += props.artistId ? `&artist_id=${props.artistId}` : "";
   params += props.albumId ? `&album_id=${props.albumId}` : "";
 
+  const slug = `/chart/top-tracks?period=${props.period}&limit=100${params}`;
+
   if (!data.items[0]) {
     return (
-      <div className="w-[348px]">
+      <div className="w-[450px]">
         <CardHeader
           isOffset
           to={`/chart/top-tracks?period=${props.period}${params}`}
@@ -76,7 +78,7 @@ const TopTracks = (props: Props) => {
   }
 
   return (
-    <div className="w-[350px] md:w-full max-w-[725px] xl:max-w-[375px]">
+    <div className="w-[350px] md:w-full max-w-[725px] xl:max-w-[450px]">
       <CardHeader
         isOffset
         to={`/chart/top-tracks?period=${props.period}${params}`}
@@ -84,7 +86,14 @@ const TopTracks = (props: Props) => {
         {header}
       </CardHeader>
       <div className="mt-7">
-        <TopItemList ranked type="track" data={data} separators />
+        <TopItemList
+          ranked
+          type="track"
+          data={data}
+          separators
+          slug={slug}
+          showSeeMore
+        />
       </div>
     </div>
   );

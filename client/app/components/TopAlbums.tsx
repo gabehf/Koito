@@ -36,6 +36,8 @@ export default function TopAlbums(props: Props) {
 
   const header = "Top albums";
 
+  const slug = `/chart/top-albums?period=${props.period}&artist_id=${props.artistId}&limit=${props.limit}`;
+
   if (isPending) {
     return (
       <div className="w-[300px]">
@@ -64,7 +66,7 @@ export default function TopAlbums(props: Props) {
         </Link>
       </h3>
       <div className="max-w-[300px]">
-        <TopItemList type="album" data={data} />
+        <TopItemList type="album" data={data} slug={slug} />
         {data.items.length < 1 ? "Nothing to show" : ""}
       </div>
     </div>

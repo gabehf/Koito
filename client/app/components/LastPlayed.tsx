@@ -65,7 +65,7 @@ export default function LastPlays(props: Props) {
       const res = await deleteListen(listen);
       if (res.ok || (res.status >= 200 && res.status < 300)) {
         setItems((prev) =>
-          (prev ?? data.items).filter((i) => i.time !== listen.time)
+          (prev ?? data.items).filter((i) => i.time !== listen.time),
         );
       } else {
         console.error("Failed to delete listen:", res.status);
@@ -128,8 +128,8 @@ export default function LastPlays(props: Props) {
           onDelete={handleDelete}
         />
       )}
-      {props.showSeeMore && (
-        <div className="flex items-center w-[350px] sm:w-full">
+      {props.showSeeMore && data.has_next_page && (
+        <div className="flex items-center w-[350px] sm:w-full mt-2">
           <Link
             to={`/listens?period=all_time${params}`}
             className="inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"

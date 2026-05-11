@@ -13,20 +13,24 @@ type Item = Album | Track | Artist;
 
 interface Props<T extends Ranked<Item>> {
   data: PaginatedResponse<T>;
+  slug: string;
   startIndex?: number;
   separators?: ConstrainBoolean;
   ranked?: boolean;
   type: "album" | "track" | "artist";
   className?: string;
+  showSeeMore?: boolean;
 }
 
 export default function TopItemList<T extends Ranked<Item>>({
   data,
+  slug,
   separators,
   startIndex,
   type,
   className,
   ranked,
+  showSeeMore,
 }: Props<T>) {
   if (startIndex) data.items.splice(0, startIndex - 1);
   return (
@@ -48,6 +52,16 @@ export default function TopItemList<T extends Ranked<Item>>({
           </div>
         );
       })}
+      {showSeeMore && data.has_next_page && (
+        <div className="flex items-center w-full mt-2">
+          <Link
+            to={slug}
+            className="inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"
+          >
+            SEE MORE →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -90,7 +104,7 @@ function ItemCard({
                   image={album.image}
                   link={`/album/${album.id}`}
                   size="sm"
-                  title={<Link to={`/album/${album.id}`}>{album.title}</Link>}
+                  title={album.title}
                   alt={album.title}
                   meta={
                     album.is_various_artists ? (
@@ -136,7 +150,7 @@ function ItemCard({
                   image={track.image}
                   link={`/track/${track.id}`}
                   size="sm"
-                  title={<Link to={`/track/${track.id}`}>{track.title}</Link>}
+                  title={track.title}
                   alt={track.title}
                   subtitle={<ArtistLinks artists={track.artists} />}
                   lazy
@@ -176,7 +190,7 @@ function ItemCard({
                   image={artist.image}
                   size="sm"
                   link={`/artist/${artist.id}`}
-                  title={<Link to={`/artist/${artist.id}`}>{artist.name}</Link>}
+                  title={artist.name}
                   alt={artist.name}
                   lazy
                 />
