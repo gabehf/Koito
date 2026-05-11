@@ -19,8 +19,27 @@ export default function Rewind(props: Props) {
     return <p>Not enough data exists to create a Rewind for this period :(</p>;
   }
   return (
-    <div className="flex flex-col gap-7">
-      <h2>{props.stats.title}</h2>
+    <div className="flex flex-col gap-7 card pt-6 pb-12 px-8">
+      <div className="w-full text-start shrink-0 ml-6">
+        <span
+          className="
+            relative inline-block
+            text-2xl font-semibold
+          "
+        >
+          <span
+            className="
+              absolute inset-0
+              -translate-x-6 translate-y-12
+              bg-(--color-primary)
+              z-0
+              h-0.5
+            "
+            aria-hidden
+          />
+          <h2>{props.stats.title}</h2>
+        </span>
+      </div>
       <RewindTopItem
         title="Top Artist"
         imageSrc={artistimg?.medium}

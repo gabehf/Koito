@@ -19,7 +19,7 @@ export default function RewindStatText(props: Props) {
               -translate-x-2 translate-y-8
               bg-(--color-primary)
               z-0
-              h-1
+              h-0.5
             "
             aria-hidden
           />

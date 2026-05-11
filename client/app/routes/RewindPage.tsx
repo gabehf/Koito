@@ -30,10 +30,10 @@ const months = [
 export async function clientLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const year = parseInt(
-    url.searchParams.get("year") || getRewindParams().year.toString()
+    url.searchParams.get("year") || getRewindParams().year.toString(),
   );
   const month = parseInt(
-    url.searchParams.get("month") || getRewindParams().month.toString()
+    url.searchParams.get("month") || getRewindParams().month.toString(),
   );
 
   const res = await fetch(`/apis/web/v1/summary?year=${year}&month=${month}`);
@@ -49,10 +49,10 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
 export default function RewindPage() {
   const currentParams = new URLSearchParams(location.search);
   let year = parseInt(
-    currentParams.get("year") || getRewindParams().year.toString()
+    currentParams.get("year") || getRewindParams().year.toString(),
   );
   let month = parseInt(
-    currentParams.get("month") || getRewindParams().month.toString()
+    currentParams.get("month") || getRewindParams().month.toString(),
   );
   const navigate = useNavigate();
   const [showTime, setShowTime] = useState(false);
@@ -124,13 +124,7 @@ export default function RewindPage() {
   const pgTitle = `${stats.title} - Koito`;
 
   return (
-    <div
-      className="w-full min-h-screen"
-      style={{
-        background: `linear-gradient(to bottom, ${bgColor}, var(--color-bg) 500px)`,
-        transition: "1000",
-      }}
-    >
+    <div className="w-full min-h-screen">
       <div className="flex flex-col items-start sm:items-center gap-4">
         <title>{pgTitle}</title>
         <meta property="og:title" content={pgTitle} />
