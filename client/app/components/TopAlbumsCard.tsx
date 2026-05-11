@@ -10,6 +10,7 @@ import CardHeader from "./primitives/CardHeader";
 import ArtistLinks from "./ArtistLinks";
 import MediaItem from "./primitives/MediaItem";
 import { Link } from "react-router";
+import { TopCardSkeleton } from "./skeletons/TopCardSkeleton";
 
 interface Props {
   period: string;
@@ -20,7 +21,6 @@ const getTopAlbums = (args: { limit: number; period: string; page: number }) =>
 
 export default function TopAlbumsCard({ period }: Props) {
   const numItems = 5;
-  const imageSize = 90;
 
   const args = { limit: numItems, period: period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
@@ -31,14 +31,7 @@ export default function TopAlbumsCard({ period }: Props) {
   const header = "Top albums";
 
   if (isPending) {
-    return (
-      <div className="w-[300px]">
-        <CardHeader to={`/chart/top-albums?period=${period}`} isOffset>
-          {header}
-        </CardHeader>
-        <p>Loading...</p>
-      </div>
-    );
+    return <TopCardSkeleton header={header} numItems={numItems} />;
   } else if (isError) {
     return (
       <div className="w-[300px]">
@@ -85,8 +78,6 @@ export default function TopAlbumsCard({ period }: Props) {
           <div
             className="absolute inset-0 to-50% bg-gradient-to-t from-(--color-bg-secondary) to-transparent"
             style={{
-              backdropFilter: "blur(0px)",
-              WebkitBackdropFilter: "blur(0px)",
               maskImage: "linear-gradient(to top, black, transparent)",
               WebkitMaskImage: "linear-gradient(to top, black, transparent)",
               borderRadius: "var(--border-radius) var(--border-radius) 0 0",

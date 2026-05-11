@@ -10,16 +10,17 @@ import DeleteModal from "~/components/modals/DeleteModal";
 import EditModal from "~/components/modals/EditModal/EditModal";
 import AddListenModal from "~/components/modals/AddListenModal";
 import MbzIcon from "~/components/icons/MbzIcon";
+import { timeListenedString } from "~/utils/utils";
 import { Link } from "react-router";
 
 export type MergeFunc = (
   from: number,
   to: number,
-  replaceImage: boolean
+  replaceImage: boolean,
 ) => Promise<Response>;
 export type MergeSearchCleanerFunc = (
   r: SearchResponse,
-  id: number
+  id: number,
 ) => SearchResponse;
 
 interface Props {
@@ -29,6 +30,9 @@ interface Props {
   id: number;
   rank: number;
   musicbrainzId: string;
+  listenCount: number;
+  timeListened: number;
+  firstListen: number; // unix
   imgItemId: number;
   mergeFunc: MergeFunc;
   mergeCleanerFunc: MergeSearchCleanerFunc;
@@ -62,12 +66,10 @@ export default function MediaLayout(props: Props) {
 
   let vw = Math.max(
     document.documentElement.clientWidth || 0,
-    window.innerWidth || 0
+    window.innerWidth || 0,
   );
 
   let iconSize = vw > 768 ? normalIconSize : mobileIconSize;
-
-  console.log("MBZ:", props.musicbrainzId);
 
   const mobileTopMarginClass =
     user || props.musicbrainzId != null ? "mt-12" : "mt-4";
@@ -117,7 +119,25 @@ export default function MediaLayout(props: Props) {
                 </span>
               </h5>
             </div>
-            {props.subContent}
+            <div className="flex flex-col gap-1.5 items-start">
+              {props.subContent}
+              {props.listenCount > 0 && (
+                <p>
+                  {props.listenCount} play{props.listenCount > 1 ? "s" : ""}
+                </p>
+              )}
+              {props.timeListened !== 0 && (
+                <p title={Math.floor(props.timeListened / 60 / 60) + " hours"}>
+                  {timeListenedString(props.timeListened)}
+                </p>
+              )}
+              {props.firstListen > 0 && (
+                <p title={new Date(props.firstListen * 1000).toLocaleString()}>
+                  Listening since{" "}
+                  {new Date(props.firstListen * 1000).toLocaleDateString()}
+                </p>
+              )}
+            </div>
           </div>
           <div className="absolute left-1 sm:right-10 sm:left-auto -top-9 sm:top-0 flex gap-3 items-center">
             {props.musicbrainzId && (

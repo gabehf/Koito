@@ -54,12 +54,7 @@ export default function ActivityGrid({
   const header = "Activity";
 
   if (isPending) {
-    return (
-      <div className="w-[350px]">
-        <CardHeader>{header}</CardHeader>
-        <p>Loading...</p>
-      </div>
-    );
+    return <ActivityGridSkeleton />;
   } else if (isError) {
     return (
       <div className="w-[350px]">
@@ -98,7 +93,7 @@ export default function ActivityGrid({
   const daysSinceMonday = (today.getDay() + 6) % 7; // Mon=0 … Sun=6
   const gridStart = new Date(today);
   gridStart.setDate(
-    gridStart.getDate() - daysSinceMonday - (NUM_WEEKS - 1) * 7
+    gridStart.getDate() - daysSinceMonday - (NUM_WEEKS - 1) * 7,
   );
 
   const cells: { date: Date; listens: number; isFuture: boolean }[] = [];
@@ -202,6 +197,61 @@ export default function ActivityGrid({
               ))}
             </div>
             <div>More</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActivityGridSkeleton() {
+  const CELL_W = "w-[9px] sm:w-[10px]";
+  const CELL_H = "h-[9px] sm:h-[10px]";
+  const CELL_GAP = "gap-[2px] md:gap-[3px]";
+  const CELL_RADIUS = "rounded-[2px]";
+  const DAY_LABELS = ["Mon", "", "Wed", "", "Fri", "", "Sun"];
+
+  return (
+    <div className="flex flex-col items-start">
+      <CardHeader isOffset>Activity</CardHeader>
+      <div className="flex flex-col items-center gap-5 pt-4 sm:pt-6 px-4 sm:px-7 pb-4 sm:pb-5 card">
+        <div className="flex items-start gap-2">
+          <div className={`grid grid-rows-7 ${CELL_GAP}`}>
+            {DAY_LABELS.map((label, i) => (
+              <div
+                key={i}
+                className={`${CELL_H} flex items-center justify-end`}
+              >
+                <span className="text-[8px] sm:text-[11px] mt-4 leading-none text-(--color-fg-secondary)">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div
+            className={`w-auto grid grid-flow-col grid-rows-7 mt-2.5 ${CELL_GAP}`}
+          >
+            {Array.from({ length: NUM_WEEKS * 7 }).map((_, i) => (
+              <div
+                key={i}
+                className={`${CELL_W} ${CELL_H} ${CELL_RADIUS} bg animate-pulse`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="flex justify-around w-full">
+          <div className="w-24 h-3 bg animate-pulse rounded-(--border-radius)" />
+          <div className="flex items-center gap-2">
+            <div className="w-16 h-3 bg animate-pulse rounded-(--border-radius)" />
+            <div className="grid grid-cols-5 gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-[8px] sm:w-[9px] h-[8px] sm:h-[9px] ${CELL_RADIUS} bg animate-pulse`}
+                />
+              ))}
+            </div>
+            <div className="w-16 h-3 bg animate-pulse rounded-(--border-radius)" />
           </div>
         </div>
       </div>

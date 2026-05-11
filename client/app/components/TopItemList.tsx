@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import ArtistLinks from "./ArtistLinks";
-import MediaItem from "./primitives/MediaItem";
+import MediaItem, { MediaItemSkeleton } from "./primitives/MediaItem";
 import {
   type Album,
   type Artist,
@@ -206,4 +206,52 @@ function ItemCard({
       );
     }
   }
+}
+
+interface SkeletonProps {
+  count?: number;
+  ranked?: boolean;
+  separators?: boolean;
+  type: "album" | "track" | "artist";
+  className?: string;
+}
+
+export function TopItemListSkeleton({
+  count = 5,
+  ranked,
+  type,
+  className,
+}: SkeletonProps) {
+  return (
+    <div className={`flex flex-col gap-1 ${className} min-w-[350px]`}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} style={{ fontSize: 12 }} className="mb-3">
+          <table className="sm:text-[15px] text-[13px] border-collapse">
+            <tbody>
+              <tr>
+                {ranked && (
+                  <td className="pr-3">
+                    <div className="w-5 h-3 bg-secondary animate-pulse rounded-(--border-radius)" />
+                  </td>
+                )}
+                <td className="pr-3 py-1 w-full">
+                  <MediaItemSkeleton
+                    size="sm"
+                    className="gap-2"
+                    subtitle={type === "track"}
+                    meta={type === "album"}
+                  />
+                </td>
+                <td className="min-w-[75px]">
+                  <div className="flex justify-end">
+                    <div className="w-14 h-3 bg-secondary animate-pulse rounded-(--border-radius)" />
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
 }

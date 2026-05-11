@@ -22,8 +22,6 @@ export default function Artist() {
   const artist = useLoaderData() as Artist;
   const period = "all_time";
 
-  // remove canonical name from alias list
-  console.log(artist.aliases);
   let index = artist.aliases.indexOf(artist.name);
   if (index !== -1) {
     artist.aliases.splice(index, 1);
@@ -37,6 +35,9 @@ export default function Artist() {
       id={artist.id}
       rank={artist.all_time_rank}
       musicbrainzId={artist.musicbrainz_id}
+      timeListened={artist.time_listened}
+      listenCount={artist.listen_count}
+      firstListen={artist.first_listen}
       imgItemId={artist.id}
       mergeFunc={mergeArtists}
       mergeCleanerFunc={(r, id) => {
@@ -49,32 +50,13 @@ export default function Artist() {
         }
         return r;
       }}
-      subContent={
-        <div className="flex flex-col gap-1.5 items-start">
-          {artist.listen_count > 0 && (
-            <p>
-              {artist.listen_count} play{artist.listen_count > 1 ? "s" : ""}
-            </p>
-          )}
-          {artist.time_listened !== 0 && (
-            <p title={Math.floor(artist.time_listened / 60 / 60) + " hours"}>
-              {timeListenedString(artist.time_listened)}
-            </p>
-          )}
-          {artist.first_listen > 0 && (
-            <p title={new Date(artist.first_listen * 1000).toLocaleString()}>
-              Listening since{" "}
-              {new Date(artist.first_listen * 1000).toLocaleDateString()}
-            </p>
-          )}
-        </div>
-      }
+      subContent={<></>}
     >
       <div className="flex flex-col gap-20">
-        <div className="flex gap-10 md:gap-25 mt-10 flex-wrap items-center">
+        <div className="flex gap-10 mt-10 flex-wrap items-center">
           <div className="flex gap-10 md:gap-25 flex-wrap lg:flex-nowrap items-start">
             <TopTracks limit={8} period={period} artistId={artist.id} />
-            <div className="min-w-[350px] w-3/5 max-w-[525px]">
+            <div className="min-w-[350px] w-2/5 max-w-[525px]">
               <LastPlayed
                 limit={11}
                 artistId={artist.id}

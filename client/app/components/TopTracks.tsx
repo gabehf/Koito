@@ -6,7 +6,7 @@ import {
   type Track,
 } from "api/api";
 import { Link } from "react-router";
-import TopItemList from "./TopItemList";
+import TopItemList, { TopItemListSkeleton } from "./TopItemList";
 import CardHeader from "./primitives/CardHeader";
 
 interface Props {
@@ -42,14 +42,16 @@ const TopTracks = (props: Props) => {
 
   if (isPending) {
     return (
-      <div className="w-[450px]">
-        <h3>{header}</h3>
-        <p>Loading...</p>
+      <div className="min-w-[350px] sm:min-w-[450px] md:w-full max-w-[725px] xl:max-w-[450px]">
+        <CardHeader isOffset>{header}</CardHeader>
+        <div className="mt-7">
+          <TopItemListSkeleton count={props.limit} ranked type="track" />
+        </div>
       </div>
     );
   } else if (isError) {
     return (
-      <div className="w-[450px]">
+      <div className="min-w-[350px] sm:min-w-[450px] ">
         <h3>{header}</h3>
         <p className="error">Error: {error.message}</p>
       </div>
@@ -65,7 +67,7 @@ const TopTracks = (props: Props) => {
 
   if (!data.items[0]) {
     return (
-      <div className="w-[450px]">
+      <div className="min-w-[350px] sm:min-w-[450px] md:w-full max-w-[725px] xl:max-w-[450px]">
         <CardHeader
           isOffset
           to={`/chart/top-tracks?period=${props.period}${params}`}
@@ -78,7 +80,7 @@ const TopTracks = (props: Props) => {
   }
 
   return (
-    <div className="w-[350px] md:w-full max-w-[725px] xl:max-w-[450px]">
+    <div className="min-w-[350px] sm:min-w-[450px] md:w-full max-w-[725px] xl:max-w-[450px]">
       <CardHeader
         isOffset
         to={`/chart/top-tracks?period=${props.period}${params}`}

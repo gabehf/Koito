@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { timeSince } from "~/utils/utils";
-import ArtistLinks from "./ArtistLinks";
-import Image from "./primitives/Image";
 import {
   apiFetch,
   deleteListen,
@@ -11,7 +8,6 @@ import {
   type PaginatedResponse,
 } from "api/api";
 import { Link } from "react-router";
-import { useAppContext } from "~/providers/AppProvider";
 import CardHeader from "./primitives/CardHeader";
 import ListensTable from "./ListensTable";
 
@@ -37,7 +33,6 @@ const getLastListens = (args: {
 const getNowPlaying = () => apiFetch<NowPlaying>("/apis/web/v1/now-playing");
 
 export default function LastPlays(props: Props) {
-  const { user } = useAppContext();
   const args = {
     limit: props.limit,
     period: "all_time",
@@ -76,12 +71,7 @@ export default function LastPlays(props: Props) {
   };
 
   if (isPending) {
-    return (
-      <div className="w-[300px] sm:w-[500px]">
-        <h3>{header}</h3>
-        <p>Loading...</p>
-      </div>
-    );
+    return <LastPlaysSkeleton limit={props.limit} />;
   } else if (isError) {
     return (
       <div className="w-[300px] sm:w-[500px]">
@@ -138,6 +128,35 @@ export default function LastPlays(props: Props) {
           </Link>
         </div>
       )}
+    </div>
+  );
+}
+
+interface LastPlaysSkeleton {
+  limit: number;
+}
+
+export function LastPlaysSkeleton({ limit }: LastPlaysSkeleton) {
+  return (
+    <div className="text-[13px] sm:text-[15px] w-[350px] md:w-full max-w-[725px] xl:max-w-[1100px]">
+      <CardHeader>Last played</CardHeader>
+      <div className="flex flex-col mt-6">
+        {Array.from({ length: limit }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3.5 py-2 last:border-none"
+          >
+            {/* Thumbnail */}
+            <div className="w-10 h-10 shrink-0 bg-secondary animate-pulse rounded-(--border-radius)" />
+            {/* Track + artist */}
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <div className="h-3.5 w-40 bg-secondary animate-pulse rounded-(--border-radius)" />
+            </div>
+            {/* Timestamp */}
+            <div className="h-3 w-16 shrink-0 bg-secondary animate-pulse rounded-(--border-radius)" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

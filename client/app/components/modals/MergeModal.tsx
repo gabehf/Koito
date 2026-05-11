@@ -24,7 +24,7 @@ export default function MergeModal(props: Props) {
   const [data, setData] = useState<SearchResponse>();
   const deferredQuery = useDeferredValue(query);
   const [mergeTarget, setMergeTarget] = useState<{ title: string; id: number }>(
-    { title: "", id: 0 }
+    { title: "", id: 0 },
   );
   const [mergeOrderReversed, setMergeOrderReversed] = useState(false);
   const [replaceImage, setReplaceImage] = useState(false);
@@ -41,10 +41,6 @@ export default function MergeModal(props: Props) {
   const toggleSelect = ({ title, id }: { title: string; id: number }) => {
     setMergeTarget({ title: title, id: id });
   };
-
-  useEffect(() => {
-    console.log("mergeTarget", mergeTarget);
-  }, [mergeTarget]);
 
   const doMerge = () => {
     let from, to;

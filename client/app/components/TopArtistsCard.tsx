@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import CardHeader from "./primitives/CardHeader";
 import MediaItem from "./primitives/MediaItem";
 import { Link } from "react-router";
+import { TopCardSkeleton } from "./skeletons/TopCardSkeleton";
 
 interface Props {
   period: string;
@@ -29,14 +30,7 @@ export default function TopArtistsCard({ period }: Props) {
   const header = "Top artists";
 
   if (isPending) {
-    return (
-      <div className="w-[300px]">
-        <CardHeader to={`/chart/top-artists?period=${period}`} isOffset>
-          {header}
-        </CardHeader>
-        <p>Loading...</p>
-      </div>
-    );
+    return <TopCardSkeleton header={header} numItems={numItems} />;
   } else if (isError) {
     return (
       <div className="w-[300px]">

@@ -34,6 +34,9 @@ export default function Track() {
       id={track.id}
       rank={track.all_time_rank}
       musicbrainzId={track.musicbrainz_id}
+      timeListened={track.time_listened}
+      listenCount={track.listen_count}
+      firstListen={track.first_listen}
       imgItemId={track.album_id}
       mergeFunc={mergeTracks}
       mergeCleanerFunc={(r, id) => {
@@ -47,7 +50,7 @@ export default function Track() {
         return r;
       }}
       subContent={
-        <div className="flex flex-col gap-2 items-start">
+        <>
           {track.artists.length > 0 && (
             <p>
               By{" "}
@@ -70,28 +73,12 @@ export default function Track() {
               {album.title}
             </Link>
           </p>
-          {track.listen_count !== 0 && (
-            <p>
-              {track.listen_count} play{track.listen_count > 1 ? "s" : ""}
-            </p>
-          )}
-          {track.time_listened !== 0 && (
-            <p title={Math.floor(track.time_listened / 60 / 60) + " hours"}>
-              {timeListenedString(track.time_listened)}
-            </p>
-          )}
-          {track.first_listen > 0 && (
-            <p title={new Date(track.first_listen * 1000).toLocaleString()}>
-              Listening since{" "}
-              {new Date(track.first_listen * 1000).toLocaleDateString()}
-            </p>
-          )}
-        </div>
+        </>
       }
     >
       <div className="flex flex-col gap-20">
         <div className="flex gap-10 md:gap-25 mt-10 flex-wrap items-center">
-          <div className="min-w-[350px] w-2/5 max-w-[600px]">
+          <div className="min-w-[350px] w-2/5 max-w-[525px]">
             <LastPlayed limit={11} trackId={track.id} showNowPlaying />
           </div>
           <div className="flex flex-col gap-10">

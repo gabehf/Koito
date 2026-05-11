@@ -31,6 +31,9 @@ export default function Album() {
       id={album.id}
       rank={album.all_time_rank}
       musicbrainzId={album.musicbrainz_id}
+      timeListened={album.time_listened}
+      listenCount={album.listen_count}
+      firstListen={album.first_listen}
       imgItemId={album.id}
       mergeFunc={mergeAlbums}
       mergeCleanerFunc={(r, id) => {
@@ -44,7 +47,7 @@ export default function Album() {
         return r;
       }}
       subContent={
-        <div className="flex flex-col gap-1.5 items-start">
+        <>
           {album.artists.length > 0 && !album.is_various_artists && (
             <p>
               By{" "}
@@ -61,30 +64,14 @@ export default function Album() {
             </p>
           )}
           {album.is_various_artists && <p>By Various Artists</p>}
-          {album.listen_count !== 0 && (
-            <p>
-              {album.listen_count} play{album.listen_count > 1 ? "s" : ""}
-            </p>
-          )}
-          {album.time_listened !== 0 && (
-            <p title={Math.floor(album.time_listened / 60 / 60) + " hours"}>
-              {timeListenedString(album.time_listened)}
-            </p>
-          )}
-          {album.first_listen > 0 && (
-            <p title={new Date(album.first_listen * 1000).toLocaleString()}>
-              Listening since{" "}
-              {new Date(album.first_listen * 1000).toLocaleDateString()}
-            </p>
-          )}
-        </div>
+        </>
       }
     >
       <div className="flex flex-col gap-20">
-        <div className="flex gap-10 md:gap-25 mt-10 flex-wrap items-center">
+        <div className="flex gap-10 mt-10 flex-wrap items-center">
           <div className="flex gap-10 md:gap-25 flex-wrap lg:flex-nowrap items-start">
             <TopTracks limit={8} period={period} albumId={album.id} />
-            <div className="min-w-[350px] w-2/5 max-w-[600px]">
+            <div className="min-w-[350px] w-2/5 max-w-[525px]">
               <LastPlayed
                 limit={11}
                 albumId={album.id}
