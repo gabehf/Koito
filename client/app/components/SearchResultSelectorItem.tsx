@@ -19,7 +19,7 @@ export default function SearchResultSelectorItem(props: Props) {
       }}
       onClick={props.onClick}
     >
-      <Image src={props.img} size={75} />
+      <Image src={props.img} size={75} alt={props.text} />
       <div className="flex justify-between items-center w-full">
         <div className="flex flex-col items-start text-start">
           {props.text}

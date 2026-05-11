@@ -119,10 +119,11 @@ export default function TopAlbumsCard({ period }: Props) {
               key={`top_albums_card_${i.rank}_${i.item.title}`}
             >
               <MediaItem
-                image={i.item.image.medium}
-                imageSize={imageSize}
+                image={i.item.image}
+                size="md"
                 link={`/album/${i.item.id}`}
                 title={i.item.title}
+                alt={i.item.title}
                 subtitle={<ArtistLinks artists={[i.item.artists[0]]} />}
                 meta={`${i.item.listen_count} plays`}
               />

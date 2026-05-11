@@ -354,7 +354,7 @@ func BuildImageList(imageid *uuid.UUID) models.ImageList {
 			Small:  fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeSmall),
 			Medium: fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeMedium),
 			Large:  fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeLarge),
-			// XL:     fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeXL),
+			XL:     fmt.Sprintf("/images/%s/%s.webp", imageid.String(), ImageSizeXL),
 		}
 	}
 }

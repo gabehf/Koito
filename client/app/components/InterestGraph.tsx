@@ -5,18 +5,6 @@ import type { Theme } from "~/styles/themes.css";
 import { Area, AreaChart, Label, XAxis } from "recharts";
 import CardHeader from "./primitives/CardHeader";
 
-function getPrimaryColor(theme: Theme): string {
-  const value = theme.primary;
-  const rgbMatch = value.match(
-    /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/
-  );
-  if (rgbMatch) {
-    const [, r, g, b] = rgbMatch.map(Number);
-    return "#" + [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
-  }
-
-  return value;
-}
 interface Props {
   buckets?: number;
   artistId?: number;
@@ -49,7 +37,7 @@ export default function InterestGraph({
   });
 
   const { theme } = useTheme();
-  const color = getPrimaryColor(theme);
+  const color = theme.primary;
 
   const title = "Interest over time";
 

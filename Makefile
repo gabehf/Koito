@@ -55,6 +55,7 @@ client.deps:
 
 client.build: client.deps
 	cd client && yarn run build
+	find client/build/client -type f \( -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.svg" \) -exec gzip -k -9 {} \;
 
 test: api.test
 

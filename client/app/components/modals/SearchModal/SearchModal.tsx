@@ -86,7 +86,7 @@ export default function SearchModal({ open, setOpen }: Props) {
 
   return ReactDOM.createPortal(
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-start bg-black/80 backdrop-blur-sm transition-opacity duration-100 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-start bg-black/90 transition-opacity duration-100 ${
         isClosing ? "animate-fade-out" : "animate-fade-in"
       }`}
     >
@@ -108,12 +108,6 @@ export default function SearchModal({ open, setOpen }: Props) {
             className="w-full mx-auto fg bg rounded p-2"
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button
-            onClick={closeSearchModal}
-            className="absolute text-xl top-1 right-2 sm:top-3 sm:right-4 text-(--color-fg-tertiary) hover:text-(--color-fg) hover:cursor-pointer"
-          >
-            ×
-          </button>
         </div>
         <SearchResults data={data} onSelect={closeSearchModal} />
       </div>

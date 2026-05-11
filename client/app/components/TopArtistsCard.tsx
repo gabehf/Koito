@@ -101,9 +101,10 @@ export default function TopArtistsCard({ period }: Props) {
           {data.items.slice(1).map((i) => (
             <div className="px-6 pb-6" key={`top_artists_card_${i.rank}`}>
               <MediaItem
-                image={i.item.image.medium}
-                imageSize={imageSize}
+                image={i.item.image}
+                size="md"
                 link={`/artist/${i.item.id}`}
+                alt={i.item.name}
                 title={i.item.name}
                 meta={`${i.item.listen_count} plays`}
               />

@@ -30,7 +30,11 @@ export default function ListensTable({
           <tr className="group border-b-1 border-(--color-bg-tertiary) relative last:border-b-0">
             <td className="py-3 w-8 sm:w-11">
               <Link to={`/track/${npData.track.id}`}>
-                <Image src={npData.track.image.small} size={64} />
+                <Image
+                  src={npData.track.image.small}
+                  size={64}
+                  alt={npData.track.title}
+                />
               </Link>
             </td>
             <td className="w-[150px] sm:w-full">
@@ -62,7 +66,11 @@ export default function ListensTable({
           >
             <td className="py-3 w-8 sm:w-11">
               <Link to={`/track/${item.track.id}`}>
-                <Image src={item.track.image.small} size={32} />
+                <Image
+                  src={item.track.image.small}
+                  size={32}
+                  alt={item.track.title}
+                />
               </Link>
             </td>
             <td className="w-[150px] sm:w-full">

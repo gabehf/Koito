@@ -82,7 +82,7 @@ export function Modal({
 
   return ReactDOM.createPortal(
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-100 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/90 transition-opacity duration-100 ${
         isClosing ? "animate-fade-out" : "animate-fade-in"
       }`}
     >

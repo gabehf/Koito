@@ -86,6 +86,8 @@ func ImageHandler(store db.ImageStore) http.HandlerFunc {
 		}
 
 		l.Debug().Msgf("ImageHandler: Serving image from path '%s'", desiredImgPath)
+		w.Header().Set("Content-Type", "image/webp")
+		w.Header().Set("Cache-Control", "public, max-age=2592000")
 		http.ServeFile(w, r, desiredImgPath)
 	}
 }

@@ -96,10 +96,13 @@ export default function MediaLayout(props: Props) {
         <div className="flex gap-8 flex-wrap md:flex-nowrap relative sm:mb-6">
           <div className="flex flex-col justify-around">
             <img
+              fetchPriority="high"
               style={{ zIndex: 5 }}
-              src={props.img.large}
+              src={props.img.medium}
+              srcSet={`${props.img.medium} 300w, ${props.img.large} 640w, ${props.img.xl} 1000w`}
+              sizes="(max-width: 480px) 280px, 385px"
               alt={props.title}
-              className="md:min-w-[385px] rounded-(--border-radius) border w-[280px] h-auto"
+              className="md:w-[385px] rounded-(--border-radius) border w-[280px] h-[280px] h-auto"
             />
           </div>
           <div className="flex flex-col items-start">

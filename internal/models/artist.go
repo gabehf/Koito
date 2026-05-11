@@ -20,7 +20,7 @@ type ImageList struct {
 	Small  string `json:"small"`
 	Medium string `json:"medium"`
 	Large  string `json:"large"`
-	// XL     string `json:"xl"`
+	XL     string `json:"xl"`
 }
 
 type SimpleArtist struct {

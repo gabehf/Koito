@@ -87,10 +87,11 @@ function ItemCard({
               <td className="pr-3 py-1 w-full">
                 <MediaItem
                   className="gap-2"
-                  image={album.image.medium}
+                  image={album.image}
                   link={`/album/${album.id}`}
-                  imageSize={56}
+                  size="sm"
                   title={<Link to={`/album/${album.id}`}>{album.title}</Link>}
+                  alt={album.title}
                   meta={
                     album.is_various_artists ? (
                       "Various Artists"
@@ -132,10 +133,11 @@ function ItemCard({
               <td className="pr-3 py-1 w-full">
                 <MediaItem
                   className="gap-2"
-                  image={track.image.medium}
+                  image={track.image}
                   link={`/track/${track.id}`}
-                  imageSize={56}
+                  size="sm"
                   title={<Link to={`/track/${track.id}`}>{track.title}</Link>}
+                  alt={track.title}
                   subtitle={<ArtistLinks artists={track.artists} />}
                   lazy
                 />
@@ -171,10 +173,11 @@ function ItemCard({
               <td className="pr-3 py-1 w-full">
                 <MediaItem
                   className="gap-2"
-                  image={artist.image.medium}
+                  image={artist.image}
+                  size="sm"
                   link={`/artist/${artist.id}`}
-                  imageSize={56}
                   title={<Link to={`/artist/${artist.id}`}>{artist.name}</Link>}
+                  alt={artist.name}
                   lazy
                 />
               </td>

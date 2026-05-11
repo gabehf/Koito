@@ -17,7 +17,11 @@ function SearchResultItem(props: Props) {
       className="px-3 py-2 flex gap-3 items-center hover:text-(--color-fg-secondary)"
       onClick={props.onClick}
     >
-      <Image src={props.img} size={props.imgSize ? props.imgSize : 100} />
+      <Image
+        src={props.img}
+        size={props.imgSize ? props.imgSize : 100}
+        alt={props.text}
+      />
       <div>
         {props.text}
         {props.subtext ? (

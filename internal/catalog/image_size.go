@@ -7,11 +7,11 @@ import (
 type ImageSize string
 
 const (
-	ImageSizeXS     ImageSize = "32x32"
+	ImageSizeXS     ImageSize = "64x64"
 	ImageSizeSmall  ImageSize = "128x128"
-	ImageSizeMedium ImageSize = "256x256"
+	ImageSizeMedium ImageSize = "300x300"
 	ImageSizeLarge  ImageSize = "640x640"
-	// ImageSizeXL     ImageSize = "1000x1000"
+	ImageSizeXL     ImageSize = "1000x1000"
 	ImageSizeSource ImageSize = "source"
 
 	ImageCacheDir = "image_cache"
@@ -20,15 +20,15 @@ const (
 func (s ImageSize) Width() int {
 	switch s {
 	case ImageSizeXS:
-		return 32
+		return 64
 	case ImageSizeSmall:
 		return 128
 	case ImageSizeMedium:
-		return 256
+		return 300
 	case ImageSizeLarge:
 		return 640
-	// case ImageSizeXL:
-	// 	return 1000
+	case ImageSizeXL:
+		return 1000
 	case ImageSizeSource:
 		return 1200
 	default:
@@ -41,7 +41,7 @@ func (s ImageSize) String() string {
 
 func ParseImageSize(s string) (ImageSize, error) {
 	switch ImageSize(s) {
-	case ImageSizeXS, ImageSizeSmall, ImageSizeMedium, ImageSizeLarge:
+	case ImageSizeXS, ImageSizeSmall, ImageSizeMedium, ImageSizeLarge, ImageSizeXL:
 		return ImageSize(s), nil
 	default:
 		return "", fmt.Errorf("ParseImageSize: invalid image size %q", s)

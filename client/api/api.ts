@@ -370,6 +370,7 @@ type ImageList = {
   small: string;
   medium: string;
   large: string;
+  xl: string;
 };
 type Track = {
   id: number;

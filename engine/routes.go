@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -153,25 +154,44 @@ func bindRoutes(
 	publicServer(r, "/public", filesDir)
 }
 
-// FileServer conveniently sets up a http.FileServer handler to serve
-// static files from a http.FileSystem.
 func fileServer(r chi.Router, path string, root http.FileSystem) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
 
-	// Serve static files
 	fs := http.FileServer(root)
+
 	r.Get(path+"*", func(w http.ResponseWriter, r *http.Request) {
-		// Check if file exists
 		filePath := filepath.Join("client/build/client", strings.TrimPrefix(r.URL.Path, path))
+
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			// File doesn't exist, serve index.html
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			http.ServeFile(w, r, filepath.Join("client/build/client", "index.html"))
 			return
 		}
 
-		// Serve file normally
+		ext := strings.ToLower(filepath.Ext(filePath))
+		switch ext {
+		case ".js", ".css", ".woff", ".woff2", ".ttf", ".eot",
+			".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico":
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		default:
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+
+		// Serve pre-compressed file if the client accepts gzip and it exists
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			gzPath := filePath + ".gz"
+			if _, err := os.Stat(gzPath); err == nil {
+				w.Header().Set("Content-Encoding", "gzip")
+				w.Header().Set("Vary", "Accept-Encoding")
+				// Set the correct Content-Type for the original file, not .gz
+				w.Header().Set("Content-Type", mime.TypeByExtension(ext))
+				http.ServeFile(w, r, gzPath)
+				return
+			}
+		}
+
 		fs.ServeHTTP(w, r)
 	})
 }

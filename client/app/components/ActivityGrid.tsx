@@ -196,6 +196,7 @@ export default function ActivityGrid({
                     background: "var(--color-primary)",
                     opacity: getBlendAmount(i, 5),
                   }}
+                  key={`activity_grid_legend_${i}`}
                   className={`w-[8px] sm:w-[9px] h-[8px] sm:h-[9px] rounded-[3px] ${"border-[0.5px] border-(--color-bg-tertiary)"}`}
                 />
               ))}
