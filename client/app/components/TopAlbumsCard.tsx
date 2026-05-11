@@ -68,6 +68,7 @@ export default function TopAlbumsCard({ period }: Props) {
             }}
             width={350}
             height={350}
+            alt={data.items[0]?.item.title}
           />
           <div
             className="absolute inset-0 bg-gradient-to-t to-50% from-(--color-bg-secondary) to-transparent"

@@ -86,11 +86,20 @@ export default function ActivityGrid({
     listenMap.set(key, item.listens);
   }
 
+  let firstDay = 1;
+  try {
+    // This doesn't work in Firefox
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/getWeekInfo
+    firstDay = new Intl.Locale(navigator.language).getWeekInfo().firstDay;
+  } catch (err) {
+    console.log(err);
+  }
+
   // Align the grid to calendar weeks (Monday = row 0, Sunday = row 6).
   // Column 0 is the oldest week; the last column is the current (partial) week.
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const daysSinceMonday = (today.getDay() + 6) % 7; // Mon=0 … Sun=6
+  const daysSinceMonday = (today.getDay() + (7 - firstDay)) % 7; // Mon=0 … Sun=6
   const gridStart = new Date(today);
   gridStart.setDate(
     gridStart.getDate() - daysSinceMonday - (NUM_WEEKS - 1) * 7,
@@ -110,14 +119,17 @@ export default function ActivityGrid({
   // if window size is small (640px)
   if (width <= 640) {
     // remove 10 weeks from data
-    cells.splice(0, 10 * 7 - 1);
+    cells.splice(0, 10 * 7);
   }
 
   const CELL_W = "w-[9px] sm:w-[10px]";
   const CELL_H = "h-[9px] sm:h-[10px]";
   const CELL_GAP = "gap-[2px] md:gap-[3px]";
   const CELL_RADIUS = "rounded-[2px]";
-  const DAY_LABELS = ["Mon", "", "Wed", "", "Fri", "", "Sun"];
+  const DAY_LABELS =
+    firstDay == 1
+      ? ["Mon", "", "Wed", "", "Fri", "", "Sun"]
+      : ["Sun", "", "Tue", "", "Thu", "", "Sat"];
 
   return (
     <div className="flex flex-col items-start">

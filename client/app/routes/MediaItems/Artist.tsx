@@ -53,10 +53,10 @@ export default function Artist() {
       subContent={<></>}
     >
       <div className="flex flex-col gap-20">
-        <div className="flex gap-10 mt-10 flex-wrap items-center">
+        <div className="flex gap-10 md:gap-20 mt-10 flex-wrap items-center">
           <div className="flex gap-10 md:gap-25 flex-wrap lg:flex-nowrap items-start">
             <TopTracks limit={8} period={period} artistId={artist.id} />
-            <div className="min-w-[350px] w-2/5 max-w-[525px]">
+            <div className="min-w-[350px] w-2/5">
               <LastPlayed
                 limit={11}
                 artistId={artist.id}
@@ -65,12 +65,15 @@ export default function Artist() {
               />
             </div>
           </div>
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-wrap gap-10">
             <InterestGraph artistId={artist.id} />
             <ActivityGrid configurable artistId={artist.id} />
           </div>
         </div>
-        <ArtistAlbums period={period} artistId={artist.id} name={artist.name} />
+        <ArtistAlbums
+          artistId={artist.id}
+          header={`Albums featuring ${artist.name}`}
+        />
       </div>
     </MediaLayout>
   );
