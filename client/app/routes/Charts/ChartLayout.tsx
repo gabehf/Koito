@@ -130,7 +130,7 @@ export default function ChartLayout<T>({
 
   const yearOptions = Array.from(
     { length: 10 },
-    (_, i) => `${new Date().getFullYear() - i}`
+    (_, i) => `${new Date().getFullYear() - i}`,
   );
   const monthOptions = Array.from({ length: 12 }, (_, i) => `${i + 1}`);
   const weekOptions = Array.from({ length: 53 }, (_, i) => `${i + 1}`);
@@ -210,9 +210,9 @@ export default function ChartLayout<T>({
       <title>{pgTitle}</title>
       <meta property="og:title" content={pgTitle} />
       <meta name="description" content={pgTitle} />
-      <div className="w-19/20 mx-auto sm:ml-18 mt-6 sm:mt-12">
+      <div className="w-(100%-3) sm:w-17/20 mx-auto ml-3 sm:ml-18 mt-6 sm:mt-12">
         <h1>{title}</h1>
-        <div className="flex flex-col items-start md:flex-row sm:items-center gap-2 sm:gap-4">
+        <div className="flex flex-col items-start lg:flex-row sm:items-start gap-2 sm:gap-4">
           <PeriodSelector
             current={period}
             setter={handleSetPeriod}
