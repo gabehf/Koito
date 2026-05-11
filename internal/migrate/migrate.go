@@ -7,6 +7,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/gabehf/koito/db/migrations"
 	migrations_sqlite "github.com/gabehf/koito/db/migrations_sqlite"
 	"github.com/gabehf/koito/internal/cfg"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -33,6 +34,12 @@ func Migrate(ctx context.Context, l *zerolog.Logger) error {
 	defer pgDB.Close()
 	if err := pgDB.PingContext(ctx); err != nil {
 		return fmt.Errorf("migrate: ping postgres: %w", err)
+	}
+
+	goose.SetBaseFS(migrations.Files)
+
+	if err := goose.Up(pgDB, "."); err != nil {
+		return fmt.Errorf("migrate: psql schema migration: %w", err)
 	}
 
 	sqliteDSN := path.Join(cfg.ConfigDir(), "koito.db") +
