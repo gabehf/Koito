@@ -8,6 +8,7 @@ import type {
 } from "~/routes/MediaItems/MediaLayout";
 import { useNavigate } from "react-router";
 import SubHeader from "../primitives/SubHeader";
+import { AsyncButton } from "../AsyncButton";
 
 interface Props {
   open: boolean;
@@ -28,6 +29,8 @@ export default function MergeModal(props: Props) {
   );
   const [mergeOrderReversed, setMergeOrderReversed] = useState(false);
   const [replaceImage, setReplaceImage] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
   const navigate = useNavigate();
 
   const closeMergeModal = () => {
@@ -43,6 +46,7 @@ export default function MergeModal(props: Props) {
   };
 
   const doMerge = () => {
+    setLoading(true);
     let from, to;
     if (!mergeOrderReversed) {
       from = mergeTarget;
@@ -56,17 +60,21 @@ export default function MergeModal(props: Props) {
       .then((r) => {
         if (r.ok) {
           if (mergeOrderReversed) {
+            setLoading(false);
             navigate(`/${props.type.toLowerCase()}/${mergeTarget.id}`);
             closeMergeModal();
           } else {
+            setLoading(false);
             window.location.reload();
           }
         } else {
-          // TODO: handle error
-          console.log(r);
+          r.json().then((r) => setError(r.error));
         }
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+      });
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -99,24 +107,22 @@ export default function MergeModal(props: Props) {
         />
         <SearchResults selectorMode data={data} onSelect={toggleSelect} />
         {mergeTarget.id !== 0 ? (
-          <>
+          <div className="flex flex-col items-center">
             {mergeOrderReversed ? (
-              <p className="mt-5">
+              <p className="mt-5 mb-5">
                 <strong>{props.currentTitle}</strong> will be merged into{" "}
                 <strong>{mergeTarget.title}</strong>
               </p>
             ) : (
-              <p className="mt-5">
+              <p className="mt-5 mb-5">
                 <strong>{mergeTarget.title}</strong> will be merged into{" "}
                 <strong>{props.currentTitle}</strong>
               </p>
             )}
-            <button
-              className="hover:cursor-pointer px-5 py-2 rounded-md mt-5 bg-(--color-bg) hover:bg-(--color-bg-tertiary)"
-              onClick={doMerge}
-            >
+            <AsyncButton onClick={doMerge} loading={loading}>
               Merge Items
-            </button>
+            </AsyncButton>
+            {error && <div className="error">{error}</div>}
             <div className="flex items-center gap-2 mt-3">
               <input
                 type="checkbox"
@@ -138,7 +144,7 @@ export default function MergeModal(props: Props) {
                 <label htmlFor="replace-image">Replace image</label>
               </div>
             )}
-          </>
+          </div>
         ) : (
           ""
         )}
