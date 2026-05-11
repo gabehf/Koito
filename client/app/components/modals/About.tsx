@@ -27,7 +27,7 @@ export default function About() {
       <div className="w-full bg p-6 rounded-sm flex flex-col items-center gap-4">
         <div className="inline-flex items-center">
           <img
-            src="../../../public/web-app-manifest-192x192.png"
+            src="web-app-manifest-192x192.png"
             alt="koito logo"
             style={{ width: 70 }}
           />
