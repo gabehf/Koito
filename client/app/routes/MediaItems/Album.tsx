@@ -71,7 +71,12 @@ export default function Album() {
       <div className="flex flex-col gap-20">
         <div className="flex gap-10 md:gap-20 mt-10 flex-wrap items-center max-w-[1400px]">
           <div className="flex gap-10 md:gap-25 flex-wrap lg:flex-nowrap items-start">
-            <TopTracks limit={8} period={period} albumId={album.id} />
+            <TopTracks
+              limit={8}
+              period={period}
+              albumId={album.id}
+              showSeeMore
+            />
             <div className="min-w-[350px] w-2/5">
               <LastPlayed
                 limit={11}

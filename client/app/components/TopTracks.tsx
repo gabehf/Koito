@@ -12,6 +12,7 @@ import CardHeader from "./primitives/CardHeader";
 interface Props {
   limit: number;
   period: string;
+  showSeeMore?: boolean;
   artistId?: Number;
   albumId?: Number;
 }
@@ -94,7 +95,7 @@ const TopTracks = (props: Props) => {
           data={data}
           separators
           slug={slug}
-          showSeeMore
+          showSeeMore={props.showSeeMore}
         />
       </div>
     </div>
