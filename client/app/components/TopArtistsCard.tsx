@@ -15,15 +15,14 @@ interface Props {
 }
 
 const getTopArtists = (args: { limit: number; period: string; page: number }) =>
-  apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top-artists", args);
+  apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top/artists", args);
 
 export default function TopArtistsCard({ period }: Props) {
   const numItems = 5;
-  const imageSize = 90;
 
   const args = { limit: numItems, period: period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top-artists", args],
+    queryKey: ["top/artists", args],
     queryFn: () => getTopArtists(args),
   });
 
@@ -34,7 +33,7 @@ export default function TopArtistsCard({ period }: Props) {
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <CardHeader to={`/chart/top-artists?period=${period}`} isOffset>
+        <CardHeader to={`/chart/top/artists?period=${period}`} isOffset>
           {header}
         </CardHeader>
         <p className="error">Error: {error.message}</p>
@@ -45,7 +44,7 @@ export default function TopArtistsCard({ period }: Props) {
   if (!data.items[0]) {
     return (
       <div className="w-[348px]">
-        <CardHeader to={`/chart/top-artists?period=${period}`} isOffset>
+        <CardHeader to={`/chart/top/artists?period=${period}`} isOffset>
           {header}
         </CardHeader>
         <p className="ml-6 mt-6">Nothing to show</p>
@@ -55,7 +54,7 @@ export default function TopArtistsCard({ period }: Props) {
 
   return (
     <div>
-      <CardHeader to={`/chart/top-artists?period=${period}`} isOffset>
+      <CardHeader to={`/chart/top/artists?period=${period}`} isOffset>
         {header}
       </CardHeader>
       <div className="max-w-[350px] card">

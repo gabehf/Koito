@@ -1,35 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch, type InterestBucket } from "api/api";
 import { useTheme } from "~/hooks/useTheme";
-import type { Theme } from "~/styles/themes.css";
-import { Area, AreaChart, Label, XAxis } from "recharts";
+import { Area, AreaChart } from "recharts";
 import CardHeader from "./primitives/CardHeader";
 
 interface Props {
   buckets?: number;
-  artistId?: number;
-  albumId?: number;
-  trackId?: number;
+  type: string;
+  id: number;
 }
 
-const getInterest = (args: {
-  buckets: number;
-  artist_id: number;
-  album_id: number;
-  track_id: number;
-}) => apiFetch<InterestBucket[]>("/apis/web/v1/interest", args);
+const getInterest = (args: { buckets: number; type: string; id: number }) =>
+  apiFetch<InterestBucket[]>(
+    `/apis/web/v1/${args.type.toLowerCase()}/${args.id}/interest`,
+    args,
+  );
 
-export default function InterestGraph({
-  buckets = 16,
-  artistId = 0,
-  albumId = 0,
-  trackId = 0,
-}: Props) {
+export default function InterestGraph({ buckets = 16, type, id }: Props) {
   const args = {
     buckets,
-    artist_id: artistId,
-    album_id: albumId,
-    track_id: trackId,
+    type: type,
+    id: id,
   };
   const { isPending, isError, data, error } = useQuery({
     queryKey: ["interest", args],

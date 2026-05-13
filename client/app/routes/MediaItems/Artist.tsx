@@ -71,13 +71,14 @@ export default function Artist() {
             </div>
           </div>
           <div className="flex flex-wrap gap-10">
-            <InterestGraph artistId={artist.id} />
+            <InterestGraph type="artist" id={artist.id} />
             <ActivityGrid configurable artistId={artist.id} />
           </div>
         </div>
         <ArtistAlbums
           artistId={artist.id}
-          header={`Albums featuring ${artist.name}`}
+          name={artist.name}
+          period="all_time"
         />
       </div>
     </MediaLayout>

@@ -87,7 +87,7 @@ export default function Album() {
             </div>
           </div>
           <div className="flex flex-wrap gap-10">
-            <InterestGraph albumId={album.id} />
+            <InterestGraph type="album" id={album.id} />
             <ActivityGrid configurable albumId={album.id} />
           </div>
         </div>

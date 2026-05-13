@@ -82,7 +82,7 @@ export default function Track() {
             <LastPlayed limit={11} trackId={track.id} showNowPlaying />
           </div>
           <div className="flex flex-col gap-10">
-            <InterestGraph trackId={track.id} />
+            <InterestGraph type="track" id={track.id} />
             <ActivityGrid configurable trackId={track.id} />
           </div>
         </div>

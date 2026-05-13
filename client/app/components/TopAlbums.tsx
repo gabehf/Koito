@@ -20,7 +20,7 @@ const getTopAlbums = (args: {
   artist_id?: number;
   page: number;
 }) =>
-  apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top-albums", args);
+  apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top/albums", args);
 
 export default function TopAlbums(props: Props) {
   const args = {
@@ -30,13 +30,13 @@ export default function TopAlbums(props: Props) {
     page: 0,
   };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top-albums", args],
+    queryKey: ["top/albums", args],
     queryFn: () => getTopAlbums(args),
   });
 
   const header = "Top albums";
 
-  const slug = `/chart/top-albums?period=${props.period}&artist_id=${props.artistId}&limit=${props.limit}`;
+  const slug = `/chart/top/albums?period=${props.period}&artist_id=${props.artistId}&limit=${props.limit}`;
 
   if (isPending) {
     return (

@@ -24,7 +24,7 @@ const getTopTracks = (args: {
   album_id?: number;
   page: number;
 }) =>
-  apiFetch<PaginatedResponse<Ranked<Track>>>("/apis/web/v1/top-tracks", args);
+  apiFetch<PaginatedResponse<Ranked<Track>>>("/apis/web/v1/top/tracks", args);
 
 const TopTracks = (props: Props) => {
   const args = {
@@ -35,7 +35,7 @@ const TopTracks = (props: Props) => {
     page: 0,
   };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top-tracks", args],
+    queryKey: ["top/tracks", args],
     queryFn: () => getTopTracks(args),
   });
 
@@ -53,7 +53,7 @@ const TopTracks = (props: Props) => {
   } else if (isError) {
     return (
       <div className="min-w-[350px] sm:w-[450px] xl:max-w-[450px]">
-        <h3>{header}</h3>
+        <CardHeader isOffset>{header}</CardHeader>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -64,14 +64,14 @@ const TopTracks = (props: Props) => {
   params += props.artistId ? `&artist_id=${props.artistId}` : "";
   params += props.albumId ? `&album_id=${props.albumId}` : "";
 
-  const slug = `/chart/top-tracks?period=${props.period}&limit=100${params}`;
+  const slug = `/chart/top/tracks?period=${props.period}&limit=100${params}`;
 
   if (!data.items[0]) {
     return (
       <div className="min-w-[350px] sm:w-[450px] xl:max-w-[450px]">
         <CardHeader
           isOffset
-          to={`/chart/top-tracks?period=${props.period}${params}`}
+          to={`/chart/top/tracks?period=${props.period}${params}`}
         >
           {header}
         </CardHeader>
@@ -84,7 +84,7 @@ const TopTracks = (props: Props) => {
     <div className="min-w-[350px] sm:w-[450px] xl:max-w-[450px]">
       <CardHeader
         isOffset
-        to={`/chart/top-tracks?period=${props.period}${params}`}
+        to={`/chart/top/tracks?period=${props.period}${params}`}
       >
         {header}
       </CardHeader>

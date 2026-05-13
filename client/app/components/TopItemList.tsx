@@ -56,7 +56,7 @@ export default function TopItemList<T extends Ranked<Item>>({
         <div className="flex items-center w-full mt-2">
           <Link
             to={slug}
-            className="inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"
+            className="text-[13px] sm:text-[15px] inline-block w-fit mx-auto text-(--color-fg-secondary) hover:text-(--color-fg) hover:cursor-pointer"
           >
             SEE MORE →
           </Link>

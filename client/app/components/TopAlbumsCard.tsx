@@ -17,14 +17,14 @@ interface Props {
 }
 
 const getTopAlbums = (args: { limit: number; period: string; page: number }) =>
-  apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top-albums", args);
+  apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top/albums", args);
 
 export default function TopAlbumsCard({ period }: Props) {
   const numItems = 5;
 
   const args = { limit: numItems, period: period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top-albums", args],
+    queryKey: ["top/albums", args],
     queryFn: () => getTopAlbums(args),
   });
 
@@ -35,7 +35,7 @@ export default function TopAlbumsCard({ period }: Props) {
   } else if (isError) {
     return (
       <div className="w-[300px]">
-        <CardHeader to={`/chart/top-albums?period=${period}`} isOffset>
+        <CardHeader to={`/chart/top/albums?period=${period}`} isOffset>
           {header}
         </CardHeader>
         <p className="error">Error: {error.message}</p>
@@ -46,7 +46,7 @@ export default function TopAlbumsCard({ period }: Props) {
   if (!data.items[0]) {
     return (
       <div className="w-[348px]">
-        <CardHeader to={`/chart/top-albums?period=${period}`} isOffset>
+        <CardHeader to={`/chart/top/albums?period=${period}`} isOffset>
           {header}
         </CardHeader>
         <p className="ml-6 mt-6">Nothing to show</p>
@@ -56,7 +56,7 @@ export default function TopAlbumsCard({ period }: Props) {
 
   return (
     <div>
-      <CardHeader to={`/chart/top-albums?period=${period}`} isOffset>
+      <CardHeader to={`/chart/top/albums?period=${period}`} isOffset>
         {header}
       </CardHeader>
       <div className="max-w-[350px] card">

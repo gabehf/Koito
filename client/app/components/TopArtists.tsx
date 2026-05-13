@@ -17,18 +17,18 @@ interface Props {
 }
 
 const getTopArtists = (args: { limit: number; period: string; page: number }) =>
-  apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top-artists", args);
+  apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top/artists", args);
 
 export default function TopArtists(props: Props) {
   const args = { limit: props.limit, period: props.period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top-artists", args],
+    queryKey: ["top/artists", args],
     queryFn: () => getTopArtists(args),
   });
 
   const header = "Top artists";
 
-  const slug = `/chart/top-artists?period=${props.period}&limit=${props.limit}`;
+  const slug = `/chart/top/artists?period=${props.period}&limit=${props.limit}`;
 
   if (isPending) {
     return (
