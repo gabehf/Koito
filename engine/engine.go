@@ -19,7 +19,6 @@ import (
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
-	"github.com/gabehf/koito/internal/db/psql"
 	"github.com/gabehf/koito/internal/db/sqlite"
 	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/importer"
@@ -61,25 +60,15 @@ func initLogger(getenv func(string) string, version string, w io.Writer) (*zerol
 
 func connectDB(l *zerolog.Logger) db.DB {
 	l.Debug().Msg("Engine: Initializing database connection")
-	if cfg.SqliteEnabled() {
-		l.Info().Msg("Engine: Using SQLite database driver")
-		s, err := sqlite.New()
-		for err != nil {
-			l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
-			time.Sleep(5 * time.Second)
-			s, err = sqlite.New()
-		}
-		l.Info().Msg("Engine: Database connection established")
-		return s
-	}
-	p, err := psql.New()
+	l.Info().Msg("Engine: Using SQLite database driver")
+	s, err := sqlite.New()
 	for err != nil {
 		l.Error().Err(err).Msg("Engine: Failed to connect to database; retrying in 5 seconds")
 		time.Sleep(5 * time.Second)
-		p, err = psql.New()
+		s, err = sqlite.New()
 	}
 	l.Info().Msg("Engine: Database connection established")
-	return p
+	return s
 }
 
 func Run(

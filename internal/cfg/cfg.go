@@ -1,7 +1,6 @@
 package cfg
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -118,9 +117,7 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg.sqliteEnabled = strings.ToLower(getenv(SQLITE_ENABLED)) == "true"
 
 	cfg.databaseUrl = getenv(DATABASE_URL_ENV)
-	if cfg.databaseUrl == "" && !cfg.sqliteEnabled {
-		return nil, errors.New("loadConfig: " + DATABASE_URL_ENV + " is required if " + SQLITE_ENABLED + " is false")
-	}
+
 	cfg.bindAddr = getenv(BIND_ADDR_ENV)
 	var err error
 	cfg.listenPort, err = strconv.Atoi(getenv(LISTEN_PORT_ENV))
