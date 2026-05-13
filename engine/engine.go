@@ -124,13 +124,20 @@ func Run(
 		}
 	}
 
-	if cfg.SqliteEnabled() && cfg.DatabaseUrl() != "" {
+	if cfg.DatabaseUrl() != "" {
 		l.Info().Msg("Engine: Running Postgres to SQLite migration")
 		if err := migrate.Migrate(ctx, l); err != nil {
 			l.Fatal().Err(err).Msg("Engine: Migration failed")
 			return err
 		}
+		l.Info().Msg("Engine: Your data was automatically migrated to SQLite. " +
+			"Please check and make sure that all your data was migrated successfully, " +
+			"then remove " + cfg.DATABASE_URL_ENV + " from your configuration or else Koito will fail to start.")
 		l.Info().Msg("Engine: Migration complete; proceeding with SQLite")
+	}
+
+	if cfg.SqliteEnabled() {
+		l.Info().Msg("Engine: The environment variable " + cfg.SQLITE_ENABLED + " is no longer needed and can be removed.")
 	}
 
 	store := connectDB(l)
