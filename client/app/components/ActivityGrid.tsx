@@ -190,9 +190,10 @@ export default function ActivityGrid({
           </div>
         </div>
         <div className="flex justify-around w-full">
-          <div className="text-[11px] color-fg-secondary">
+          {/* TODO: Uncomment when streak is added to API */}
+          {/*<div className="text-[11px] color-fg-secondary">
             Streak · <span className="text-(--color-primary)">234</span>
-          </div>
+          </div>*/}
           <div className="flex items-center gap-2 text-[11px] color-fg-secondary">
             <div>Less</div>
             <div className="grid grid-cols-5 gap-1">
