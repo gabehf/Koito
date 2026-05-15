@@ -15,3 +15,9 @@ type Track struct {
 	FirstListen  int64          `json:"first_listen"`
 	AllTimeRank  int64          `json:"all_time_rank"`
 }
+
+type SimpleTrack struct {
+	ID      int32          `json:"id"`
+	Title   string         `json:"title"`
+	Artists []SimpleArtist `json:"artists"`
+}

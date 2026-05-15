@@ -38,16 +38,16 @@ async function handleJson<T>(r: Response): Promise<T> {
   return (await r.json()) as T;
 }
 async function getLastListens(
-  args: getItemsArgs
+  args: getItemsArgs,
 ): Promise<PaginatedResponse<Listen>> {
   const r = await fetch(
-    `/apis/web/v1/listens?period=${args.period}&limit=${args.limit}&artist_id=${args.artist_id}&album_id=${args.album_id}&track_id=${args.track_id}&page=${args.page}`
+    `/apis/web/v1/listens?period=${args.period}&limit=${args.limit}&artist_id=${args.artist_id}&album_id=${args.album_id}&track_id=${args.track_id}&page=${args.page}`,
   );
   return handleJson<PaginatedResponse<Listen>>(r);
 }
 
 async function getTopTracks(
-  args: getItemsArgs
+  args: getItemsArgs,
 ): Promise<PaginatedResponse<Ranked<Track>>> {
   let url = `/apis/web/v1/top-tracks?period=${args.period}&limit=${args.limit}&page=${args.page}`;
 
@@ -59,7 +59,7 @@ async function getTopTracks(
 }
 
 async function getTopAlbums(
-  args: getItemsArgs
+  args: getItemsArgs,
 ): Promise<PaginatedResponse<Ranked<Album>>> {
   let url = `/apis/web/v1/top-albums?period=${args.period}&limit=${args.limit}&page=${args.page}`;
   if (args.artist_id) url += `&artist_id=${args.artist_id}`;
@@ -69,7 +69,7 @@ async function getTopAlbums(
 }
 
 async function getTopArtists(
-  args: getItemsArgs
+  args: getItemsArgs,
 ): Promise<PaginatedResponse<Ranked<Artist>>> {
   const url = `/apis/web/v1/top-artists?period=${args.period}&limit=${args.limit}&page=${args.page}`;
   const r = await fetch(url);
@@ -77,17 +77,17 @@ async function getTopArtists(
 }
 
 async function getActivity(
-  args: getActivityArgs
+  args: getActivityArgs,
 ): Promise<ListenActivityItem[]> {
   const r = await fetch(
-    `/apis/web/v1/listen-activity?step=${args.step}&range=${args.range}&month=${args.month}&year=${args.year}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
+    `/apis/web/v1/listen-activity?step=${args.step}&range=${args.range}&month=${args.month}&year=${args.year}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`,
   );
   return handleJson<ListenActivityItem[]>(r);
 }
 
 async function getInterest(args: getInterestArgs): Promise<InterestBucket[]> {
   const r = await fetch(
-    `/apis/web/v1/interest?buckets=${args.buckets}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`
+    `/apis/web/v1/interest?buckets=${args.buckets}&album_id=${args.album_id}&artist_id=${args.artist_id}&track_id=${args.track_id}`,
   );
   return handleJson<InterestBucket[]>(r);
 }
@@ -101,7 +101,7 @@ async function getStats(period: string): Promise<Stats> {
 function search(q: string): Promise<SearchResponse> {
   q = encodeURIComponent(q);
   return fetch(`/apis/web/v1/search?q=${q}`).then(
-    (r) => r.json() as Promise<SearchResponse>
+    (r) => r.json() as Promise<SearchResponse>,
   );
 }
 
@@ -126,31 +126,31 @@ function mergeTracks(from: number, to: number): Promise<Response> {
 function mergeAlbums(
   from: number,
   to: number,
-  replaceImage: boolean
+  replaceImage: boolean,
 ): Promise<Response> {
   return fetch(
     `/apis/web/v1/merge/albums?from_id=${from}&to_id=${to}&replace_image=${replaceImage}`,
     {
       method: "POST",
-    }
+    },
   );
 }
 function mergeArtists(
   from: number,
   to: number,
-  replaceImage: boolean
+  replaceImage: boolean,
 ): Promise<Response> {
   return fetch(
     `/apis/web/v1/merge/artists?from_id=${from}&to_id=${to}&replace_image=${replaceImage}`,
     {
       method: "POST",
-    }
+    },
   );
 }
 function login(
   username: string,
   password: string,
-  remember: boolean
+  remember: boolean,
 ): Promise<Response> {
   const form = new URLSearchParams();
   form.append("username", username);
@@ -185,7 +185,7 @@ function submitListen(id: string, ts: Date): Promise<Response> {
 
 function getApiKeys(): Promise<ApiKey[]> {
   return fetch(`/apis/web/v1/user/apikeys`).then(
-    (r) => r.json() as Promise<ApiKey[]>
+    (r) => r.json() as Promise<ApiKey[]>,
   );
 }
 const createApiKey = async (label: string): Promise<ApiKey> => {
@@ -241,13 +241,13 @@ function updateUser(username: string, password: string) {
 }
 function getAliases(type: string, id: number): Promise<Alias[]> {
   return fetch(`/apis/web/v1/aliases?${type}_id=${id}`).then(
-    (r) => r.json() as Promise<Alias[]>
+    (r) => r.json() as Promise<Alias[]>,
   );
 }
 function createAlias(
   type: string,
   id: number,
-  alias: string
+  alias: string,
 ): Promise<Response> {
   const form = new URLSearchParams();
   form.append(`${type}_id`, String(id));
@@ -260,7 +260,7 @@ function createAlias(
 function deleteAlias(
   type: string,
   id: number,
-  alias: string
+  alias: string,
 ): Promise<Response> {
   const form = new URLSearchParams();
   form.append(`${type}_id`, String(id));
@@ -273,7 +273,7 @@ function deleteAlias(
 function setPrimaryAlias(
   type: string,
   id: number,
-  alias: string
+  alias: string,
 ): Promise<Response> {
   const form = new URLSearchParams();
   form.append(`${type}_id`, String(id));
@@ -286,7 +286,7 @@ function setPrimaryAlias(
 function updateMbzId(
   type: string,
   id: number,
-  mbzid: string
+  mbzid: string,
 ): Promise<Response> {
   const form = new URLSearchParams();
   form.append(`${type}_id`, String(id));
@@ -298,7 +298,7 @@ function updateMbzId(
 }
 function getAlbum(id: number): Promise<Album> {
   return fetch(`/apis/web/v1/album?id=${id}`).then(
-    (r) => r.json() as Promise<Album>
+    (r) => r.json() as Promise<Album>,
   );
 }
 
@@ -317,7 +317,7 @@ function getNowPlaying(): Promise<NowPlaying> {
 
 async function getRewindStats(args: timeframe): Promise<RewindStats> {
   const r = await fetch(
-    `/apis/web/v1/summary?week=${args.week}&month=${args.month}&year=${args.year}&from=${args.from}&to=${args.to}`
+    `/apis/web/v1/summary?week=${args.week}&month=${args.month}&year=${args.year}&from=${args.from}&to=${args.to}`,
   );
   return handleJson<RewindStats>(r);
 }
@@ -369,6 +369,11 @@ type Track = {
   first_listen: number;
   all_time_rank: number;
 };
+type SimpleTrack = {
+  id: number;
+  title: string;
+  artists: SimpleArtists[];
+};
 type Artist = {
   id: number;
   name: string;
@@ -401,7 +406,7 @@ type Alias = {
 };
 type Listen = {
   time: string;
-  track: Track;
+  track: SimpleTrack;
 };
 type PaginatedResponse<T> = {
   items: T[];
