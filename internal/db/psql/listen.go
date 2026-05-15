@@ -38,7 +38,7 @@ func (d *Psql) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) (*
 		listens = make([]*models.Listen, len(rows))
 		for i, row := range rows {
 			t := &models.Listen{
-				Track: models.Track{
+				Track: models.SimpleTrack{
 					Title: row.TrackTitle,
 					ID:    row.TrackID,
 				},
@@ -74,7 +74,7 @@ func (d *Psql) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) (*
 		listens = make([]*models.Listen, len(rows))
 		for i, row := range rows {
 			t := &models.Listen{
-				Track: models.Track{
+				Track: models.SimpleTrack{
 					Title: row.TrackTitle,
 					ID:    row.TrackID,
 				},
@@ -110,7 +110,7 @@ func (d *Psql) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) (*
 		listens = make([]*models.Listen, len(rows))
 		for i, row := range rows {
 			t := &models.Listen{
-				Track: models.Track{
+				Track: models.SimpleTrack{
 					Title: row.TrackTitle,
 					ID:    row.TrackID,
 				},
@@ -145,7 +145,7 @@ func (d *Psql) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) (*
 		listens = make([]*models.Listen, len(rows))
 		for i, row := range rows {
 			t := &models.Listen{
-				Track: models.Track{
+				Track: models.SimpleTrack{
 					Title: row.TrackTitle,
 					ID:    row.TrackID,
 				},
