@@ -50,7 +50,7 @@ export default function InterestGraph({ buckets = 16, type, id }: Props) {
   return (
     <div className="flex flex-col items-start">
       <CardHeader isOffset>{title}</CardHeader>
-      <div className="flex flex-col items-center w-[350px] sm:w-[550px] text-[12px] p-6 card">
+      <div className="flex flex-col items-center w-[340px] sm:w-[550px] text-[12px] p-6 card">
         <AreaChart
           style={{
             width: "100%",
