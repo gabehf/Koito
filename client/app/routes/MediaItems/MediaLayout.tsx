@@ -12,6 +12,7 @@ import AddListenModal from "~/components/modals/AddListenModal";
 import MbzIcon from "~/components/icons/MbzIcon";
 import { timeListenedString } from "~/utils/utils";
 import { Link } from "react-router";
+import useWindowWidth from "~/hooks/useWindowWidth";
 
 export type MergeFunc = (
   from: number,
@@ -64,10 +65,7 @@ export default function MediaLayout(props: Props) {
   const mobileIconSize = 22;
   const normalIconSize = 30;
 
-  let vw = Math.max(
-    document.documentElement.clientWidth || 0,
-    window.innerWidth || 0,
-  );
+  let vw = useWindowWidth();
 
   let iconSize = vw > 768 ? normalIconSize : mobileIconSize;
 
