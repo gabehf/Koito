@@ -26,6 +26,8 @@ const getActivity = (args: {
   track_id: number;
 }) => apiFetch<ListenActivityItem[]>("/apis/web/v1/listen-activity", args);
 
+const header = "Activity";
+
 const NUM_WEEKS = 36;
 
 export default function ActivityGrid({
@@ -50,8 +52,6 @@ export default function ActivityGrid({
   });
 
   const width = useWindowWidth();
-
-  const header = "Activity";
 
   if (isPending) {
     return <ActivityGridSkeleton />;
@@ -224,9 +224,11 @@ function ActivityGridSkeleton() {
   const CELL_RADIUS = "rounded-[2px]";
   const DAY_LABELS = ["Mon", "", "Wed", "", "Fri", "", "Sun"];
 
+  const width = useWindowWidth();
+
   return (
     <div className="flex flex-col items-start">
-      <CardHeader isOffset>Activity</CardHeader>
+      <CardHeader isOffset>{header}</CardHeader>
       <div className="flex flex-col items-center gap-5 pt-4 sm:pt-6 px-4 sm:px-7 pb-4 sm:pb-5 card">
         <div className="flex items-start gap-2">
           <div className={`grid grid-rows-7 ${CELL_GAP}`}>
@@ -244,7 +246,9 @@ function ActivityGridSkeleton() {
           <div
             className={`w-auto grid grid-flow-col grid-rows-7 mt-2.5 ${CELL_GAP}`}
           >
-            {Array.from({ length: NUM_WEEKS * 7 }).map((_, i) => (
+            {Array.from({
+              length: NUM_WEEKS * 7 - (width <= 640 ? 10 * 7 : 0),
+            }).map((_, i) => (
               <div
                 key={i}
                 className={`${CELL_W} ${CELL_H} ${CELL_RADIUS} bg animate-pulse`}
@@ -253,7 +257,7 @@ function ActivityGridSkeleton() {
           </div>
         </div>
         <div className="flex justify-around w-full">
-          <div className="w-24 h-3 bg animate-pulse rounded-(--border-radius)" />
+          {/*<div className="w-24 h-3 bg animate-pulse rounded-(--border-radius)" />*/}
           <div className="flex items-center gap-2">
             <div className="w-16 h-3 bg animate-pulse rounded-(--border-radius)" />
             <div className="grid grid-cols-5 gap-1">
