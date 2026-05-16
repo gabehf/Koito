@@ -160,7 +160,10 @@ export default function MediaLayout(props: Props) {
                       className="hover:cursor-pointer"
                       onClick={() => setAddListenModalOpen(true)}
                     >
-                      <Plus size={iconSize} />
+                      <Plus
+                        size={iconSize}
+                        className="hover:stroke-(--color-fg-secondary)"
+                      />
                     </button>
                     <AddListenModal
                       open={addListenModalOpen}
@@ -174,7 +177,10 @@ export default function MediaLayout(props: Props) {
                   className="hover:cursor-pointer"
                   onClick={() => setRenameModalOpen(true)}
                 >
-                  <Edit size={iconSize} />
+                  <Edit
+                    size={iconSize}
+                    className="hover:stroke-(--color-fg-secondary)"
+                  />
                 </button>
 
                 {props.type !== "Track" && (
@@ -183,7 +189,10 @@ export default function MediaLayout(props: Props) {
                     className="hover:cursor-pointer"
                     onClick={() => setImageModalOpen(true)}
                   >
-                    <ImageIcon size={iconSize} />
+                    <ImageIcon
+                      size={iconSize}
+                      className="hover:stroke-(--color-fg-secondary)"
+                    />
                   </button>
                 )}
                 <button
@@ -191,14 +200,20 @@ export default function MediaLayout(props: Props) {
                   className="hover:cursor-pointer"
                   onClick={() => setMergeModalOpen(true)}
                 >
-                  <Merge size={iconSize} />
+                  <Merge
+                    size={iconSize}
+                    className="hover:stroke-(--color-fg-secondary)"
+                  />
                 </button>
                 <button
                   title="Delete Item"
                   className="hover:cursor-pointer"
                   onClick={() => setDeleteModalOpen(true)}
                 >
-                  <Trash size={iconSize} />
+                  <Trash
+                    size={iconSize}
+                    className="hover:stroke-(--color-fg-secondary)"
+                  />
                 </button>
                 <EditModal
                   open={renameModalOpen}
