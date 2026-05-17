@@ -9,7 +9,7 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
   url.searchParams.set("page", page);
 
   const res = await fetch(
-    `/apis/web/v1/top-tracks?${url.searchParams.toString()}`
+    `/apis/web/v1/top/tracks?${url.searchParams.toString()}`
   );
   if (!res.ok) {
     throw new Response("Failed to load top tracks", { status: 500 });
@@ -28,7 +28,7 @@ export default function TrackChart() {
     <ChartLayout
       title="Top Tracks"
       initialData={initialData}
-      endpoint="chart/top-tracks"
+      endpoint="chart/top/tracks"
       render={({ data, page, onNext, onPrev }) => (
         <div className="flex flex-col gap-5 w-full">
           <div className="flex gap-15 mx-auto">

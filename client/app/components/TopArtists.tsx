@@ -15,7 +15,7 @@ interface Props {
 export default function TopArtists(props: Props) {
   const { isPending, isError, data, error } = useQuery({
     queryKey: [
-      "top-artists",
+      "top/artists",
       { limit: props.limit, period: props.period, page: 0 },
     ],
     queryFn: ({ queryKey }) => getTopArtists(queryKey[1] as getItemsArgs),
@@ -42,7 +42,7 @@ export default function TopArtists(props: Props) {
   return (
     <div>
       <h3 className="hover:underline">
-        <Link to={`/chart/top-artists?period=${props.period}`}>{header}</Link>
+        <Link to={`/chart/top/artists?period=${props.period}`}>{header}</Link>
       </h3>
       <div className="max-w-[300px]">
         <TopItemList type="artist" data={data} />

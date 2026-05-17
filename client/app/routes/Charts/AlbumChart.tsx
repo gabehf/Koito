@@ -9,7 +9,7 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
   url.searchParams.set("page", page);
 
   const res = await fetch(
-    `/apis/web/v1/top-albums?${url.searchParams.toString()}`
+    `/apis/web/v1/top/albums?${url.searchParams.toString()}`
   );
   if (!res.ok) {
     throw new Response("Failed to load top albums", { status: 500 });
@@ -28,7 +28,7 @@ export default function AlbumChart() {
     <ChartLayout
       title="Top Albums"
       initialData={initialData}
-      endpoint="chart/top-albums"
+      endpoint="chart/top/albums"
       render={({ data, page, onNext, onPrev }) => (
         <div className="flex flex-col gap-5 w-full">
           <div className="flex gap-15 mx-auto">

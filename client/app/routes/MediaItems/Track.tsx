@@ -9,12 +9,12 @@ import { timeListenedString } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
-  let res = await fetch(`/apis/web/v1/track?id=${params.id}`);
+  let res = await fetch(`/apis/web/v1/track/${params.id}`);
   if (!res.ok) {
     throw new Response("Failed to load track", { status: res.status });
   }
   const track: Track = await res.json();
-  res = await fetch(`/apis/web/v1/album?id=${track.album_id}`);
+  res = await fetch(`/apis/web/v1/album/${track.album_id}`);
   if (!res.ok) {
     throw new Response("Failed to load album for track", {
       status: res.status,
@@ -100,4 +100,3 @@ export default function Track() {
     </MediaLayout>
   );
 }
-
