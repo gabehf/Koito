@@ -195,3 +195,15 @@ func (s *Sqlite) imageForTrack(ctx context.Context, trackId int32) (*uuid.UUID, 
 	}
 	return imageid, nil
 }
+
+func (s *Sqlite) GetFirstListenUnix(ctx context.Context) (int64, error) {
+	row := s.db.QueryRow(`
+		SELECT listened_at FROM listens ORDER BY listened_at ASC LIMIT 1;`)
+	var unix int64
+	err := row.Scan(&unix)
+	if err != nil {
+		return 0, fmt.Errorf("GetFirstListenUnix: %w", err)
+	}
+
+	return unix, nil
+}

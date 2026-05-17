@@ -77,6 +77,7 @@ type ListenStore interface {
 	CountListensToItem(ctx context.Context, opts TimeListenedOpts) (int64, error)
 	CountTimeListened(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountTimeListenedToItem(ctx context.Context, opts TimeListenedOpts) (int64, error)
+	GetFirstListenUnix(ctx context.Context) (int64, error)
 }
 
 type UserStore interface {
