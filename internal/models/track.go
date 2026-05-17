@@ -20,4 +20,5 @@ type SimpleTrack struct {
 	ID      int32          `json:"id"`
 	Title   string         `json:"title"`
 	Artists []SimpleArtist `json:"artists"`
+	Image   ImageList      `json:"image"`
 }
