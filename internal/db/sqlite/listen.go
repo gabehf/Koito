@@ -149,7 +149,7 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 	for _, r := range raw {
 		l := &models.Listen{
 			Time: time.Unix(r.listenedAt, 0).UTC(),
-			Track: models.Track{
+			Track: models.SimpleTrack{
 				ID:    r.trackID,
 				Title: r.title,
 			},
