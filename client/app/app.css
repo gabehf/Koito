@@ -2,8 +2,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Jost", "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:
+    "Jost", "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --animate-fade-in-scale: fade-in-scale 0.1s ease forwards;
   --animate-fade-out-scale: fade-out-scale 0.1s ease forwards;
 
@@ -145,9 +146,42 @@ input[type="password"],
 textarea {
   border: 1px solid var(--color-bg);
 }
+
 input[type="checkbox"] {
-  height: fit-content;
+  box-sizing: border-box;
+  position: relative; /* needed for ::after */
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--color-bg-tertiary);
+  border-radius: 5px;
+  appearance: none;
+  background-color: transparent;
+  outline: none;
+  transition: outline 0.1s;
 }
+input[type="checkbox"]:not(:disabled):checked {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+input[type="checkbox"]:disabled {
+  background-color: var(--color-bg-tertiary);
+}
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background-color: var(--color-bg);
+  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="black" d="M11.941,28.877l-11.941-11.942l5.695-5.696l6.246,6.246l14.364-14.364L32,8.818"/></svg>');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="black" d="M11.941,28.877l-11.941-11.942l5.695-5.696l6.246,6.246l14.364-14.364L32,8.818"/></svg>');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
 input:focus-visible,
 button:focus-visible,
 a:focus-visible,
