@@ -1,18 +1,15 @@
 import Rewind from "~/components/rewind/Rewind";
-import type { Route } from "./+types/Home";
 import { type RewindStats } from "api/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData } from "react-router";
-import { getRewindParams, getRewindYear } from "~/utils/utils";
-import { useNavigate } from "react-router";
-import { average } from "color.js";
+import { useLoaderData, useLocation, useNavigate } from "react-router";
+import { getRewindParams } from "~/utils/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useAppContext } from "~/providers/AppProvider";
 
 // TODO: Bind year and month selectors to what data actually exists
 
 const months = [
-  "Full Year",
   "January",
   "February",
   "March",
@@ -27,179 +24,196 @@ const months = [
   "December",
 ];
 
+const parseParams = (
+  params: URLSearchParams,
+): { year: number; month?: number } => {
+  const rawYear = params.get("year");
+  const rawMonth = params.get("month");
+
+  if (!rawYear && !rawMonth) return getRewindParams();
+  if (rawYear && rawMonth)
+    return { year: parseInt(rawYear), month: parseInt(rawMonth) };
+  if (rawYear) return { year: parseInt(rawYear) };
+
+  const month = parseInt(rawMonth!);
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  return { year: month <= currentMonth ? currentYear : currentYear - 1, month };
+};
+
 export async function clientLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const year = parseInt(
-    url.searchParams.get("year") || getRewindParams().year.toString(),
-  );
-  const month = parseInt(
-    url.searchParams.get("month") || getRewindParams().month.toString(),
-  );
+  const { year, month } = parseParams(url.searchParams);
 
   const res = await fetch(`/apis/web/v1/summary?year=${year}&month=${month}`);
-  if (!res.ok) {
-    throw new Response("Failed to load summary", { status: 500 });
-  }
+  if (!res.ok) throw new Response("Failed to load summary", { status: 500 });
 
   const stats: RewindStats = await res.json();
-  stats.title = `Your ${month === 0 ? "" : months[month]} ${year} Rewind`;
+  stats.title = `Your ${month && month > 0 ? months[month - 1] : ""} ${year} Rewind`;
   return { stats };
 }
 
 export default function RewindPage() {
-  const currentParams = new URLSearchParams(location.search);
-  let year = parseInt(
-    currentParams.get("year") || getRewindParams().year.toString(),
-  );
-  let month = parseInt(
-    currentParams.get("month") || getRewindParams().month.toString(),
-  );
+  const location = useLocation();
   const navigate = useNavigate();
+  const { stats } = useLoaderData<{ stats: RewindStats }>();
+  const { firstActivity } = useAppContext();
+
+  const { year: loadedYear, month: loadedMonth } = parseParams(
+    new URLSearchParams(location.search),
+  );
+
+  const [year, setYear] = useState(loadedYear);
+  const [month, setMonth] = useState(loadedMonth);
+  const [showYearly, setShowYearly] = useState(
+    !loadedMonth || loadedMonth === 0,
+  );
   const [showTime, setShowTime] = useState(false);
-  const { stats: stats } = useLoaderData<{ stats: RewindStats }>();
 
-  const [bgColor, setBgColor] = useState<string>("(--color-bg)");
-
-  useEffect(() => {
-    if (!stats.top_artists[0]) return;
-
-    const img = (stats.top_artists[0] as any)?.item.image;
-    if (!img) return;
-
-    average(img.small, { amount: 1 }).then((color) => {
-      setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
-    });
-  }, [stats]);
-
-  const updateParams = (params: Record<string, string | null>) => {
+  const updateParams = (updates: Record<string, string | null>) => {
     const nextParams = new URLSearchParams(location.search);
-
-    for (const key in params) {
-      const val = params[key];
-
-      if (val !== null) {
-        nextParams.set(key, val);
-      }
+    for (const [key, val] of Object.entries(updates)) {
+      val !== null ? nextParams.set(key, val) : nextParams.delete(key);
     }
-
-    const url = `/rewind?${nextParams.toString()}`;
-
-    navigate(url, { replace: false });
+    navigate(`/rewind?${nextParams.toString()}`, { replace: false });
   };
 
-  const navigateMonth = (direction: "prev" | "next") => {
-    if (direction === "next") {
-      if (month === 12) {
-        month = 0;
-      } else {
-        month += 1;
-      }
-    } else {
-      if (month === 0) {
-        month = 12;
-      } else {
-        month -= 1;
-      }
-    }
-    console.log(`Month: ${month}`);
-
-    updateParams({
-      year: year.toString(),
-      month: month.toString(),
-    });
+  const navigateMonth = (newMonth: number) => {
+    setMonth(newMonth);
+    updateParams({ year: year.toString(), month: newMonth.toString() });
   };
+
   const navigateYear = (direction: "prev" | "next") => {
-    if (direction === "next") {
-      year += 1;
-    } else {
-      year -= 1;
-    }
-
-    updateParams({
-      year: year.toString(),
-      month: month.toString(),
-    });
+    setYear(direction === "next" ? year + 1 : year - 1);
   };
+
+  // month is 0-indexed (array index), matching JS Date convention
+  function isFuture(month: number, year: number) {
+    return new Date(year, month + 1) > new Date();
+  }
+
+  function isBeforeFirstActivity(month: number, year: number) {
+    return !!firstActivity && new Date(year, month + 1) < firstActivity;
+  }
+
+  function isUnavailable(monthIndex: number, year: number) {
+    return (
+      isFuture(monthIndex, year) || isBeforeFirstActivity(monthIndex, year)
+    );
+  }
 
   const pgTitle = `${stats.title} - Koito`;
 
   return (
     <div className="w-full min-h-screen">
-      <div className="flex flex-col items-start sm:items-center gap-4">
-        <title>{pgTitle}</title>
-        <meta property="og:title" content={pgTitle} />
-        <meta name="description" content={pgTitle} />
-        <div className="flex flex-col lg:flex-row items-start lg:mt-15 mt-5 gap-10 w-19/20 px-5 md:px-20">
-          <div className="flex flex-col items-start gap-4">
-            <div className="flex flex-col items-start gap-4 py-8">
-              <div className="flex items-center gap-6 justify-around">
-                <button
-                  onClick={() => navigateMonth("prev")}
-                  className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={
-                    // Previous month is in the future OR
-                    new Date(year, month - 2) > new Date() ||
-                    // We are looking at current year and prev would take us to full year
-                    (new Date().getFullYear() === year && month === 1)
-                  }
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <p className="font-medium text-xl text-center w-30">
-                  {months[month]}
-                </p>
-                <button
-                  onClick={() => navigateMonth("next")}
-                  className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={
-                    // next month is current or future month and
-                    month >= new Date().getMonth() &&
-                    // we are looking at current (or future) year
-                    year >= new Date().getFullYear()
-                  }
-                >
-                  <ChevronRight size={20} />
-                </button>
+      <title>{pgTitle}</title>
+      <meta property="og:title" content={pgTitle} />
+      <meta name="description" content={pgTitle} />
+      <div className="flex flex-col lg:flex-row items-center sm:items-start lg:mt-15 mt-5 gap-10 w-19/20 mx-auto px-5 md:px-10">
+        <div className="flex flex-col items-start gap-4">
+          <div className="flex flex-col items-center gap-4 mt-4 sm:mt-14 w-[250px] mx-auto">
+            {!showYearly && (
+              <>
+                <div className="flex items-center gap-6 justify-around">
+                  <button
+                    onClick={() => navigateYear("prev")}
+                    className="p-2 disabled:opacity-0"
+                    disabled={
+                      new Date(year - 1, month || 0) > new Date() ||
+                      (firstActivity && year - 1 < firstActivity.getFullYear())
+                    }
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <p className="font-medium text-xl text-center w-30">{year}</p>
+                  <button
+                    onClick={() => navigateYear("next")}
+                    className="p-2 disabled:opacity-0"
+                    disabled={isFuture(0, year + 1)}
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {months.map((m, i) => {
+                    const isSelected =
+                      month !== undefined &&
+                      i === month - 1 &&
+                      loadedYear === year;
+                    const unavailable = isUnavailable(i, year);
+                    return (
+                      <button
+                        key={m}
+                        className={`px-12 py-2 rounded-(--border-radius)
+                          ${isSelected ? "card" : "border-1 border-(--color-bg)"}
+                          ${unavailable ? "color-fg-tertiary" : "hover:bg-(--color-bg-secondary)"}
+                        `}
+                        onClick={() => navigateMonth(i + 1)}
+                        disabled={unavailable || isSelected}
+                      >
+                        {m.substring(0, 3)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {showYearly && firstActivity && (
+              <div className="grid grid-cols-2 gap-2">
+                {Array.from(
+                  {
+                    length:
+                      new Date().getFullYear() - firstActivity.getFullYear(),
+                  },
+                  (_, index) => firstActivity.getFullYear() + index,
+                ).map((y) => (
+                  <button
+                    key={y}
+                    className={`px-10 py-2 rounded-(--border-radius) hover:bg-(--color-bg-secondary)
+                      ${y === year && !month ? "card" : "border-1 border-(--color-bg)"}
+                    `}
+                    onClick={() => {
+                      setYear(y);
+                      setMonth(undefined);
+                      updateParams({ year: y.toString(), month: null });
+                    }}
+                    disabled={(!month || month === 0) && y === year}
+                  >
+                    {y}
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center gap-6 justify-around">
-                <button
-                  onClick={() => navigateYear("prev")}
-                  className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={new Date(year - 1, month) > new Date()}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <p className="font-medium text-xl text-center w-30">{year}</p>
-                <button
-                  onClick={() => navigateYear("next")}
-                  className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={
-                    // Next year date is in the future OR
-                    new Date(year + 1, month - 1) > new Date() ||
-                    // Next year date is current full year OR
-                    (month == 0 && new Date().getFullYear() === year + 1) ||
-                    // Next year date is current month
-                    (new Date().getMonth() === month - 1 &&
-                      new Date().getFullYear() === year + 1)
-                  }
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <label htmlFor="show-time-checkbox">Show time listened?</label>
-              <input
-                type="checkbox"
-                name="show-time-checkbox"
-                checked={showTime}
-                onChange={(e) => setShowTime(!showTime)}
-              ></input>
-            </div>
+            )}
           </div>
-          {stats !== undefined && (
-            <Rewind stats={stats} includeTime={showTime} />
-          )}
+          <div className="flex items-center gap-2">
+            <input
+              id="show-time-checkbox"
+              type="checkbox"
+              checked={showTime}
+              onChange={(e) => setShowTime(e.target.checked)}
+            />
+            <label htmlFor="show-time-checkbox">Show time listened?</label>
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex justify-around w-2/3 mb-4">
+            <button
+              className="period-selector"
+              onClick={() => setShowYearly(false)}
+              disabled={!showYearly}
+            >
+              MONTHLY
+            </button>
+            <button
+              className="period-selector"
+              onClick={() => setShowYearly(true)}
+              disabled={showYearly}
+            >
+              YEARLY
+            </button>
+          </div>
+          {stats && <Rewind stats={stats} includeTime={showTime} />}
         </div>
       </div>
     </div>

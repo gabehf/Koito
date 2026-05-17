@@ -19,25 +19,25 @@ export default function Rewind(props: Props) {
     return <p>Not enough data exists to create a Rewind for this period :(</p>;
   }
   return (
-    <div className="flex flex-col gap-7 card pt-6 pb-12 px-8">
-      <div className="w-full text-start shrink-0 ml-6">
+    <div className="flex flex-col gap-7 card pt-4 sm:pt-6 pb-8 sm:pb-12 px-4 sm:px-8 min-w-[350px]">
+      <div className="w-full text-start shrink-0 sm:ml-6">
         <span
           className="
             relative inline-block
-            text-2xl font-semibold
+            text-2xl md:text-4xl font-semibold
           "
         >
           <span
             className="
               absolute inset-0
-              -translate-x-6 translate-y-12
+              sm:-translate-x-6 translate-y-9 sm:translate-y-12
               bg-(--color-primary)
               z-0
               h-0.5
             "
             aria-hidden
           />
-          <h2>{props.stats.title}</h2>
+          <h5>{props.stats.title}</h5>
         </span>
       </div>
       <RewindTopItem
@@ -67,7 +67,7 @@ export default function Rewind(props: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-5">
         <RewindStatText
           figure={`${props.stats.minutes_listened}`}
-          text="Minutes listened"
+          text="Minutes"
         />
         <RewindStatText figure={`${props.stats.unique_tracks}`} text="Tracks" />
         <RewindStatText
@@ -82,7 +82,7 @@ export default function Rewind(props: Props) {
         />
         <RewindStatText
           figure={`${props.stats.avg_plays_per_day.toFixed(1)}`}
-          text="Plays per day"
+          text="Plays / day"
         />
         <RewindStatText
           figure={`${props.stats.unique_artists}`}
