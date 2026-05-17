@@ -58,6 +58,10 @@ export default function RewindPage() {
   const [showTime, setShowTime] = useState(false);
   const { stats: stats } = useLoaderData<{ stats: RewindStats }>();
   const latestRewindParams = getRewindParams();
+  const latestMonthlyRewindParams = {
+    year: latestRewindParams.year,
+    month: latestRewindParams.month === 0 ? 12 : latestRewindParams.month,
+  };
   const rewindView = month === 0 ? "year" : "month";
 
   const [bgColor, setBgColor] = useState<string>("(--color-bg)");
@@ -119,9 +123,9 @@ export default function RewindPage() {
 
   const nextMonthParams = getAdjacentMonthParams(year, month, "next");
   const disableNextMonth =
-    nextMonthParams.year > latestRewindParams.year ||
-    (nextMonthParams.year === latestRewindParams.year &&
-      nextMonthParams.month > latestRewindParams.month);
+    nextMonthParams.year > latestMonthlyRewindParams.year ||
+    (nextMonthParams.year === latestMonthlyRewindParams.year &&
+      nextMonthParams.month > latestMonthlyRewindParams.month);
 
   const navigateMonth = (direction: "prev" | "next") => {
     const nextParams = getAdjacentMonthParams(year, month, direction);
@@ -141,7 +145,10 @@ export default function RewindPage() {
       return;
     }
 
-    const nextMonth = year === latestRewindParams.year ? latestRewindParams.month : 12;
+    const nextMonth =
+      year === latestMonthlyRewindParams.year
+        ? latestMonthlyRewindParams.month
+        : 12;
 
     updateParams({
       year: year.toString(),
