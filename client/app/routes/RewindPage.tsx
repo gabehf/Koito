@@ -7,8 +7,6 @@ import { getRewindParams } from "~/utils/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAppContext } from "~/providers/AppProvider";
 
-// TODO: Bind year and month selectors to what data actually exists
-
 const months = [
   "January",
   "February",
