@@ -137,6 +137,10 @@ export default function RewindPage() {
   };
 
   const setRewindView = (view: "year" | "month") => {
+    if (view === rewindView) {
+      return;
+    }
+
     if (view === "year") {
       updateParams({
         year: year.toString(),
@@ -189,6 +193,7 @@ export default function RewindPage() {
               <div className="flex w-[15rem] items-center rounded-lg bg p-1">
                 <button
                   onClick={() => setRewindView("year")}
+                  disabled={rewindView === "year"}
                   className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover-bg-secondary ${
                     rewindView === "year"
                       ? "bg-secondary"
@@ -199,6 +204,7 @@ export default function RewindPage() {
                 </button>
                 <button
                   onClick={() => setRewindView("month")}
+                  disabled={rewindView === "month"}
                   className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover-bg-secondary ${
                     rewindView === "month"
                       ? "bg-secondary"
