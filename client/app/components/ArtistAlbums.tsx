@@ -11,7 +11,7 @@ interface Props {
 export default function ArtistAlbums({ artistId, name }: Props) {
   const { isPending, isError, data, error } = useQuery({
     queryKey: [
-      "top-albums",
+      "top/albums",
       { limit: 99, period: "all_time", artist_id: artistId },
     ],
     queryFn: ({ queryKey }) => getTopAlbums(queryKey[1] as getItemsArgs),

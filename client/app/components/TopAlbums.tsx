@@ -19,7 +19,7 @@ interface Props {
 export default function TopAlbums(props: Props) {
   const { isPending, isError, data, error } = useQuery({
     queryKey: [
-      "top-albums",
+      "top/albums",
       {
         limit: props.limit,
         period: props.period,
@@ -52,7 +52,7 @@ export default function TopAlbums(props: Props) {
     <div>
       <h3 className="hover:underline">
         <Link
-          to={`/chart/top-albums?period=${props.period}${
+          to={`/chart/top/albums?period=${props.period}${
             props.artistId ? `&artist_id=${props.artistId}` : ""
           }`}
         >

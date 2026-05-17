@@ -10,41 +10,6 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func DeleteTrackHandler(store db.TrackStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		l := logger.FromContext(ctx)
-
-		l.Debug().Msg("DeleteTrackHandler: Received request to delete track")
-
-		trackIDStr := r.URL.Query().Get("id")
-		if trackIDStr == "" {
-			l.Debug().Msg("DeleteTrackHandler: Missing track ID in request")
-			utils.WriteError(w, "track_id must be provided", http.StatusBadRequest)
-			return
-		}
-
-		trackID, err := strconv.Atoi(trackIDStr)
-		if err != nil {
-			l.Debug().AnErr("error", err).Msg("DeleteTrackHandler: Invalid track ID")
-			utils.WriteError(w, "invalid id", http.StatusBadRequest)
-			return
-		}
-
-		l.Debug().Msgf("DeleteTrackHandler: Deleting track with ID %d", trackID)
-
-		err = store.DeleteTrack(ctx, int32(trackID))
-		if err != nil {
-			l.Err(err).Msg("DeleteTrackHandler: Failed to delete track")
-			utils.WriteError(w, "failed to delete track", http.StatusInternalServerError)
-			return
-		}
-
-		l.Debug().Msgf("DeleteTrackHandler: Successfully deleted track with ID %d", trackID)
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
 func DeleteListenHandler(store db.ListenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -90,76 +55,6 @@ func DeleteListenHandler(store db.ListenStore) http.HandlerFunc {
 		}
 
 		l.Debug().Msgf("DeleteListenHandler: Successfully deleted listen record for track ID %d at timestamp %d", trackID, unix)
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func DeleteArtistHandler(store db.ArtistStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		l := logger.FromContext(ctx)
-
-		l.Debug().Msg("DeleteArtistHandler: Received request to delete artist")
-
-		artistIDStr := r.URL.Query().Get("id")
-		if artistIDStr == "" {
-			l.Debug().Msg("DeleteArtistHandler: Missing artist ID in request")
-			utils.WriteError(w, "id must be provided", http.StatusBadRequest)
-			return
-		}
-
-		artistID, err := strconv.Atoi(artistIDStr)
-		if err != nil {
-			l.Debug().AnErr("error", err).Msg("DeleteArtistHandler: Invalid artist ID")
-			utils.WriteError(w, "invalid id", http.StatusBadRequest)
-			return
-		}
-
-		l.Debug().Msgf("DeleteArtistHandler: Deleting artist with ID %d", artistID)
-
-		err = store.DeleteArtist(ctx, int32(artistID))
-		if err != nil {
-			l.Err(err).Msg("DeleteArtistHandler: Failed to delete artist")
-			utils.WriteError(w, "failed to delete artist", http.StatusInternalServerError)
-			return
-		}
-
-		l.Debug().Msgf("DeleteArtistHandler: Successfully deleted artist with ID %d", artistID)
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func DeleteAlbumHandler(store db.AlbumStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		l := logger.FromContext(ctx)
-
-		l.Debug().Msg("DeleteAlbumHandler: Received request to delete album")
-
-		albumIDStr := r.URL.Query().Get("id")
-		if albumIDStr == "" {
-			l.Debug().Msg("DeleteAlbumHandler: Missing album ID in request")
-			utils.WriteError(w, "id must be provided", http.StatusBadRequest)
-			return
-		}
-
-		albumID, err := strconv.Atoi(albumIDStr)
-		if err != nil {
-			l.Debug().AnErr("error", err).Msg("DeleteAlbumHandler: Invalid album ID")
-			utils.WriteError(w, "invalid id", http.StatusBadRequest)
-			return
-		}
-
-		l.Debug().Msgf("DeleteAlbumHandler: Deleting album with ID %d", albumID)
-
-		err = store.DeleteAlbum(ctx, int32(albumID))
-		if err != nil {
-			l.Err(err).Msg("DeleteAlbumHandler: Failed to delete album")
-			utils.WriteError(w, "failed to delete album", http.StatusInternalServerError)
-			return
-		}
-
-		l.Debug().Msgf("DeleteAlbumHandler: Successfully deleted album with ID %d", albumID)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

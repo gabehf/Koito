@@ -8,7 +8,6 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -34,11 +33,10 @@ var apikeyOnce sync.Once
 
 func login(t *testing.T) {
 	loginOnce.Do(func() {
-		formdata := url.Values{}
-		formdata.Set("username", cfg.DefaultUsername())
-		formdata.Set("password", cfg.DefaultPassword())
-		encoded := formdata.Encode()
-		resp, err := http.DefaultClient.Post(host()+"/apis/web/v1/login", "application/x-www-form-urlencoded", strings.NewReader(encoded))
+		resp, err := http.DefaultClient.Post(
+			host()+"/apis/web/v1/login",
+			"application/json",
+			strings.NewReader(`{"username":"`+cfg.DefaultUsername()+`","password":"`+cfg.DefaultPassword()+`"}`))
 		respBytes, _ := io.ReadAll(resp.Body)
 		t.Logf("Login request response: %s - %s", resp.Status, respBytes)
 		require.NoError(t, err)
@@ -55,7 +53,7 @@ func makeAuthRequest(t *testing.T, session, method, endpoint string, body io.Rea
 		Name:  "koito_session",
 		Value: session,
 	})
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 	t.Logf("Making request to %s with session: %s", endpoint, session)
 	return http.DefaultClient.Do(req)
 }
@@ -201,7 +199,7 @@ func TestGetters(t *testing.T) {
 	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 	// Artist was saved
-	resp, err := http.DefaultClient.Get(host() + "/apis/web/v1/artist?id=1")
+	resp, err := http.DefaultClient.Get(host() + "/apis/web/v1/artist/1")
 	assert.NoError(t, err)
 	var artist models.Artist
 	err = json.NewDecoder(resp.Body).Decode(&artist)
@@ -209,7 +207,7 @@ func TestGetters(t *testing.T) {
 	assert.Equal(t, "さユり", artist.Name)
 
 	// Album was saved
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/album?id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/album/1")
 	assert.NoError(t, err)
 	var album models.Album
 	err = json.NewDecoder(resp.Body).Decode(&album)
@@ -217,7 +215,7 @@ func TestGetters(t *testing.T) {
 	assert.Equal(t, "酸欠少女", album.Title)
 
 	// Track was saved
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track?id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track/1")
 	assert.NoError(t, err)
 	var track models.Track
 	err = json.NewDecoder(resp.Body).Decode(&track)
@@ -234,21 +232,21 @@ func TestGetters(t *testing.T) {
 	assert.EqualValues(t, 2, listens.Items[0].Track.ID)
 	assert.Equal(t, "Where Our Blue Is", listens.Items[0].Track.Title)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-artists?period=all_time")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top/artists?period=all_time")
 	assert.NoError(t, err)
 	var artists db.PaginatedResponse[models.Artist]
 	err = json.NewDecoder(resp.Body).Decode(&artists)
 	require.NoError(t, err)
 	require.Len(t, artists.Items, 3)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-albums?period=all_time")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top/albums?period=all_time")
 	assert.NoError(t, err)
 	var albums db.PaginatedResponse[models.Album]
 	err = json.NewDecoder(resp.Body).Decode(&albums)
 	require.NoError(t, err)
 	require.Len(t, albums.Items, 3)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top-tracks?period=all_time")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/top/tracks?period=all_time")
 	assert.NoError(t, err)
 	var tracks db.PaginatedResponse[models.Track]
 	err = json.NewDecoder(resp.Body).Decode(&tracks)
@@ -262,11 +260,11 @@ func TestMerge(t *testing.T) {
 	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
-	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/merge/tracks?from_id=1&to_id=2", nil)
+	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/track/2/merge", strings.NewReader(`{"merge_from_id":1}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track?id=2")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track/2")
 	require.NoError(t, err)
 	var track models.Track
 	err = json.NewDecoder(resp.Body).Decode(&track)
@@ -277,11 +275,11 @@ func TestMerge(t *testing.T) {
 
 	t.Run("Submit Listens", doSubmitListens)
 
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/merge/artists?from_id=1&to_id=2", nil)
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artist/2/merge", strings.NewReader(`{"merge_from_id":1}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/artist?id=2")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/artist/2")
 	require.NoError(t, err)
 	var artist models.Artist
 	err = json.NewDecoder(resp.Body).Decode(&artist)
@@ -292,11 +290,11 @@ func TestMerge(t *testing.T) {
 
 	t.Run("Submit Listens", doSubmitListens)
 
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/merge/albums?from_id=1&to_id=2", nil)
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/album/2/merge", strings.NewReader(`{"merge_from_id":1}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/album?id=2")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/album/2")
 	require.NoError(t, err)
 	var album models.Album
 	err = json.NewDecoder(resp.Body).Decode(&album)
@@ -343,27 +341,27 @@ func TestDelete(t *testing.T) {
 	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
-	resp, err := makeAuthRequest(t, session, "DELETE", "/apis/web/v1/artist?id=1", nil)
+	resp, err := makeAuthRequest(t, session, "DELETE", "/apis/web/v1/artist/1", nil)
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/artist?id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/artist/1")
 	require.NoError(t, err)
 	require.Equal(t, 404, resp.StatusCode)
 
-	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/album?id=1", nil)
+	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/album/1", nil)
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/album?id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/album/1")
 	require.NoError(t, err)
 	require.Equal(t, 404, resp.StatusCode)
 
-	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/track?id=1", nil)
+	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/track/1", nil)
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track?id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track/1")
 	require.NoError(t, err)
 	require.Equal(t, 404, resp.StatusCode)
 
@@ -374,14 +372,14 @@ func TestLoginGate(t *testing.T) {
 	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
-	req, err := http.NewRequest("DELETE", host()+"/apis/web/v1/artist?id=1", nil)
+	req, err := http.NewRequest("DELETE", host()+"/apis/web/v1/artist/1", nil)
 	require.NoError(t, err)
 	req.Header.Add("Authorization", "Token "+apikey)
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 204, resp.StatusCode)
 
-	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist?id=3", nil)
+	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist/3", nil)
 	require.NoError(t, err)
 	resp, err = http.DefaultClient.Do(req)
 	assert.NoError(t, err)
@@ -393,14 +391,14 @@ func TestLoginGate(t *testing.T) {
 
 	cfg.SetLoginGate(true)
 
-	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist?id=3", nil)
+	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist/3", nil)
 	require.NoError(t, err)
 	// req.Header.Add("Authorization", "Token "+apikey)
 	resp, err = http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 401, resp.StatusCode)
 
-	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist?id=3", nil)
+	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist/3", nil)
 	require.NoError(t, err)
 	req.Header.Add("Authorization", "Token "+apikey)
 	resp, err = http.DefaultClient.Do(req)
@@ -419,11 +417,11 @@ func TestAliasesAndSearch(t *testing.T) {
 	truncateTestData(t)
 	t.Run("Submit Listens", doSubmitListens)
 
-	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases?artist_id=1&alias=Sayuri", nil)
+	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/artist/1/aliases", strings.NewReader(`{"alias":"Sayuri"}`))
 	require.NoError(t, err)
 	require.Equal(t, 201, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/aliases?artist_id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/artist/1/aliases")
 	require.NoError(t, err)
 	require.Equal(t, 200, resp.StatusCode)
 	var actual []models.Alias
@@ -434,11 +432,11 @@ func TestAliasesAndSearch(t *testing.T) {
 		{ID: 1, Alias: "Sayuri", Source: "Manual", Primary: false},
 	}, actual)
 
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases?album_id=1&alias=Sanketsu+Girl", nil)
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/album/1/aliases", strings.NewReader(`{"alias":"Sanketsu Girl"}`))
 	require.NoError(t, err)
 	require.Equal(t, 201, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/aliases?album_id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/album/1/aliases")
 	require.NoError(t, err)
 	require.Equal(t, 200, resp.StatusCode)
 	actual = nil
@@ -449,15 +447,15 @@ func TestAliasesAndSearch(t *testing.T) {
 		{ID: 1, Alias: "Sanketsu Girl", Source: "Manual", Primary: false},
 	}, actual)
 
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases?track_id=1&alias=Tower+of+Flower", nil)
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/track/1/aliases", strings.NewReader(`{"alias":"Tower of Flower"}`))
 	require.NoError(t, err)
 	require.Equal(t, 201, resp.StatusCode)
 
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases/primary?track_id=1&alias=Tower+of+Flower", nil)
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track/1/aliases/primary", strings.NewReader(`{"alias":"Tower of Flower"}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track?id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track/1")
 	require.NoError(t, err)
 	require.Equal(t, 200, resp.StatusCode)
 	var track models.Track
@@ -465,7 +463,7 @@ func TestAliasesAndSearch(t *testing.T) {
 	require.Len(t, actual, 2)
 	assert.Equal(t, track.Title, "Tower of Flower")
 
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/aliases/primary?artist_id=1&alias=Sayuri", nil)
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/artist/1/aliases/primary", strings.NewReader(`{"alias":"Sayuri"}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
@@ -530,11 +528,10 @@ func TestListenActivity(t *testing.T) {
 
 func TestAuth(t *testing.T) {
 	// logs in a new session
-	formdata := url.Values{}
-	formdata.Set("username", cfg.DefaultUsername())
-	formdata.Set("password", cfg.DefaultPassword())
-	encoded := formdata.Encode()
-	resp, err := http.DefaultClient.Post(host()+"/apis/web/v1/login", "application/x-www-form-urlencoded", strings.NewReader(encoded))
+	resp, err := http.DefaultClient.Post(
+		host()+"/apis/web/v1/login",
+		"application/json",
+		strings.NewReader(`{"username":"`+cfg.DefaultUsername()+`","password":"`+cfg.DefaultPassword()+`"}`))
 	respBytes, _ := io.ReadAll(resp.Body)
 	t.Logf("Login request response: %s - %s", resp.Status, respBytes)
 	require.NoError(t, err)
@@ -543,7 +540,7 @@ func TestAuth(t *testing.T) {
 	require.NotEmpty(t, s)
 
 	// test update user
-	req, err := http.NewRequest("PATCH", host()+"/apis/web/v1/user?username=new&password=supersecret", nil)
+	req, err := http.NewRequest("PATCH", host()+"/apis/web/v1/user", strings.NewReader(`{"username":"new","password":"supersecret"}`))
 	require.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "koito_session",
@@ -553,8 +550,8 @@ func TestAuth(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	// test /me with updated info
-	req, err = http.NewRequest("GET", host()+"/apis/web/v1/user/me", nil)
+	// test /user with updated info
+	req, err = http.NewRequest("GET", host()+"/apis/web/v1/user", nil)
 	require.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "koito_session",
@@ -568,16 +565,15 @@ func TestAuth(t *testing.T) {
 	require.Equal(t, "new", me.Username)
 
 	// login with old password fails
-	formdata = url.Values{}
-	formdata.Set("username", cfg.DefaultUsername())
-	formdata.Set("password", cfg.DefaultPassword())
-	encoded = formdata.Encode()
-	resp, err = http.DefaultClient.Post(host()+"/apis/web/v1/login", "application/x-www-form-urlencoded", strings.NewReader(encoded))
+	resp, err = http.DefaultClient.Post(
+		host()+"/apis/web/v1/login",
+		"application/json",
+		strings.NewReader(`{"username":"`+cfg.DefaultUsername()+`","password":"`+cfg.DefaultPassword()+`"}`))
 	require.NoError(t, err)
 	require.Equal(t, 401, resp.StatusCode)
 
 	// reset update so other tests dont fail
-	req, err = http.NewRequest("PATCH", host()+fmt.Sprintf("/apis/web/v1/user?username=%s&password=%s", cfg.DefaultUsername(), cfg.DefaultPassword()), nil)
+	req, err = http.NewRequest("PATCH", host()+"/apis/web/v1/user", strings.NewReader(`{"username":"`+cfg.DefaultUsername()+`","password":"`+cfg.DefaultPassword()+`"}`))
 	require.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "koito_session",
@@ -588,7 +584,7 @@ func TestAuth(t *testing.T) {
 	require.Equal(t, 204, resp.StatusCode)
 
 	// creates api key
-	req, err = http.NewRequest("POST", host()+"/apis/web/v1/user/apikeys?label=testing", nil)
+	req, err = http.NewRequest("POST", host()+"/apis/web/v1/user/apikeys", strings.NewReader(`{"label":"testing"}`))
 	require.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "koito_session",
@@ -598,7 +594,7 @@ func TestAuth(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 201, resp.StatusCode)
 	var response struct {
-		Key string `json:"key"`
+		Key string `json:"key"}`
 	}
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&response))
 	require.NotEmpty(t, response.Key)
@@ -620,9 +616,9 @@ func TestAuth(t *testing.T) {
 
 	// changes api key label
 	login(t) // i dont care about using the new session anymore
-	resp, err = makeAuthRequest(t, s, "PATCH", "/apis/web/v1/user/apikeys?id=2&label=well+tested", nil)
+	resp, err = makeAuthRequest(t, s, "PATCH", "/apis/web/v1/user/apikeys/2", strings.NewReader(`{"label":"well tested"}`))
 	require.NoError(t, err)
-	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, 204, resp.StatusCode)
 	resp, err = makeAuthRequest(t, s, "GET", "/apis/web/v1/user/apikeys", nil)
 	require.NoError(t, err)
 	var keys []models.ApiKey
@@ -644,10 +640,7 @@ func TestAuth(t *testing.T) {
 	require.Equal(t, 204, resp.StatusCode)
 
 	// attempts to create an api key - unauthorized
-	formdata = url.Values{}
-	formdata.Set("label", "testing")
-	encoded = formdata.Encode()
-	req, err = http.NewRequest("POST", host()+"/apis/web/v1/user/apikeys", strings.NewReader(encoded))
+	req, err = http.NewRequest("POST", host()+"/apis/web/v1/user/apikeys", strings.NewReader(`{"label":"testing"}`))
 	require.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "koito_session",
@@ -701,17 +694,17 @@ func TestDeleteListen(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, `{"status": "ok"}`, string(respBytes))
 
-	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/listen?track_id=1&unix=1749475719", nil)
+	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/listens?track_id=1&unix=1749475719", nil)
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
 	// deletes are idempotent
-	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/listen?track_id=1&unix=1749475719", nil)
+	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/listens?track_id=1&unix=1749475719", nil)
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
 	// listen is deleted
-	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track?id=1")
+	resp, err = http.DefaultClient.Get(host() + "/apis/web/v1/track/1")
 	require.NoError(t, err)
 	var track models.Track
 	err = json.NewDecoder(resp.Body).Decode(&track)
@@ -735,7 +728,7 @@ func TestArtistReplaceImage(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mpw.Close())
 
-	req, err := http.NewRequest("POST", host()+"/apis/web/v1/replace-image", buf)
+	req, err := http.NewRequest("PATCH", host()+"/apis/web/v1/artist/1/image", buf)
 	require.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "koito_session",
@@ -773,7 +766,7 @@ func TestAlbumReplaceImage(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mpw.Close())
 
-	req, err := http.NewRequest("POST", host()+"/apis/web/v1/replace-image", buf)
+	req, err := http.NewRequest("PATCH", host()+"/apis/web/v1/album/1/image", buf)
 	require.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "koito_session",
@@ -801,12 +794,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 
 	// set and unset track primary artist
 
-	formdata := url.Values{}
-	formdata.Set("artist_id", "1")
-	formdata.Set("track_id", "1")
-	formdata.Set("is_primary", "false")
-	body := formdata.Encode()
-	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
+	resp, err := makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track/1/artists/1", strings.NewReader(`{"is_primary":false}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
@@ -818,12 +806,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, exists, "expected artist is_primary to be false")
 
-	formdata = url.Values{}
-	formdata.Set("artist_id", "1")
-	formdata.Set("track_id", "1")
-	formdata.Set("is_primary", "true")
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track/1/artists/1", strings.NewReader(`{"is_primary":true}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
@@ -837,12 +820,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 
 	// set and unset album primary artist
 
-	formdata = url.Values{}
-	formdata.Set("artist_id", "1")
-	formdata.Set("album_id", "1")
-	formdata.Set("is_primary", "false")
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/album/1/artists/1", strings.NewReader(`{"is_primary":false}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
@@ -854,12 +832,7 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, exists, "expected artist is_primary to be false")
 
-	formdata = url.Values{}
-	formdata.Set("artist_id", "1")
-	formdata.Set("album_id", "1")
-	formdata.Set("is_primary", "true")
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/album/1/artists/1", strings.NewReader(`{"is_primary":true}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
@@ -906,39 +879,21 @@ func TestSetPrimaryArtist(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, `{"status": "ok"}`, string(respBytes))
 
-	// set both artists as primary
+	// ensure only one artist can be primary at once
 
-	formdata = url.Values{}
-	formdata.Set("artist_id", "4")
-	formdata.Set("album_id", "4")
-	formdata.Set("is_primary", "true")
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
-	require.NoError(t, err)
-	require.Equal(t, 204, resp.StatusCode)
-	formdata = url.Values{}
-	formdata.Set("artist_id", "5")
-	formdata.Set("album_id", "4")
-	formdata.Set("is_primary", "true")
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/album/4/artists/4", strings.NewReader(`{"is_primary":true}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
-	formdata = url.Values{}
-	formdata.Set("artist_id", "4")
-	formdata.Set("track_id", "4")
-	formdata.Set("is_primary", "true")
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/album/4/artists/5", strings.NewReader(`{"is_primary":true}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
-	formdata = url.Values{}
-	formdata.Set("artist_id", "5")
-	formdata.Set("track_id", "4")
-	formdata.Set("is_primary", "true")
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/artists/primary", strings.NewReader(body))
+
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track/4/artists/4", strings.NewReader(`{"is_primary":true}`))
+	require.NoError(t, err)
+	require.Equal(t, 204, resp.StatusCode)
+
+	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track/4/artists/5", strings.NewReader(`{"is_primary":true}`))
 	require.NoError(t, err)
 	require.Equal(t, 204, resp.StatusCode)
 
@@ -955,9 +910,9 @@ func TestUpdateArtists_Track(t *testing.T) {
 	t.Run("Submit Listens", doSubmitListens)
 
 	// happy path: add artist 2 to track 1
-	resp, err := makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=1&add_artist=2", nil)
+	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/track/1/artists", strings.NewReader(`{"artist_ids":[2]}`))
 	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 
 	exists, err := store.RowExists(`
 		SELECT EXISTS (
@@ -968,9 +923,9 @@ func TestUpdateArtists_Track(t *testing.T) {
 	assert.True(t, exists, "expected artist 2 to be associated with track 1")
 
 	// happy path: remove artist 2 from track 1
-	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=1&remove_artist=2", nil)
+	resp, err = makeAuthRequest(t, session, "DELETE", "/apis/web/v1/track/1/artists/2", nil)
 	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 
 	exists, err = store.RowExists(`
 		SELECT EXISTS (
@@ -981,19 +936,19 @@ func TestUpdateArtists_Track(t *testing.T) {
 	assert.False(t, exists, "expected artist 2 to be removed from track 1")
 
 	// 401 Unauthorized
-	req, err := http.NewRequest("PATCH", host()+"/apis/web/v1/track?id=1&add_artist=2", nil)
+	req, err := http.NewRequest("POST", host()+"/apis/web/v1/track/1/artists", strings.NewReader(`{"artist_ids":[2]}`))
 	require.NoError(t, err)
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
 	// 400 Bad Request: invalid id
-	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=notanumber&add_artist=2", nil)
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/track/notanumber/artists", strings.NewReader(`{"artist_ids":[2]}`))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	// 400 Bad Request: invalid add_artist
-	resp, err = makeAuthRequest(t, session, "PATCH", "/apis/web/v1/track?id=1&add_artist=notanumber", nil)
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/track/1/artists", strings.NewReader(`{"artist_ids":["abc123"]}`))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
@@ -1005,21 +960,16 @@ func TestManualListen(t *testing.T) {
 	t.Run("Submit Listens", doSubmitListens)
 
 	// happy
-	formdata := url.Values{}
-	formdata.Set("track_id", "1")
-	formdata.Set("unix", strconv.FormatInt(time.Now().Unix()-60, 10))
-	body := formdata.Encode()
-	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/listen", strings.NewReader(body))
+	unix := strconv.FormatInt(time.Now().Unix()-60, 10)
+	resp, err := makeAuthRequest(t, session, "POST", "/apis/web/v1/listens", strings.NewReader(`{"track_id":1,"unix":`+unix+`}`))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	count, _ := store.Count(`SELECT COUNT(*) FROM listens WHERE track_id = $1`, 1)
 	assert.Equal(t, 2, count)
 
 	// 400
-	formdata.Set("track_id", "1")
-	formdata.Set("unix", strconv.FormatInt(time.Now().Unix()+60, 10))
-	body = formdata.Encode()
-	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/listen", strings.NewReader(body))
+	unix = strconv.FormatInt(time.Now().Unix()+60, 10)
+	resp, err = makeAuthRequest(t, session, "POST", "/apis/web/v1/listens", strings.NewReader(`{"track_id":1,"unix":`+unix+`}`))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }

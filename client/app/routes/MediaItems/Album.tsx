@@ -10,7 +10,7 @@ import { timeListenedString } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
-  const res = await fetch(`/apis/web/v1/album?id=${params.id}`);
+  const res = await fetch(`/apis/web/v1/album/${params.id}`);
   if (!res.ok) {
     throw new Response("Failed to load album", { status: 500 });
   }
