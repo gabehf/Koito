@@ -30,14 +30,14 @@ export default function Rewind(props: Props) {
           <span
             className="
               absolute inset-0
-              sm:-translate-x-6 translate-y-9 sm:translate-y-12
+              sm:-translate-x-6 translate-y-9 sm:translate-y-11
               bg-(--color-primary)
               z-0
               h-0.5
             "
             aria-hidden
           />
-          <h5>{props.stats.title}</h5>
+          <h5 className="mb-2">{props.stats.title}</h5>
         </span>
       </div>
       <RewindTopItem
