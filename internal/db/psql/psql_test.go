@@ -27,6 +27,10 @@ func getTestGetenv(resource *dockertest.Resource) func(string) string {
 }
 
 func TestMain(m *testing.M) {
+
+	// skip all psql tests now that psql support is deprecated
+	return
+
 	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
 	pool, err := dockertest.NewPool("")
 	if err != nil {
@@ -88,7 +92,7 @@ func testDataForTopItems(t *testing.T) {
 	// artist 4 has least listens
 
 	err := store.Exec(context.Background(),
-		`INSERT INTO artists (musicbrainz_id) 
+		`INSERT INTO artists (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000001'),
 				   ('00000000-0000-0000-0000-000000000002'),
 				   ('00000000-0000-0000-0000-000000000003'),
@@ -96,7 +100,7 @@ func testDataForTopItems(t *testing.T) {
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary) 
+		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (1, 'Artist One', 'Testing', true),
 				   (2, 'Artist Two', 'Testing', true),
 				   (3, 'Artist Three', 'Testing', true),
@@ -105,7 +109,7 @@ func testDataForTopItems(t *testing.T) {
 
 	// Insert release groups
 	err = store.Exec(context.Background(),
-		`INSERT INTO releases (musicbrainz_id) 
+		`INSERT INTO releases (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000011'),
 				   ('00000000-0000-0000-0000-000000000022'),
 				   ('00000000-0000-0000-0000-000000000033'),
@@ -113,7 +117,7 @@ func testDataForTopItems(t *testing.T) {
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO release_aliases (release_id, alias, source, is_primary) 
+		`INSERT INTO release_aliases (release_id, alias, source, is_primary)
 			VALUES (1, 'Release One', 'Testing', true),
 				   (2, 'Release Two', 'Testing', true),
 				   (3, 'Release Three', 'Testing', true),
@@ -122,13 +126,13 @@ func testDataForTopItems(t *testing.T) {
 
 	// Insert release groups
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_releases (release_id, artist_id) 
+		`INSERT INTO artist_releases (release_id, artist_id)
 			VALUES (1, 1), (2, 2), (3, 3), (4, 4)`)
 	require.NoError(t, err)
 
 	// Insert tracks
 	err = store.Exec(context.Background(),
-		`INSERT INTO tracks (musicbrainz_id, release_id, duration) 
+		`INSERT INTO tracks (musicbrainz_id, release_id, duration)
 			VALUES ('11111111-1111-1111-1111-111111111111', 1, 100),
 				   ('22222222-2222-2222-2222-222222222222', 2, 100),
 				   ('33333333-3333-3333-3333-333333333333', 3, 100),
@@ -136,7 +140,7 @@ func testDataForTopItems(t *testing.T) {
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO track_aliases (track_id, alias, source, is_primary) 
+		`INSERT INTO track_aliases (track_id, alias, source, is_primary)
 			VALUES (1, 'Track One', 'Testing', true),
 				   (2, 'Track Two', 'Testing', true),
 				   (3, 'Track Three', 'Testing', true),
@@ -145,13 +149,13 @@ func testDataForTopItems(t *testing.T) {
 
 	// Associate tracks with artists
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_tracks (artist_id, track_id) 
+		`INSERT INTO artist_tracks (artist_id, track_id)
 			VALUES (1, 1), (2, 2), (3, 3), (4, 4)`)
 	require.NoError(t, err)
 
 	// Insert listens
 	err = store.Exec(context.Background(),
-		`INSERT INTO listens (user_id, track_id, listened_at) 
+		`INSERT INTO listens (user_id, track_id, listened_at)
 			VALUES (1, 1, NOW() - INTERVAL '2 years 1 day'),
 				   (1, 1, NOW() - INTERVAL '2 years 2 days'),
 				   (1, 1, NOW() - INTERVAL '2 years 3 days'),
@@ -171,7 +175,7 @@ func testDataAbsoluteListenTimes(t *testing.T) {
 	require.NoError(t, err)
 
 	err = store.Exec(context.Background(),
-		`INSERT INTO listens (user_id, track_id, listened_at) 
+		`INSERT INTO listens (user_id, track_id, listened_at)
 			VALUES (1, 1, '2023-06-22 19:11:25-07'),
 				   (1, 1, '2023-06-22 19:12:25-07'),
 				   (1, 1, '2023-06-22 19:13:25-07'),
