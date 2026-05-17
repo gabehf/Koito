@@ -110,7 +110,7 @@ export default function RewindPage() {
       <title>{pgTitle}</title>
       <meta property="og:title" content={pgTitle} />
       <meta name="description" content={pgTitle} />
-      <div className="flex flex-col lg:flex-row items-center sm:items-start lg:mt-15 mt-5 gap-10 w-19/20 mx-auto px-5 md:px-10">
+      <div className="flex flex-col lg:flex-row items-center lg:items-start lg:mt-15 mt-5 gap-10 w-19/20 mx-auto px-5 md:px-10">
         <div className="flex flex-col items-start gap-4">
           <div className="flex flex-col items-center gap-4 mt-4 sm:mt-14 w-[250px] mx-auto">
             {!showYearly && (
