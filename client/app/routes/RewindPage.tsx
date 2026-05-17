@@ -4,7 +4,7 @@ import { imageUrl, type RewindStats } from "api/api";
 import { useEffect, useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
-import { getRewindParams, getRewindYear } from "~/utils/utils";
+import { getRewindParams } from "~/utils/utils";
 import { useNavigate } from "react-router";
 import { average } from "color.js";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -57,6 +57,7 @@ export default function RewindPage() {
   const navigate = useNavigate();
   const [showTime, setShowTime] = useState(false);
   const { stats: stats } = useLoaderData<{ stats: RewindStats }>();
+  const latestRewindParams = getRewindParams();
 
   const [bgColor, setBgColor] = useState<string>("(--color-bg)");
 
@@ -87,25 +88,46 @@ export default function RewindPage() {
     navigate(url, { replace: false });
   };
 
-  const navigateMonth = (direction: "prev" | "next") => {
+  const getAdjacentMonthParams = (
+    currentYear: number,
+    currentMonth: number,
+    direction: "prev" | "next"
+  ) => {
     if (direction === "next") {
-      if (month === 12) {
-        month = 0;
-      } else {
-        month += 1;
+      if (currentMonth === 12) {
+        return { year: currentYear + 1, month: 1 };
       }
-    } else {
-      if (month === 0) {
-        month = 12;
-      } else {
-        month -= 1;
+
+      if (currentMonth === 0) {
+        return { year: currentYear, month: 1 };
       }
+
+      return { year: currentYear, month: currentMonth + 1 };
     }
-    console.log(`Month: ${month}`);
+
+    if (currentMonth === 1) {
+      return { year: currentYear - 1, month: 12 };
+    }
+
+    if (currentMonth === 0) {
+      return { year: currentYear - 1, month: 12 };
+    }
+
+    return { year: currentYear, month: currentMonth - 1 };
+  };
+
+  const nextMonthParams = getAdjacentMonthParams(year, month, "next");
+  const disableNextMonth =
+    nextMonthParams.year > latestRewindParams.year ||
+    (nextMonthParams.year === latestRewindParams.year &&
+      nextMonthParams.month > latestRewindParams.month);
+
+  const navigateMonth = (direction: "prev" | "next") => {
+    const nextParams = getAdjacentMonthParams(year, month, direction);
 
     updateParams({
-      year: year.toString(),
-      month: month.toString(),
+      year: nextParams.year.toString(),
+      month: nextParams.month.toString(),
     });
   };
   const navigateYear = (direction: "prev" | "next") => {
@@ -142,12 +164,6 @@ export default function RewindPage() {
                 <button
                   onClick={() => navigateMonth("prev")}
                   className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={
-                    // Previous month is in the future OR
-                    new Date(year, month - 2) > new Date() ||
-                    // We are looking at current year and prev would take us to full year
-                    (new Date().getFullYear() === year && month === 1)
-                  }
                 >
                   <ChevronLeft size={20} />
                 </button>
@@ -157,12 +173,7 @@ export default function RewindPage() {
                 <button
                   onClick={() => navigateMonth("next")}
                   className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={
-                    // next month is current or future month and
-                    month >= new Date().getMonth() &&
-                    // we are looking at current (or future) year
-                    year >= new Date().getFullYear()
-                  }
+                  disabled={disableNextMonth}
                 >
                   <ChevronRight size={20} />
                 </button>

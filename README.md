@@ -1,5 +1,5 @@
 <div align="center">
-  
+
 ![Koito logo](https://github.com/user-attachments/assets/bd69a050-b40f-4da7-8ff1-4607554bfd6d)
 
 *Koito (小糸) is a Japanese surname. It is also homophonous with the words 恋と (koi to), meaning "and/with love".*
@@ -7,12 +7,12 @@
 </div>
 
 <div align="center">
-  
+
   [![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/gabehf)
-  
+
 </div>
 
-Koito is a modern, themeable ListenBrainz-compatible scrobbler for self-hosters who want control over their data and insights into their listening habits. 
+Koito is a modern, themeable ListenBrainz-compatible scrobbler for self-hosters who want control over their data and insights into their listening habits.
 It supports relaying to other compatible scrobblers, so you can try it safely without replacing your current setup.
 
 > This project is under active development and still considered "unstable", and therefore you can expect some bugs. If you don't want to replace your current scrobbler
@@ -37,7 +37,6 @@ You can view my public instance with my listening data at https://koito.mnrva.de
 ![screenshot one](assets/screenshot1.png)
 <img width="2021" height="1330" alt="image" src="https://github.com/user-attachments/assets/956748ff-f61f-4102-94b2-50783d9ee72b" />
 <img width="1505" height="1018" alt="image" src="https://github.com/user-attachments/assets/5f7e1162-f723-4e4b-a528-06cf26d1d870" />
-
 
 ## Installation
 
@@ -94,4 +93,4 @@ Not just during development, you can see my complete listening data on my [live 
 #### Random notes
 
 - I find it a little annoying when READMEs use emoji but everyone else is doing it so I felt like I had to...
-- About 50% of the reason I built this was minor/not-so-minor greivances with Maloja. Could I have just contributed to Maloja? Maybe, but I like building stuff and I like Koito's UI a lot more anyways.
+- About 50% of the reason I built this was minor/not-so-minor grievances with Maloja. Could I have just contributed to Maloja? Maybe, but I like building stuff and I like Koito's UI a lot more anyways.
