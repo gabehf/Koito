@@ -58,6 +58,7 @@ export default function RewindPage() {
   const [showTime, setShowTime] = useState(false);
   const { stats: stats } = useLoaderData<{ stats: RewindStats }>();
   const latestRewindParams = getRewindParams();
+  const rewindView = month === 0 ? "year" : "month";
 
   const [bgColor, setBgColor] = useState<string>("(--color-bg)");
 
@@ -130,6 +131,24 @@ export default function RewindPage() {
       month: nextParams.month.toString(),
     });
   };
+
+  const setRewindView = (view: "year" | "month") => {
+    if (view === "year") {
+      updateParams({
+        year: year.toString(),
+        month: "0",
+      });
+      return;
+    }
+
+    const nextMonth = year === latestRewindParams.year ? latestRewindParams.month : 12;
+
+    updateParams({
+      year: year.toString(),
+      month: nextMonth.toString(),
+    });
+  };
+
   const navigateYear = (direction: "prev" | "next") => {
     if (direction === "next") {
       year += 1;
@@ -160,25 +179,49 @@ export default function RewindPage() {
         <div className="flex flex-col lg:flex-row items-start lg:mt-15 mt-5 gap-10 w-19/20 px-5 md:px-20">
           <div className="flex flex-col items-start gap-4">
             <div className="flex flex-col items-start gap-4 py-8">
-              <div className="flex items-center gap-6 justify-around">
+              <div className="flex w-[15rem] items-center rounded-lg bg p-1">
                 <button
-                  onClick={() => navigateMonth("prev")}
-                  className="p-2 disabled:text-(--color-fg-tertiary)"
+                  onClick={() => setRewindView("year")}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover-bg-secondary ${
+                    rewindView === "year"
+                      ? "bg-secondary"
+                      : "color-fg-secondary"
+                  }`}
                 >
-                  <ChevronLeft size={20} />
+                  Full Year
                 </button>
-                <p className="font-medium text-xl text-center w-30">
-                  {months[month]}
-                </p>
                 <button
-                  onClick={() => navigateMonth("next")}
-                  className="p-2 disabled:text-(--color-fg-tertiary)"
-                  disabled={disableNextMonth}
+                  onClick={() => setRewindView("month")}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover-bg-secondary ${
+                    rewindView === "month"
+                      ? "bg-secondary"
+                      : "color-fg-secondary"
+                  }`}
                 >
-                  <ChevronRight size={20} />
+                  Monthly
                 </button>
               </div>
-              <div className="flex items-center gap-6 justify-around">
+              {rewindView === "month" && (
+                <div className="flex w-[15rem] items-center justify-between">
+                  <button
+                    onClick={() => navigateMonth("prev")}
+                    className="p-2 disabled:text-(--color-fg-tertiary)"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <p className="font-medium text-xl text-center w-30">
+                    {months[month]}
+                  </p>
+                  <button
+                    onClick={() => navigateMonth("next")}
+                    className="p-2 disabled:text-(--color-fg-tertiary)"
+                    disabled={disableNextMonth}
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              )}
+              <div className="flex w-[15rem] items-center justify-between">
                 <button
                   onClick={() => navigateYear("prev")}
                   className="p-2 disabled:text-(--color-fg-tertiary)"
