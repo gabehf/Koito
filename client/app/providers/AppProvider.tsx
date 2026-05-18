@@ -14,6 +14,7 @@ interface AppContextType {
   defaultTheme: string;
   currentVersion: string;
   updateAvailable: boolean;
+  dateFormat: string;
   setConfigurableHomeActivity: (value: boolean) => void;
   setHomeItems: (value: number) => void;
   setUsername: (value: string) => void;
@@ -34,6 +35,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [defaultTheme, setDefaultTheme] = useState<string | undefined>(
     undefined
   );
+  const [dateFormat, setDateFormat] = useState<string>("");
   const [configurableHomeActivity, setConfigurableHomeActivity] =
     useState<boolean>(false);
   const [homeItems, setHomeItems] = useState<number>(0);
@@ -67,6 +69,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setDefaultTheme("yuu");
       }
+      setDateFormat(cfg.date_format ?? "");
     });
   }, []);
 
@@ -91,6 +94,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     defaultTheme,
     currentVersion,
     updateAvailable,
+    dateFormat,
     setConfigurableHomeActivity,
     setHomeItems,
     setUsername,
@@ -100,3 +104,4 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
   );
 };
+
