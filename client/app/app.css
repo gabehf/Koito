@@ -144,7 +144,8 @@ h5 {
 input[type="text"],
 input[type="password"],
 textarea {
-  border: 1px solid var(--color-bg);
+  padding: 1rem;
+  border: 1px solid var(--color-bg-tertiary);
 }
 
 input[type="checkbox"] {
@@ -188,7 +189,7 @@ a:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   border-color: transparent;
-  outline: 2px solid var(--color-fg-tertiary);
+  outline: 1px solid var(--color-fg-tertiary);
 }
 
 button:hover {
@@ -201,6 +202,9 @@ button[disabled]:hover {
 
 button.large-button {
   background: var(--color-bg);
+  border: 1px solid var(--color-bg-tertiary);
+  padding: 0.8rem 2rem;
+  border-radius: var(--border-radius);
 }
 button.large-button:hover {
   background: var(--color-bg-tertiary);
@@ -223,6 +227,7 @@ button.period-selector:hover {
 
 button.default {
   color: var(--color-fg);
+  padding: 0.8rem 1.5rem;
 }
 button.default:disabled,
 button.default[disabled]:hover {
@@ -230,6 +235,20 @@ button.default[disabled]:hover {
 }
 button.default:hover {
   color: var(--color-fg-secondary);
+}
+
+button.danger {
+  background: var(--color-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+button.danger:hover {
+  color: var(--color-bg);
+  background-color: var(--color-error);
+}
+button.danger:disabled,
+button.danger[disabled]:hover {
+  color: var(--color-error);
 }
 
 .card {

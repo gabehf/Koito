@@ -151,6 +151,7 @@ export default function ApiKeysModal() {
               loading={loading}
               onClick={() => handleDeleteApiKey(v.id)}
               confirm
+              danger
             >
               <Trash size={16} />
             </AsyncButton>

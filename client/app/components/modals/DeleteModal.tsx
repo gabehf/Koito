@@ -33,7 +33,7 @@ export default function DeleteModal({ open, setOpen, title, id, type }: Props) {
       <SubHeader>Delete "{title}"?</SubHeader>
       <p>This action is irreversible!</p>
       <div className="flex flex-col mt-3 items-center">
-        <AsyncButton loading={loading} onClick={doDelete}>
+        <AsyncButton loading={loading} onClick={doDelete} danger>
           Yes, Delete It
         </AsyncButton>
       </div>

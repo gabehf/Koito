@@ -22,7 +22,7 @@ export default function ArtistManager({ type, id }: Props) {
     queryKey: ["get-artists-" + type.toLowerCase(), { id: id }],
     queryFn: () => {
       return fetch(`/apis/web/v1/${type.toLowerCase()}/${id}/artists`).then(
-        (r) => r.json()
+        (r) => r.json(),
       ) as Promise<Artist[]>;
     },
   });
@@ -31,7 +31,7 @@ export default function ArtistManager({ type, id }: Props) {
     (artist: Artist) => {
       setAddArtistTarget(artist);
     },
-    [type, id]
+    [type, id],
   );
 
   useEffect(() => {
@@ -132,6 +132,7 @@ export default function ArtistManager({ type, id }: Props) {
                 onClick={() => handleDeleteArtist(v.id)}
                 confirm
                 disabled={v.is_primary}
+                danger
               >
                 <Trash size={16} />
               </AsyncButton>

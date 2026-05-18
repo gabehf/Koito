@@ -6,6 +6,7 @@ type Props = {
   loading?: boolean;
   disabled?: boolean;
   confirm?: boolean;
+  danger?: boolean;
 };
 
 export function AsyncButton(props: Props) {
@@ -28,7 +29,7 @@ export function AsyncButton(props: Props) {
     <button
       onClick={handleClick}
       disabled={props.loading || props.disabled}
-      className={`relative px-5 py-2 rounded-md large-button flex disabled:opacity-50 items-center`}
+      className={`relative large-button flex disabled:opacity-50 items-center ${props.danger ? "danger" : ""}`}
     >
       <span className={props.loading ? "invisible" : "visible"}>
         {awaitingConfirm ? "Are you sure?" : props.children}

@@ -116,6 +116,7 @@ export default function AliasManager({ type, id }: Props) {
               onClick={() => handleDeleteAlias(v.alias)}
               confirm
               disabled={v.is_primary}
+              danger
             >
               <Trash size={16} />
             </AsyncButton>
