@@ -134,8 +134,8 @@ export const themes: Record<string, Theme> = {
     info: "#80b8d8",
   },
   pearl: {
-    bg: "#f0f4f8",
-    bgSecondary: "#E9EBF0",
+    bg: "#E9EBF0",
+    bgSecondary: "#F7F9FA",
     bgTertiary: "#c8d2de",
     fg: "#1a2332",
     fgSecondary: "#3d5068",
