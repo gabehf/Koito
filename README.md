@@ -34,7 +34,7 @@ You can view my public instance with my listening data at https://koito.mnrva.de
 
 ## Screenshots
 
-![screenshot one](assets/screenshot1.png)
+![screenshot one](assets/screenshot1_2.png)
 ![screenshot two](assets/screenshot2.png)
 ![screenshot three](assets/screenshot3.png)
 
@@ -47,8 +47,6 @@ services:
   koito:
     image: gabehf/koito:latest
     container_name: koito
-    environment:
-      - KOITO_SQLITE_ENABLED=true # will not be needed after v0.2.0
     ports:
       - "4110:4110"
     volumes:
