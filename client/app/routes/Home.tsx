@@ -23,8 +23,8 @@ export default function Home() {
     "bg-linear-to-b to-(--color-bg) from-(--color-bg-secondary) to-60%";
 
   return (
-    <main className="flex flex-grow justify-center pb-4 w-full">
-      <div className="flex-1 flex flex-col items-center gap-10 md:gap-16 min-h-0 sm:mt-20 mt-8 mx-10">
+    <main className="flex grow justify-center pb-4 w-full">
+      <div className="flex-1 flex flex-col items-center gap-10 md:gap-12 min-h-0 mt-8 sm:mt-10 mx-10">
         <div className="flex flex-col lg:flex-row gap-10 md:gap-20">
           <AllTimeStats />
           <ActivityGrid configurable />
