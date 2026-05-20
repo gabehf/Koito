@@ -50,7 +50,7 @@ export default function InterestGraph({ buckets = 16, type, id }: Props) {
   return (
     <div className="flex flex-col items-start">
       <CardHeader isOffset>{title}</CardHeader>
-      <div className="flex flex-col items-center w-[340px] sm:w-[550px] text-[12px] p-6 card">
+      <div className="flex flex-col items-center w-[350px] sm:w-[514px] md:w-[550px] h-[175px] text-[12px] p-6 card">
         <AreaChart
           style={{
             width: "100%",
@@ -98,7 +98,7 @@ export function InterestGraphSkeleton() {
   return (
     <div className="flex flex-col items-start">
       <CardHeader isOffset>Interest over time</CardHeader>
-      <div className="flex flex-col items-center w-[350px] sm:w-[550px] text-[12px] p-6 card">
+      <div className="flex flex-col items-center w-[350px] sm:w-[550px] h-[175px] text-[12px] p-6 card">
         <div className="w-full max-w-[450px] h-[120px] relative overflow-hidden rounded-(--border-radius) flex justify-around items-center">
           <div className="w-full h-3/4 bg rounded-(--border-radius) animate-pulse" />
         </div>
