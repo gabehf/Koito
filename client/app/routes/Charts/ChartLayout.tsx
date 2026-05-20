@@ -212,8 +212,7 @@ export default function ChartLayout<T>({
     <div
       className="w-full min-h-screen"
       style={{
-        background: `linear-gradient(to bottom, ${bgColor}, var(--color-bg) 500px)`,
-        transition: "1000",
+        background: `linear-gradient(to bottom, ${bgColor}, transparent 600px)`,
       }}
     >
       <title>{pgTitle}</title>
