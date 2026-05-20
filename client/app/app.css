@@ -144,7 +144,6 @@ h5 {
 input[type="text"],
 input[type="password"],
 textarea {
-  padding: 1rem;
   border: 1px solid var(--color-bg-tertiary);
 }
 
