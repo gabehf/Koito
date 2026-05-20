@@ -7,9 +7,8 @@ ENV BUILD_TARGET=docker
 WORKDIR /client
 RUN npm install -g corepack
 RUN corepack enable && corepack prepare yarn@4 --activate
-COPY ./client/package.json ./client/yarn.lock ./
-RUN yarn install
 COPY ./client .
+RUN yarn install
 
 RUN yarn run build
 
