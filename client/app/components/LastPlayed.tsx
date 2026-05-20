@@ -104,7 +104,7 @@ export default function LastPlays(props: Props) {
   params += props.trackId ? `&track_id=${props.trackId}` : "";
 
   return (
-    <div className="text-[13px] sm:text-[15px] w-[350px] md:w-full max-w-[725px] xl:max-w-[1200px]">
+    <div className="text-[13px] sm:text-[15px] w-[350px] sm:w-full max-w-[725px] xl:max-w-[1200px]">
       <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
       {listens.length < 1 && "Nothing to show"}
       {listens.length < 1 ? (
