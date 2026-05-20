@@ -35,7 +35,7 @@ func ImageHandler(store db.ImageStore) http.HandlerFunc {
 
 		image, err := imagecache.GetImage(imgid, filename)
 		if errors.Is(err, fs.ErrNotExist) {
-			l.Warn().Msgf("ImageHandler: Could not find requested image %s. Attempting to download from source", imgid.String())
+			l.Debug().Err(err).Msgf("ImageHandler: Could not find requested image %s. Attempting to download from source", imgid.String())
 			image, err = imageHandlerRedownload(w, r, l, store, &downloadGroup, imgid, filename)
 			if err != nil {
 				return
@@ -61,7 +61,7 @@ func imageHandlerRedownload(w http.ResponseWriter, r *http.Request, l *zerolog.L
 		http.NotFound(w, r)
 		return nil, err
 	} else if err != nil {
-		l.Err(err).Msgf("Failed to get image source for image '%s'", imgid.String())
+		l.Debug().Err(err).Msgf("Failed to get image source for image '%s'", imgid.String())
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil, err
 	} else {
