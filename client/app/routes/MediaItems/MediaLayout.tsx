@@ -98,8 +98,8 @@ export default function MediaLayout(props: Props) {
             <img
               fetchPriority="high"
               style={{ zIndex: 5 }}
-              src={props.img.medium}
-              srcSet={`${props.img.medium} 300w, ${props.img.large} 640w, ${props.img.xl} 1000w`}
+              src={props.img.large}
+              srcSet={`${props.img.large} 1x, ${props.img.xl} 2x`}
               sizes="(max-width: 480px) 280px, 385px"
               alt={props.title}
               className="md:w-[385px] rounded-(--border-radius) border w-[280px] h-[280px] h-auto"

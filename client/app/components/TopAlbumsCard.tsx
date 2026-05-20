@@ -5,7 +5,6 @@ import {
   type Album,
 } from "api/api";
 import { useQuery } from "@tanstack/react-query";
-import Image from "./primitives/Image";
 import CardHeader from "./primitives/CardHeader";
 import ArtistLinks from "./ArtistLinks";
 import MediaItem from "./primitives/MediaItem";
@@ -62,7 +61,9 @@ export default function TopAlbumsCard({ period }: Props) {
       <div className="max-w-[350px] card">
         <div className="relative">
           <img
-            src={data.items[0]?.item.image?.large}
+            src={data.items[0]?.item.image?.xl}
+            srcSet={`${data.items[0]?.item.image?.large} 640w, ${data.items[0]?.item.image?.xl} 1000w`}
+            sizes="348px"
             style={{
               borderRadius: "var(--border-radius) var(--border-radius) 0 0",
             }}
