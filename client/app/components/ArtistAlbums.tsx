@@ -6,6 +6,7 @@ import {
   type Album,
 } from "api/api";
 import MediaItem from "./primitives/MediaItem";
+import CardHeader from "./primitives/CardHeader";
 
 const getArtistAlbums = (artistId: number) =>
   apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top/albums", {
@@ -29,7 +30,7 @@ export default function ArtistAlbums({ artistId, name }: Props) {
   if (isPending) {
     return (
       <div>
-        <h3>Albums From This Artist</h3>
+        <CardHeader>Albums From This Artist</CardHeader>
         <p>Loading...</p>
       </div>
     );
@@ -37,7 +38,7 @@ export default function ArtistAlbums({ artistId, name }: Props) {
   if (isError) {
     return (
       <div>
-        <h3>Albums From This Artist</h3>
+        <CardHeader>Albums From This Artist</CardHeader>
         <p className="error">Error:{error.message}</p>
       </div>
     );
@@ -45,8 +46,8 @@ export default function ArtistAlbums({ artistId, name }: Props) {
 
   return (
     <div>
-      <h3 className="mb-6">Albums featuring {name}</h3>
-      <div className="flex flex-wrap gap-8">
+      <CardHeader>Albums featuring {name}</CardHeader>
+      <div className="flex flex-wrap gap-8 mt-8">
         {data.items.length < 1 && "Nothing to show"}
         {data.items.map((item) => (
           <div className="w-[330px]" key={item.item.id}>

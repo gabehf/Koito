@@ -68,28 +68,21 @@ export default function Album() {
         </>
       }
     >
-      <div className="flex flex-col gap-20">
-        <div className="flex gap-10 md:gap-20 mt-10 flex-wrap items-center max-w-[1400px]">
-          <div className="flex gap-10 md:gap-25 flex-wrap lg:flex-nowrap items-start">
-            <TopTracks
-              limit={8}
-              period={period}
+      <div className="flex flex-col gap-10 md:gap-12 mt-14 max-w-[1400px]">
+        <div className="flex gap-10 md:gap-20 flex-wrap lg:flex-nowrap items-start">
+          <TopTracks limit={8} period={period} albumId={album.id} showSeeMore />
+          <div className="min-w-[350px] flex-1">
+            <LastPlayed
+              limit={11}
               albumId={album.id}
+              showNowPlaying
               showSeeMore
             />
-            <div className="min-w-[350px] w-2/5">
-              <LastPlayed
-                limit={11}
-                albumId={album.id}
-                showNowPlaying
-                showSeeMore
-              />
-            </div>
           </div>
-          <div className="flex flex-wrap gap-10">
-            <InterestGraph type="album" id={album.id} />
-            <ActivityGrid configurable albumId={album.id} />
-          </div>
+        </div>
+        <div className="flex flex-wrap gap-10">
+          <InterestGraph type="album" id={album.id} />
+          <ActivityGrid configurable albumId={album.id} />
         </div>
       </div>
     </MediaLayout>

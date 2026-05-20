@@ -52,16 +52,16 @@ export default function Artist() {
       }}
       subContent={<></>}
     >
-      <div className="flex flex-col gap-20">
-        <div className="flex gap-10 md:gap-20 mt-10 flex-wrap items-center max-w-[1400px]">
-          <div className="flex gap-10 md:gap-25 flex-wrap lg:flex-nowrap items-start">
+      <div className="flex flex-col gap-14">
+        <div className="flex flex-col gap-10 md:gap-12 mt-8 max-w-[1400px]">
+          <div className="flex gap-10 md:gap-20 flex-wrap lg:flex-nowrap items-start">
             <TopTracks
               limit={8}
               period={period}
               artistId={artist.id}
               showSeeMore
             />
-            <div className="min-w-[350px] w-2/5">
+            <div className="min-w-[350px] flex-1">
               <LastPlayed
                 limit={11}
                 artistId={artist.id}
