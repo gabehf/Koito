@@ -23,7 +23,7 @@ ENV GOOS=linux
 WORKDIR /app
 
 RUN apt-get update && \
-	apt-get install -y --no-install-recommends libvips-dev pkg-config && \
+	apt-get install -y --no-install-recommends libvips-dev pkg-config ca-certificates && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY go.mod go.sum ./

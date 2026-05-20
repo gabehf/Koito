@@ -12,8 +12,6 @@ import (
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/queue"
 	"github.com/google/uuid"
-
-	_ "golang.org/x/crypto/x509roots/fallback"
 )
 
 type SubsonicClient struct {
