@@ -33,7 +33,7 @@ func bindRoutes(
 		}))
 	}
 	r.With(chimiddleware.RequestSize(5<<20)).
-		Get("/images/{image_id}/{size}.webp", handlers.ImageHandler(db))
+		Get("/image/{image_id}/{filename}", handlers.ImageHandler(db))
 
 	r.Route("/apis/web/v1", func(r chi.Router) {
 		r.Get("/config", handlers.GetCfgHandler())

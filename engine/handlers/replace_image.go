@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
+	"github.com/gabehf/koito/imagecache"
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/images"
@@ -42,7 +42,7 @@ func ReplaceArtistImageHandler(store db.ArtistStore) http.HandlerFunc {
 			return
 		}
 
-		id, imgsrc, err := resolveImage(ctx, r, l)
+		id, imgsrc, err := resolveImage(r, l)
 		if err != nil {
 			utils.WriteError(w, err.Error(), http.StatusBadRequest)
 			return
@@ -59,7 +59,7 @@ func ReplaceArtistImageHandler(store db.ArtistStore) http.HandlerFunc {
 		}
 
 		if artist.Image.Small != "" {
-			if err = catalog.DeleteImage(*parseOldImage(artist.Image.Small)); err != nil {
+			if err = imagecache.DeleteImage(*parseOldImage(artist.Image.Small)); err != nil {
 				l.Err(err).Msg("ReplaceArtistImageHandler: Failed to delete old image file")
 				utils.WriteError(w, "could not delete old image file", http.StatusInternalServerError)
 				return
@@ -90,7 +90,7 @@ func ReplaceAlbumImageHandler(store db.AlbumStore) http.HandlerFunc {
 			return
 		}
 
-		id, imgsrc, err := resolveImage(ctx, r, l)
+		id, imgsrc, err := resolveImage(r, l)
 		if err != nil {
 			utils.WriteError(w, err.Error(), http.StatusBadRequest)
 			return
@@ -107,7 +107,7 @@ func ReplaceAlbumImageHandler(store db.AlbumStore) http.HandlerFunc {
 		}
 
 		if album.Image.Small != "" {
-			if err = catalog.DeleteImage(*parseOldImage(album.Image.Small)); err != nil {
+			if err = imagecache.DeleteImage(*parseOldImage(album.Image.Small)); err != nil {
 				l.Err(err).Msg("ReplaceAlbumImageHandler: Failed to delete old image file")
 				utils.WriteError(w, "could not delete old image file", http.StatusInternalServerError)
 				return
@@ -120,10 +120,8 @@ func ReplaceAlbumImageHandler(store db.AlbumStore) http.HandlerFunc {
 
 // resolveImage extracts and caches an image from either a URL or file upload in the request.
 // Returns the new image UUID and source string.
-func resolveImage(ctx context.Context, r *http.Request, l *zerolog.Logger) (uuid.UUID, string, error) {
+func resolveImage(r *http.Request, l *zerolog.Logger) (uuid.UUID, string, error) {
 	id := uuid.New()
-
-	var dlSize = catalog.ImageSizeSource
 
 	fileUrl := r.FormValue("image_url")
 	if fileUrl != "" {
@@ -133,7 +131,7 @@ func resolveImage(ctx context.Context, r *http.Request, l *zerolog.Logger) (uuid
 			return uuid.UUID{}, "", fmt.Errorf("url is invalid or not an image file")
 		}
 		l.Debug().Msg("resolveImage: Downloading image from source")
-		if err := catalog.DownloadAndCacheImage(ctx, id, fileUrl, dlSize); err != nil {
+		if err := imagecache.DownloadImage(id, fileUrl); err != nil {
 			l.Err(err).Msg("resolveImage: Failed to cache image")
 			return uuid.UUID{}, "", fmt.Errorf("failed to cache image")
 		}
@@ -163,14 +161,14 @@ func resolveImage(ctx context.Context, r *http.Request, l *zerolog.Logger) (uuid
 	}
 
 	l.Debug().Msg("resolveImage: Saving image to cache")
-	if err := catalog.CompressAndSaveImage(ctx, id, dlSize, file); err != nil {
+	if err := imagecache.SaveImage(id, file); err != nil {
 		l.Err(err).Msg("resolveImage: Could not save file")
 		return uuid.UUID{}, "", fmt.Errorf("could not save file")
 	}
 	return id, catalog.ImageSourceUserUpload, nil
 }
 
-// parses the image id from /images/{uuid}/size.webp style links
+// parses the image id from /image/{uuid}/size.webp style links
 func parseOldImage(link string) *uuid.UUID {
 	ss := strings.Split(link, "/")
 	if len(ss) < 4 {

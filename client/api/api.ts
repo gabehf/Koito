@@ -76,7 +76,7 @@ function imageUrl(id: string, size: string) {
   if (!id) {
     id = "default";
   }
-  return `/images/${size}/${id}`;
+  return `/image/${size}/${id}`;
 }
 function replaceImage(
   type: string,

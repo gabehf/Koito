@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gabehf/koito/imagecache"
 	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/images"
@@ -133,7 +134,7 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 				imgid = uuid.New()
 				if !opts.SkipCacheImage {
 					l.Debug().Msg("Downloading artist image from source...")
-					err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
+					err = imagecache.DownloadImage(imgid, imgUrl)
 					if err != nil {
 						l.Err(err).Msg("Failed to cache image")
 					}
@@ -246,7 +247,7 @@ func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []st
 		imgid = uuid.New()
 		if !opts.SkipCacheImage {
 			l.Debug().Msg("Downloading artist image from source...")
-			err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
+			err = imagecache.DownloadImage(imgid, imgUrl)
 			if err != nil {
 				l.Err(err).Msg("Failed to cache image")
 			}
@@ -295,7 +296,7 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 				imgid = uuid.New()
 				if !opts.SkipCacheImage {
 					l.Debug().Msg("Downloading artist image from source...")
-					err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
+					err = imagecache.DownloadImage(imgid, imgUrl)
 					if err != nil {
 						l.Err(err).Msg("Failed to cache image")
 					}

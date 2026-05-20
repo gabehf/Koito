@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/gabehf/koito/imagecache"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/images"
 	"github.com/gabehf/koito/internal/logger"
@@ -132,7 +133,7 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, o
 			imgid = uuid.New()
 			if !opts.SkipCacheImage {
 				l.Debug().Msg("Downloading album image from source...")
-				err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
+				err = imagecache.DownloadImage(imgid, imgUrl)
 				if err != nil {
 					l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
 				}
@@ -218,7 +219,7 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 			imgid = uuid.New()
 			if !opts.SkipCacheImage {
 				l.Debug().Msg("Downloading album image from source...")
-				err = DownloadAndCacheImage(ctx, imgid, imgUrl, ImageSizeSource)
+				err = imagecache.DownloadImage(imgid, imgUrl)
 				if err != nil {
 					l.Err(err).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
 				}
