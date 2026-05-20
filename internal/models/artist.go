@@ -7,12 +7,20 @@ type Artist struct {
 	MbzID        *uuid.UUID `json:"musicbrainz_id"`
 	Name         string     `json:"name"`
 	Aliases      []string   `json:"aliases"`
-	Image        *uuid.UUID `json:"image"`
+	Image        ImageList  `json:"image"`
 	ListenCount  int64      `json:"listen_count"`
 	TimeListened int64      `json:"time_listened"`
 	FirstListen  int64      `json:"first_listen"`
 	IsPrimary    bool       `json:"is_primary,omitempty"`
 	AllTimeRank  int64      `json:"all_time_rank"`
+}
+
+type ImageList struct {
+	XS     string `json:"xs"`
+	Small  string `json:"small"`
+	Medium string `json:"medium"`
+	Large  string `json:"large"`
+	XL     string `json:"xl"`
 }
 
 type SimpleArtist struct {

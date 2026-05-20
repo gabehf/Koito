@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/repository"
@@ -63,7 +64,7 @@ func (d *Psql) AlbumsWithoutImages(ctx context.Context, from int32) ([]*models.A
 		}
 		albums[i] = &models.Album{
 			ID:             row.ID,
-			Image:          row.Image,
+			Image:          catalog.BuildImageList(row.Image),
 			Title:          row.Title,
 			MbzID:          row.MusicBrainzID,
 			VariousArtists: row.VariousArtists,
@@ -94,4 +95,8 @@ func (d *Psql) ArtistsWithoutImages(ctx context.Context, from int32) ([]*models.
 		}
 	}
 	return ret, nil
+}
+
+func (d *Psql) GetUserUploadedImageIDs(ctx context.Context) ([]uuid.UUID, error) {
+	return nil, fmt.Errorf("GetUserUploadedImageIDs: not implemented for psql")
 }

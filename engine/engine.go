@@ -258,6 +258,8 @@ func Run(
 
 	l.Info().Msg("Engine: Pruning orphaned images")
 	go catalog.PruneOrphanedImages(logger.NewContext(l), store)
+	l.Info().Msg("Engine: Checking image cache migration status")
+	go catalog.MigrateImageCache(logger.NewContext(l), store)
 	l.Info().Msg("Engine: Running duration backfill task")
 	go catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzC)
 	l.Info().Msg("Engine: Attempting to fetch missing artist images")

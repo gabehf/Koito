@@ -1,6 +1,7 @@
 import { login } from "api/api";
 import { useEffect, useState } from "react";
 import { AsyncButton } from "../AsyncButton";
+import SubHeader from "../primitives/SubHeader";
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ export default function LoginForm() {
 
   return (
     <>
-      <h3>Log In</h3>
+      <SubHeader>Log In</SubHeader>
       <div className="flex flex-col items-center gap-4 w-full">
         <p>
           Logging in gives you access to <strong>admin tools</strong>, such as

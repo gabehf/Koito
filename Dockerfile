@@ -5,12 +5,15 @@ ENV VITE_KOITO_VERSION=$KOITO_VERSION
 ENV BUILD_TARGET=docker
 
 WORKDIR /client
-RUN npm install -g yarn
+RUN npm install -g corepack
+RUN corepack enable && corepack prepare yarn@4 --activate
 COPY ./client/package.json ./client/yarn.lock ./
 RUN yarn install
 COPY ./client .
 
 RUN yarn run build
+
+RUN find ./build/client -type f \( -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.svg" \) -exec gzip -k -9 {} \;
 
 FROM golang:1.25 AS backend
 
@@ -21,7 +24,7 @@ ENV GOOS=linux
 WORKDIR /app
 
 RUN apt-get update && \
-	apt-get install -y libvips-dev pkg-config && \
+	apt-get install -y --no-install-recommends libvips-dev pkg-config && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY go.mod go.sum ./
@@ -37,7 +40,7 @@ FROM debian:bookworm-slim AS final
 WORKDIR /app
 
 RUN apt-get update && \
-	apt-get install -y libvips42 && \
+	apt-get install -y --no-install-recommends libvips42  && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend /app/app ./app

@@ -1,27 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
-import ArtistLinks from "./ArtistLinks";
-import { getTopArtists, imageUrl, type getItemsArgs } from "api/api";
+import {
+  apiFetch,
+  type PaginatedResponse,
+  type Ranked,
+  type Artist,
+} from "api/api";
 import { Link } from "react-router";
-import TopListSkeleton from "./skeletons/TopListSkeleton";
 import TopItemList from "./TopItemList";
 
 interface Props {
   limit: number;
   period: string;
+  startIndex?: number;
   artistId?: Number;
   albumId?: Number;
 }
 
+const getTopArtists = (args: { limit: number; period: string; page: number }) =>
+  apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top/artists", args);
+
 export default function TopArtists(props: Props) {
+  const args = { limit: props.limit, period: props.period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "top/artists",
-      { limit: props.limit, period: props.period, page: 0 },
-    ],
-    queryFn: ({ queryKey }) => getTopArtists(queryKey[1] as getItemsArgs),
+    queryKey: ["top/artists", args],
+    queryFn: () => getTopArtists(args),
   });
 
   const header = "Top artists";
+
+  const slug = `/chart/top/artists?period=${props.period}&limit=${props.limit}`;
 
   if (isPending) {
     return (
@@ -39,13 +46,17 @@ export default function TopArtists(props: Props) {
     );
   }
 
+  if (props.startIndex) {
+    data.items.splice(0, props.startIndex - 1);
+  }
+
   return (
     <div>
       <h3 className="hover:underline">
         <Link to={`/chart/top/artists?period=${props.period}`}>{header}</Link>
       </h3>
       <div className="max-w-[300px]">
-        <TopItemList type="artist" data={data} />
+        <TopItemList type="artist" data={data} slug={slug} />
         {data.items.length < 1 ? "Nothing to show" : ""}
       </div>
     </div>

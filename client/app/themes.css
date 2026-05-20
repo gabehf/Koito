@@ -1,46 +1,104 @@
 /* Theme Definitions */
 
+:root {
+  --color-border: var(--color-bg-tertiary);
+}
+
 /* Theme Helper Classes */
 
 /* Foreground Text */
-.color-fg { color: var(--color-fg); }
-.color-fg-secondary { color: var(--color-fg-secondary); }
-.color-fg-tertiary { color: var(--color-fg-tertiary); }
-.hover-color-fg:hover { color: var(--color-fg); }
-.hover-color-fg-secondary:hover { color: var(--color-fg-secondary); }
-.hover-color-fg-tertiary:hover { color: var(--color-fg-tertiary); }
+.color-fg {
+  color: var(--color-fg);
+}
+.color-fg-secondary {
+  color: var(--color-fg-secondary);
+}
+.color-fg-tertiary {
+  color: var(--color-fg-tertiary);
+}
+.hover-color-fg:hover {
+  color: var(--color-fg);
+}
+.hover-color-fg-secondary:hover {
+  color: var(--color-fg-secondary);
+}
+.hover-color-fg-tertiary:hover {
+  color: var(--color-fg-tertiary);
+}
 
 /* Backgrounds */
-.bg { background-color: var(--color-bg); }
-.bg-secondary { background-color: var(--color-bg-secondary); }
-.bg-tertiary { background-color: var(--color-bg-tertiary); }
-.hover-bg:hover { background-color: var(--color-bg); }
-.hover-bg-secondary:hover { background-color: var(--color-bg-secondary); }
-.hover-bg-tertiary:hover { background-color: var(--color-bg-tertiary); }
+.bg {
+  background-color: var(--color-bg);
+}
+.bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+.bg-tertiary {
+  background-color: var(--color-bg-tertiary);
+}
+.hover-bg:hover {
+  background-color: var(--color-bg);
+}
+.hover-bg-secondary:hover {
+  background-color: var(--color-bg-secondary);
+}
+.hover-bg-tertiary:hover {
+  background-color: var(--color-bg-tertiary);
+}
 
 /* Borders */
-.border { border: 1px solid var(--color-border); }
+.border {
+  border: 1px solid var(--color-bg-tertiary);
+}
 
 /* Accent Colors */
-.color-primary { color: var(--color-primary); }
-.bg-primary { background-color: var(--color-primary); }
-.color-accent { color: var(--color-accent); }
-.bg-secondary-accent { background-color: var(--color-accent); }
+.color-primary {
+  color: var(--color-primary);
+}
+.bg-primary {
+  background-color: var(--color-primary);
+}
+.color-accent {
+  color: var(--color-accent);
+}
+.bg-secondary-accent {
+  background-color: var(--color-accent);
+}
 
 /* Status Colors */
-.error { color: var(--color-error); }
-.bg-error { background-color: var(--color-error); }
+.error {
+  color: var(--color-error);
+}
+.bg-error {
+  background-color: var(--color-error);
+}
 
-.warning { color: var(--color-warning); }
-.bg-warning { background-color: var(--color-warning); }
+.warning {
+  color: var(--color-warning);
+}
+.bg-warning {
+  background-color: var(--color-warning);
+}
 
-.success { color: var(--color-success); }
-.bg-success { background-color: var(--color-success); }
+.success {
+  color: var(--color-success);
+}
+.bg-success {
+  background-color: var(--color-success);
+}
 
-
-.info { color: var(--color-info); }
-.bg-info { background-color: var(--color-info); }
+.info {
+  color: var(--color-info);
+}
+.bg-info {
+  background-color: var(--color-info);
+}
 
 /* Links */
-.link { color: var(--color-link); transition: color var(--transition-speed); }
-.link:hover { color: var(--color-link-hover); }
+.link {
+  color: var(--color-link);
+  transition: color var(--transition-speed);
+}
+.link:hover {
+  color: var(--color-link-hover);
+}

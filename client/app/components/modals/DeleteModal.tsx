@@ -3,6 +3,7 @@ import { AsyncButton } from "../AsyncButton";
 import { Modal } from "./Modal";
 import { useNavigate } from "react-router";
 import { useState } from "react";
+import SubHeader from "../primitives/SubHeader";
 
 interface Props {
   open: boolean;
@@ -29,10 +30,10 @@ export default function DeleteModal({ open, setOpen, title, id, type }: Props) {
 
   return (
     <Modal isOpen={open} onClose={() => setOpen(false)}>
-      <h3>Delete "{title}"?</h3>
+      <SubHeader>Delete "{title}"?</SubHeader>
       <p>This action is irreversible!</p>
       <div className="flex flex-col mt-3 items-center">
-        <AsyncButton loading={loading} onClick={doDelete}>
+        <AsyncButton loading={loading} onClick={doDelete} danger>
           Yes, Delete It
         </AsyncButton>
       </div>

@@ -1,4 +1,4 @@
-import { imageUrl, type RewindStats } from "api/api";
+import { type RewindStats } from "api/api";
 import RewindStatText from "./RewindStatText";
 import { RewindTopItem } from "./RewindTopItem";
 
@@ -19,11 +19,30 @@ export default function Rewind(props: Props) {
     return <p>Not enough data exists to create a Rewind for this period :(</p>;
   }
   return (
-    <div className="flex flex-col gap-7">
-      <h2>{props.stats.title}</h2>
+    <div className="flex flex-col gap-7 card pt-4 sm:pt-6 pb-8 sm:pb-12 px-4 sm:px-8 min-w-[350px]">
+      <div className="w-full text-start shrink-0 sm:ml-6">
+        <span
+          className="
+            relative inline-block
+            text-2xl md:text-4xl font-semibold
+          "
+        >
+          <span
+            className="
+              absolute inset-0
+              sm:-translate-x-6 translate-y-9 sm:translate-y-11
+              bg-(--color-primary)
+              z-0
+              h-0.5
+            "
+            aria-hidden
+          />
+          <h5 className="mb-2">{props.stats.title}</h5>
+        </span>
+      </div>
       <RewindTopItem
         title="Top Artist"
-        imageSrc={imageUrl(artistimg, "medium")}
+        imageSrc={artistimg?.medium}
         items={props.stats.top_artists}
         getLabel={(a) => a.name}
         includeTime={props.includeTime}
@@ -31,7 +50,7 @@ export default function Rewind(props: Props) {
 
       <RewindTopItem
         title="Top Album"
-        imageSrc={imageUrl(albumimg, "medium")}
+        imageSrc={albumimg?.medium}
         items={props.stats.top_albums}
         getLabel={(a) => a.title}
         includeTime={props.includeTime}
@@ -39,7 +58,7 @@ export default function Rewind(props: Props) {
 
       <RewindTopItem
         title="Top Track"
-        imageSrc={imageUrl(trackimg, "medium")}
+        imageSrc={trackimg?.medium}
         items={props.stats.top_tracks}
         getLabel={(t) => t.title}
         includeTime={props.includeTime}
@@ -48,7 +67,7 @@ export default function Rewind(props: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-5">
         <RewindStatText
           figure={`${props.stats.minutes_listened}`}
-          text="Minutes listened"
+          text="Minutes"
         />
         <RewindStatText figure={`${props.stats.unique_tracks}`} text="Tracks" />
         <RewindStatText
@@ -63,7 +82,7 @@ export default function Rewind(props: Props) {
         />
         <RewindStatText
           figure={`${props.stats.avg_plays_per_day.toFixed(1)}`}
-          text="Plays per day"
+          text="Plays / day"
         />
         <RewindStatText
           figure={`${props.stats.unique_artists}`}

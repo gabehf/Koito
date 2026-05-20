@@ -13,15 +13,15 @@ import (
 
 func truncateTestData(t *testing.T) {
 	err := store.Exec(context.Background(),
-		`TRUNCATE 
-		artists, 
+		`TRUNCATE
+		artists,
 		artist_aliases,
-		tracks, 
-		artist_tracks, 
-		releases, 
-		artist_releases, 
+		tracks,
+		artist_tracks,
+		releases,
+		artist_releases,
 		release_aliases,
-		listens 
+		listens
 		RESTART IDENTITY CASCADE`)
 	require.NoError(t, err)
 }
@@ -29,19 +29,19 @@ func truncateTestData(t *testing.T) {
 func testDataForRelease(t *testing.T) {
 	truncateTestData(t)
 	err := store.Exec(context.Background(),
-		`INSERT INTO artists (musicbrainz_id) 
+		`INSERT INTO artists (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000001')`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary) 
+		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (1, 'ATARASHII GAKKO!', 'MusicBrainz', true)`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO artists (musicbrainz_id) 
+		`INSERT INTO artists (musicbrainz_id)
 			VALUES ('00000000-0000-0000-0000-000000000002')`)
 	require.NoError(t, err)
 	err = store.Exec(context.Background(),
-		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary) 
+		`INSERT INTO artist_aliases (artist_id, alias, source, is_primary)
 			VALUES (2, 'Masayuki Suzuki', 'MusicBrainz', true)`)
 	require.NoError(t, err)
 }
@@ -128,7 +128,7 @@ func TestUpdateAlbum(t *testing.T) {
 	result, err := store.GetAlbum(ctx, db.GetAlbumOpts{ID: rg.ID})
 	require.NoError(t, err)
 	assert.Equal(t, newMbzID, *result.MbzID)
-	assert.Equal(t, imgid, *result.Image)
+	assert.Contains(t, result.Image.Small, imgid.String())
 	assert.True(t, result.VariousArtists)
 
 	truncateTestData(t)

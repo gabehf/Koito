@@ -3,6 +3,7 @@ import { useTheme } from "../../hooks/useTheme";
 import themes from "~/styles/themes.css";
 import ThemeOption from "./ThemeOption";
 import { AsyncButton } from "../AsyncButton";
+import SubHeader from "../primitives/SubHeader";
 
 export function ThemeSwitcher() {
   const { setTheme } = useTheme();
@@ -44,7 +45,7 @@ export function ThemeSwitcher() {
     <div className="flex flex-col gap-10">
       <div>
         <div className="flex items-center gap-3">
-          <h3>Select Theme</h3>
+          <SubHeader>Select Theme</SubHeader>
           <div className="mb-3">
             <AsyncButton onClick={resetTheme}>Reset</AsyncButton>
           </div>
@@ -61,7 +62,7 @@ export function ThemeSwitcher() {
         </div>
       </div>
       <div>
-        <h3>Use Custom Theme</h3>
+        <SubHeader>Use Custom Theme</SubHeader>
         <div className="flex flex-col items-center gap-3 bg-secondary p-5 rounded-lg">
           <textarea
             name="custom-theme"

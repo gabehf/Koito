@@ -18,7 +18,7 @@ export default function ImageDropHandler({ itemType, onComplete }: Props) {
       if (!e.dataTransfer?.files.length) return;
 
       const imageFile = Array.from(e.dataTransfer.files).find((file) =>
-        file.type.startsWith("image/")
+        file.type.startsWith("image/"),
       );
       if (!imageFile) return;
 

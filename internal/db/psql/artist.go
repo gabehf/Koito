@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
@@ -77,7 +78,7 @@ func (d *Psql) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.Ar
 		MbzID:        row.MusicBrainzID,
 		Name:         row.Name,
 		Aliases:      row.Aliases,
-		Image:        row.Image,
+		Image:        catalog.BuildImageList(row.Image),
 		ListenCount:  count,
 		TimeListened: seconds,
 		AllTimeRank:  rank.Rank,
@@ -181,7 +182,7 @@ func (d *Psql) SaveArtist(ctx context.Context, opts db.SaveArtistOpts) (*models.
 	artist := &models.Artist{
 		ID:      a.ID,
 		Name:    opts.Name,
-		Image:   a.Image,
+		Image:   catalog.BuildImageList(a.Image),
 		MbzID:   a.MusicBrainzID,
 		Aliases: []string{opts.Name},
 	}
@@ -334,7 +335,7 @@ func (d *Psql) GetArtistsForAlbum(ctx context.Context, id int32) ([]*models.Arti
 			ID:        row.ID,
 			Name:      row.Name,
 			MbzID:     row.MusicBrainzID,
-			Image:     row.Image,
+			Image:     catalog.BuildImageList(row.Image),
 			IsPrimary: row.IsPrimary.Valid && row.IsPrimary.Bool,
 		}
 	}
@@ -357,7 +358,7 @@ func (d *Psql) GetArtistsForTrack(ctx context.Context, id int32) ([]*models.Arti
 			ID:        row.ID,
 			Name:      row.Name,
 			MbzID:     row.MusicBrainzID,
-			Image:     row.Image,
+			Image:     catalog.BuildImageList(row.Image),
 			IsPrimary: row.IsPrimary.Valid && row.IsPrimary.Bool,
 		}
 	}

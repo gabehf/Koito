@@ -1,8 +1,9 @@
 import { useFetcher, useLocation, useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { average } from "color.js";
-import { imageUrl, type PaginatedResponse } from "api/api";
+import { type PaginatedResponse } from "api/api";
 import PeriodSelector from "~/components/PeriodSelector";
+import { useAppContext } from "~/providers/AppProvider";
 
 interface ChartLayoutProps<T> {
   title: "Top Albums" | "Top Tracks" | "Top Artists" | "Last Played";
@@ -28,6 +29,8 @@ export default function ChartLayout<T>({
   const location = useLocation();
   const navigate = useNavigate();
 
+  const { firstActivity } = useAppContext();
+
   const currentParams = new URLSearchParams(location.search);
   const currentPage = parseInt(currentParams.get("page") || "1", 10);
 
@@ -43,8 +46,8 @@ export default function ChartLayout<T>({
     const img = (data.items[0] as any)?.item?.image;
     if (!img) return;
 
-    average(imageUrl(img, "small"), { amount: 1 }).then((color) => {
-      setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.4)`);
+    average(img.small, { amount: 1 }).then((color) => {
+      setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
     });
   }, [data]);
 
@@ -128,9 +131,16 @@ export default function ChartLayout<T>({
   const handleNextPage = () => setPage(currentPage + 1);
   const handlePrevPage = () => setPage(currentPage - 1);
 
+  const now = new Date();
+
+  const yearLowerLimit =
+    firstActivity?.getFullYear() || now.setFullYear(now.getFullYear() - 10);
+
   const yearOptions = Array.from(
-    { length: 10 },
-    (_, i) => `${new Date().getFullYear() - i}`
+    {
+      length: now.getFullYear() - yearLowerLimit + 1,
+    },
+    (_, i) => `${new Date().getFullYear() - i}`,
   );
   const monthOptions = Array.from({ length: 12 }, (_, i) => `${i + 1}`);
   const weekOptions = Array.from({ length: 53 }, (_, i) => `${i + 1}`);
@@ -139,7 +149,6 @@ export default function ChartLayout<T>({
     let from: Date;
     let to: Date;
 
-    const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth(); // 0-indexed
     const currentDate = now.getDate();
@@ -196,29 +205,28 @@ export default function ChartLayout<T>({
       day: "numeric",
     });
 
-    return `${formatter.format(from)} - ${formatter.format(to)}`;
+    return `${formatter.format(from)} – ${formatter.format(to)}`;
   };
 
   return (
     <div
       className="w-full min-h-screen"
       style={{
-        background: `linear-gradient(to bottom, ${bgColor}, var(--color-bg) 500px)`,
-        transition: "1000",
+        background: `linear-gradient(to bottom, ${bgColor}, transparent 600px)`,
       }}
     >
       <title>{pgTitle}</title>
       <meta property="og:title" content={pgTitle} />
       <meta name="description" content={pgTitle} />
-      <div className="w-19/20 sm:17/20 mx-auto pt-6 sm:pt-12">
+      <div className="w-(100%-3) sm:w-17/20 mx-auto ml-3 sm:ml-18 mt-6 sm:mt-12">
         <h1>{title}</h1>
-        <div className="flex flex-col items-start md:flex-row sm:items-center gap-4">
+        <div className="flex flex-col items-start lg:flex-row sm:items-start gap-2 sm:gap-4">
           <PeriodSelector
             current={period}
             setter={handleSetPeriod}
             disableCache
           />
-          <div className="flex gap-5">
+          <div className="flex gap-3">
             <select
               value={year ?? ""}
               onChange={(e) => handleSetYear(e.target.value)}

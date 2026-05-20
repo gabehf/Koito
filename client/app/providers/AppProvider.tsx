@@ -14,6 +14,7 @@ interface AppContextType {
   defaultTheme: string;
   currentVersion: string;
   updateAvailable: boolean;
+  firstActivity: Date | undefined;
   setConfigurableHomeActivity: (value: boolean) => void;
   setHomeItems: (value: number) => void;
   setUsername: (value: string) => void;
@@ -32,7 +33,7 @@ export const useAppContext = () => {
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [defaultTheme, setDefaultTheme] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [configurableHomeActivity, setConfigurableHomeActivity] =
     useState<boolean>(false);
@@ -48,6 +49,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const currentVersion = import.meta.env.VITE_KOITO_VERSION || pkg.version;
 
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
+  const [firstActivity, setFirstActivity] = useState<Date | undefined>();
 
   useEffect(() => {
     fetch("/apis/web/v1/user")
@@ -68,6 +70,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         setDefaultTheme("yuu");
       }
     });
+
+    fetch("/apis/web/v1/first-activity")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setFirstActivity(new Date(data.time));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -91,6 +102,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     defaultTheme,
     currentVersion,
     updateAvailable,
+    firstActivity,
     setConfigurableHomeActivity,
     setHomeItems,
     setUsername,

@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
@@ -69,7 +70,7 @@ func (s *Sqlite) getAlbumByID(ctx context.Context, id int32) (*models.Album, err
 		return nil, fmt.Errorf("getAlbumByID: %w", err)
 	}
 	ret.MbzID = parseNullableUUID(mbzID)
-	ret.Image = parseNullableUUID(image)
+	ret.Image = catalog.BuildImageList(parseNullableUUID(image))
 	ret.VariousArtists = variousArtists == 1
 
 	artists, err := s.artistsForRelease(ctx, id)
@@ -220,7 +221,7 @@ func (s *Sqlite) SaveAlbum(ctx context.Context, opts db.SaveAlbumOpts) (*models.
 	}
 	if opts.Image != uuid.Nil {
 		u := opts.Image
-		ret.Image = &u
+		ret.Image = catalog.BuildImageList(&u)
 	}
 	return ret, nil
 }
@@ -478,7 +479,7 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 		}
 
 		a.MbzID = parseNullableUUID(mbzID)
-		a.Image = parseNullableUUID(image)
+		a.Image = catalog.BuildImageList(parseNullableUUID(image))
 		a.VariousArtists = variousArtists == 1
 
 		// Fetch artists for the release (Note: This is still an N+1 query.
@@ -528,7 +529,7 @@ func (s *Sqlite) AlbumsWithoutImages(ctx context.Context, from int32) ([]*models
 			return nil, err
 		}
 		r.album.MbzID = parseNullableUUID(mbzID)
-		r.album.Image = parseNullableUUID(image)
+		r.album.Image = catalog.BuildImageList(parseNullableUUID(image))
 		raw = append(raw, r)
 	}
 	if err := rows.Close(); err != nil {

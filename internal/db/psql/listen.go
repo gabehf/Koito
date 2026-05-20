@@ -208,3 +208,7 @@ func (d *Psql) DeleteListen(ctx context.Context, trackId int32, listenedAt time.
 		ListenedAt: listenedAt,
 	})
 }
+
+func (d *Psql) GetFirstListenUnix(ctx context.Context) (int64, error) {
+	return 0, errors.New("GetFirstListenUnix: not implemented for psql")
+}

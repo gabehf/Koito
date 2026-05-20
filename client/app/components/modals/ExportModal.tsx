@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AsyncButton } from "../AsyncButton";
 import { getExport } from "api/api";
+import SubHeader from "../primitives/SubHeader";
 
 export default function ExportModal() {
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ export default function ExportModal() {
 
   return (
     <div>
-      <h3>Export</h3>
+      <SubHeader>Export</SubHeader>
       <AsyncButton loading={loading} onClick={handleExport}>
         Export Data
       </AsyncButton>

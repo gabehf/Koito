@@ -9,7 +9,7 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
   url.searchParams.set("page", page);
 
   const res = await fetch(
-    `/apis/web/v1/top/tracks?${url.searchParams.toString()}`
+    `/apis/web/v1/top/tracks?${url.searchParams.toString()}`,
   );
   if (!res.ok) {
     throw new Response("Failed to load top tracks", { status: 500 });
@@ -30,7 +30,7 @@ export default function TrackChart() {
       initialData={initialData}
       endpoint="chart/top/tracks"
       render={({ data, page, onNext, onPrev }) => (
-        <div className="flex flex-col gap-5 w-full">
+        <div className="flex flex-col gap-5 text-sm md:text-[16px] w-11/12 max-w-[1000px]">
           <div className="flex gap-15 mx-auto">
             <button className="default" onClick={onPrev} disabled={page <= 1}>
               Prev
@@ -47,11 +47,12 @@ export default function TrackChart() {
             ranked
             separators
             data={data}
-            className="w-11/12 sm:w-[600px]"
+            className="w-full"
             type="track"
+            slug=""
           />
           <div className="flex gap-15 mx-auto">
-            <button className="default" onClick={onPrev} disabled={page === 0}>
+            <button className="default" onClick={onPrev} disabled={page <= 1}>
               Prev
             </button>
             <button

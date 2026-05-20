@@ -1,6 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTopAlbums, imageUrl, type getItemsArgs } from "api/api";
-import { Link } from "react-router";
+import {
+  apiFetch,
+  type PaginatedResponse,
+  type Ranked,
+  type Album,
+} from "api/api";
+import MediaItem from "./primitives/MediaItem";
+import CardHeader from "./primitives/CardHeader";
+
+const getArtistAlbums = (artistId: number) =>
+  apiFetch<PaginatedResponse<Ranked<Album>>>("/apis/web/v1/top/albums", {
+    period: "all_time",
+    limit: 99,
+    artist_id: artistId,
+  });
 
 interface Props {
   artistId: number;
@@ -10,17 +23,14 @@ interface Props {
 
 export default function ArtistAlbums({ artistId, name }: Props) {
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "top/albums",
-      { limit: 99, period: "all_time", artist_id: artistId },
-    ],
-    queryFn: ({ queryKey }) => getTopAlbums(queryKey[1] as getItemsArgs),
+    queryKey: ["artist-albums", artistId],
+    queryFn: () => getArtistAlbums(artistId),
   });
 
   if (isPending) {
     return (
       <div>
-        <h3>Albums From This Artist</h3>
+        <CardHeader>Albums From This Artist</CardHeader>
         <p>Loading...</p>
       </div>
     );
@@ -28,7 +38,7 @@ export default function ArtistAlbums({ artistId, name }: Props) {
   if (isError) {
     return (
       <div>
-        <h3>Albums From This Artist</h3>
+        <CardHeader>Albums From This Artist</CardHeader>
         <p className="error">Error:{error.message}</p>
       </div>
     );
@@ -36,27 +46,21 @@ export default function ArtistAlbums({ artistId, name }: Props) {
 
   return (
     <div>
-      <h3>Albums featuring {name}</h3>
-      <div className="flex flex-wrap gap-8">
+      <CardHeader>Albums featuring {name}</CardHeader>
+      <div className="flex flex-wrap gap-8 mt-8">
         {data.items.length < 1 && "Nothing to show"}
         {data.items.map((item) => (
-          <Link
-            to={`/album/${item.item.id}`}
-            className="flex gap-2 items-start"
-          >
-            <img
-              src={imageUrl(item.item.image, "medium")}
+          <div className="w-[330px]" key={item.item.id}>
+            <MediaItem
+              image={item.item.image}
+              size="lg"
+              link={`/album/${item.item.id}`}
               alt={item.item.title}
-              style={{ width: 130 }}
+              alignTop
+              title={item.item.title}
+              meta={`${item.item.listen_count} plays`}
             />
-            <div className="w-[180px] flex flex-col items-start gap-1">
-              <p>{item.item.title}</p>
-              <p className="text-sm color-fg-secondary">
-                {item.item.listen_count} play
-                {item.item.listen_count > 1 ? "s" : ""}
-              </p>
-            </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

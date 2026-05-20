@@ -1,21 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { getStats, type Stats, type ApiError } from "api/api";
+import { apiFetch, type Stats } from "api/api";
+import CardHeader from "./primitives/CardHeader";
+
+const getStats = (period: string) =>
+  apiFetch<Stats>("/apis/web/v1/stats", { period });
 
 export default function AllTimeStats() {
   const { isPending, isError, data, error } = useQuery({
     queryKey: ["stats", "all_time"],
-    queryFn: ({ queryKey }) => getStats(queryKey[1]),
+    queryFn: () => getStats("all_time"),
   });
 
   const header = "All time stats";
 
   if (isPending) {
-    return (
-      <div>
-        <h3>{header}</h3>
-        <p>Loading...</p>
-      </div>
-    );
+    return <AllTimeStatsSkeleton />;
   } else if (isError) {
     return (
       <>
@@ -31,15 +30,15 @@ export default function AllTimeStats() {
 
   return (
     <div>
-      <h3>{header}</h3>
-      <div>
+      <CardHeader>{header}</CardHeader>
+      <div className="mt-6">
         <span
           className={numberClasses}
           title={Math.floor(data.minutes_listened / 60) + " hours"}
         >
           {data.minutes_listened}
         </span>{" "}
-        Minutes Listened
+        Minutes
       </div>
       <div>
         <span className={numberClasses}>{data.listen_count}</span> Plays
@@ -52,6 +51,29 @@ export default function AllTimeStats() {
       </div>
       <div>
         <span className={numberClasses}>{data.artist_count}</span> Artists
+      </div>
+    </div>
+  );
+}
+
+export function AllTimeStatsSkeleton() {
+  const barWidths = [80, 60, 70, 50, 60];
+  return (
+    <div>
+      <CardHeader>All time stats</CardHeader>
+      <div className="mt-6 flex flex-col gap-2">
+        {barWidths.map((w, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div
+              className="h-5 bg-secondary animate-pulse rounded-(--border-radius)"
+              style={{ width: 40 }}
+            />
+            <div
+              className="h-3 bg-secondary animate-pulse rounded-(--border-radius)"
+              style={{ width: w }}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { logout, updateUser } from "api/api";
 import { useState } from "react";
 import { AsyncButton } from "../AsyncButton";
 import { useAppContext } from "~/providers/AppProvider";
+import SubHeader from "../primitives/SubHeader";
 
 export default function Account() {
   const [username, setUsername] = useState("");
@@ -55,7 +56,7 @@ export default function Account() {
 
   return (
     <>
-      <h3>Account</h3>
+      <SubHeader>Account</SubHeader>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4 items-center">
           <p>
@@ -65,13 +66,13 @@ export default function Account() {
             Logout
           </AsyncButton>
         </div>
-        <h3>Update User</h3>
+        <SubHeader>Update User</SubHeader>
         <form
           action="#"
           onSubmit={(e) => e.preventDefault()}
           className="flex flex-col gap-4"
         >
-          <div className="flex flex gap-4">
+          <div className="flex gap-4">
             <input
               name="koito-update-username"
               type="text"
@@ -81,7 +82,7 @@ export default function Account() {
               onChange={(e) => setUsername(e.target.value)}
             />
           </div>
-          <div className="w-sm">
+          <div className="w-fit">
             <AsyncButton loading={loading} onClick={updateHandler}>
               Submit
             </AsyncButton>
@@ -92,7 +93,7 @@ export default function Account() {
           onSubmit={(e) => e.preventDefault()}
           className="flex flex-col gap-4"
         >
-          <div className="flex flex gap-4">
+          <div className="flex gap-4">
             <input
               name="koito-update-password"
               type="password"
@@ -110,7 +111,7 @@ export default function Account() {
               onChange={(e) => setConfirmPw(e.target.value)}
             />
           </div>
-          <div className="w-sm">
+          <div className="w-fit">
             <AsyncButton loading={loading} onClick={updateHandler}>
               Submit
             </AsyncButton>

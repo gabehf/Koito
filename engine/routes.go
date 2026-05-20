@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -32,7 +33,7 @@ func bindRoutes(
 		}))
 	}
 	r.With(chimiddleware.RequestSize(5<<20)).
-		Get("/images/{size}/{filename}", handlers.ImageHandler(db))
+		Get("/image/{image_id}/{filename}", handlers.ImageHandler(db))
 
 	r.Route("/apis/web/v1", func(r chi.Router) {
 		r.Get("/config", handlers.GetCfgHandler())
@@ -59,6 +60,7 @@ func bindRoutes(
 
 			r.Get("/listens", handlers.GetListensHandler(db))
 			r.Get("/listen-activity", handlers.GetListenActivityHandler(db))
+			r.Get("/first-activity", handlers.FirstActivityHandler(db))
 			r.Get("/now-playing", handlers.NowPlayingHandler(db))
 			r.Get("/stats", handlers.StatsHandler(db))
 			r.Get("/search", handlers.SearchHandler(db))
@@ -153,25 +155,44 @@ func bindRoutes(
 	publicServer(r, "/public", filesDir)
 }
 
-// FileServer conveniently sets up a http.FileServer handler to serve
-// static files from a http.FileSystem.
 func fileServer(r chi.Router, path string, root http.FileSystem) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
 
-	// Serve static files
 	fs := http.FileServer(root)
+
 	r.Get(path+"*", func(w http.ResponseWriter, r *http.Request) {
-		// Check if file exists
 		filePath := filepath.Join("client/build/client", strings.TrimPrefix(r.URL.Path, path))
+
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			// File doesn't exist, serve index.html
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			http.ServeFile(w, r, filepath.Join("client/build/client", "index.html"))
 			return
 		}
 
-		// Serve file normally
+		ext := strings.ToLower(filepath.Ext(filePath))
+		switch ext {
+		case ".js", ".css", ".woff", ".woff2", ".ttf", ".eot",
+			".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico":
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		default:
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+
+		// Serve pre-compressed file if the client accepts gzip and it exists
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			gzPath := filePath + ".gz"
+			if _, err := os.Stat(gzPath); err == nil {
+				w.Header().Set("Content-Encoding", "gzip")
+				w.Header().Set("Vary", "Accept-Encoding")
+				// Set the correct Content-Type for the original file, not .gz
+				w.Header().Set("Content-Type", mime.TypeByExtension(ext))
+				http.ServeFile(w, r, gzPath)
+				return
+			}
+		}
+
 		fs.ServeHTTP(w, r)
 	})
 }

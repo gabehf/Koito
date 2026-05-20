@@ -35,7 +35,7 @@ export default function TopThreeAlbums(props: Props) {
         style={{ gap: 15 }}
       >
         {data.items.map((item, index) => (
-          <AlbumDisplay album={item} size={index === 0 ? 190 : 130} />
+          <AlbumDisplay album={item.item} size={index === 0 ? 190 : 130} />
         ))}
       </div>
     </div>

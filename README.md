@@ -2,7 +2,7 @@
   
 ![Koito logo](https://github.com/user-attachments/assets/bd69a050-b40f-4da7-8ff1-4607554bfd6d)
 
-*Koito (小糸) is a Japanese surname. It is also homophonous with the words 恋と (koi to), meaning "and/with love".*
+_Koito (小糸) is a Japanese surname. It is also homophonous with the words 恋と (koi to), meaning "and/with love"._
 
 </div>
 
@@ -12,13 +12,13 @@
   
 </div>
 
-Koito is a modern, themeable ListenBrainz-compatible scrobbler for self-hosters who want control over their data and insights into their listening habits. 
+Koito is a modern, themeable ListenBrainz-compatible scrobbler for self-hosters who want control over their data and insights into their listening habits.
 It supports relaying to other compatible scrobblers, so you can try it safely without replacing your current setup.
 
 > This project is under active development and still considered "unstable", and therefore you can expect some bugs. If you don't want to replace your current scrobbler
-with Koito quite yet, you can [set up a relay](https://koito.io/guides/scrobbler/#set-up-a-relay) from Koito to another ListenBrainz-compatible
-scrobbler. This is what I've been doing for the entire development of this app and it hasn't failed me once. Or, you can always use something
-like [multi-scrobbler](https://github.com/FoxxMD/multi-scrobbler).
+> with Koito quite yet, you can [set up a relay](https://koito.io/guides/scrobbler/#set-up-a-relay) from Koito to another ListenBrainz-compatible
+> scrobbler. This is what I've been doing for the entire development of this app and it hasn't failed me once. Or, you can always use something
+> like [multi-scrobbler](https://github.com/FoxxMD/multi-scrobbler).
 
 ## Features
 
@@ -35,9 +35,8 @@ You can view my public instance with my listening data at https://koito.mnrva.de
 ## Screenshots
 
 ![screenshot one](assets/screenshot1.png)
-<img width="2021" height="1330" alt="image" src="https://github.com/user-attachments/assets/956748ff-f61f-4102-94b2-50783d9ee72b" />
-<img width="1505" height="1018" alt="image" src="https://github.com/user-attachments/assets/5f7e1162-f723-4e4b-a528-06cf26d1d870" />
-
+![screenshot two](assets/screenshot2.png)
+![screenshot three](assets/screenshot3.png)
 
 ## Installation
 

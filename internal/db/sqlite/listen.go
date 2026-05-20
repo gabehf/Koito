@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/models"
+	"github.com/google/uuid"
 )
 
 func (s *Sqlite) SaveListen(ctx context.Context, opts db.SaveListenOpts) error {
@@ -158,6 +160,11 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		if err != nil {
 			return nil, err
 		}
+		imgid, err := s.imageForTrack(ctx, l.Track.ID)
+		if err != nil {
+			return nil, err
+		}
+		l.Track.Image = catalog.BuildImageList(imgid)
 		listens = append(listens, l)
 	}
 
@@ -168,4 +175,35 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 		HasNextPage:  int64(offset+len(listens)) < count,
 		CurrentPage:  int32(opts.Page),
 	}, nil
+}
+
+func (s *Sqlite) imageForTrack(ctx context.Context, trackId int32) (*uuid.UUID, error) {
+	row := s.db.QueryRowContext(ctx, `
+		SELECT r.image
+		FROM releases r
+		JOIN tracks t ON r.id = t.release_id
+		WHERE t.id = ? AND r.image IS NOT NULL`,
+		trackId,
+	)
+	var imageid *uuid.UUID
+	err := row.Scan(&imageid)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("imageForTrack: %w", err)
+	}
+	return imageid, nil
+}
+
+func (s *Sqlite) GetFirstListenUnix(ctx context.Context) (int64, error) {
+	row := s.db.QueryRow(`
+		SELECT listened_at FROM listens ORDER BY listened_at ASC LIMIT 1;`)
+	var unix int64
+	err := row.Scan(&unix)
+	if err != nil {
+		return 0, fmt.Errorf("GetFirstListenUnix: %w", err)
+	}
+
+	return unix, nil
 }

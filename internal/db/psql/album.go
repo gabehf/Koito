@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
@@ -100,7 +101,7 @@ func (d *Psql) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Albu
 	ret.ID = row.ID
 	ret.MbzID = row.MusicBrainzID
 	ret.Title = row.Title
-	ret.Image = row.Image
+	ret.Image = catalog.BuildImageList(row.Image)
 	ret.VariousArtists = row.VariousArtists
 	err = json.Unmarshal(row.Artists, &ret.Artists)
 	if err != nil {
@@ -133,7 +134,7 @@ func (d *Psql) GetAlbumWithNoMbzIDByTitles(ctx context.Context, artistId int32, 
 		ret.ID = row.ID
 		ret.MbzID = row.MusicBrainzID
 		ret.Title = row.Title
-		ret.Image = row.Image
+		ret.Image = catalog.BuildImageList(row.Image)
 		ret.VariousArtists = row.VariousArtists
 	} else {
 		return nil, errors.New("GetAlbumWithNoMbzIDByTitles: insufficient information to get album")
@@ -239,7 +240,7 @@ func (d *Psql) SaveAlbum(ctx context.Context, opts db.SaveAlbumOpts) (*models.Al
 		ID:             r.ID,
 		MbzID:          r.MusicBrainzID,
 		Title:          opts.Title,
-		Image:          r.Image,
+		Image:          catalog.BuildImageList(r.Image),
 		VariousArtists: r.VariousArtists,
 	}, nil
 }

@@ -9,7 +9,7 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
   url.searchParams.set("page", page);
 
   const res = await fetch(
-    `/apis/web/v1/top/artists?${url.searchParams.toString()}`
+    `/apis/web/v1/top/artists?${url.searchParams.toString()}`,
   );
   if (!res.ok) {
     throw new Response("Failed to load top artists", { status: 500 });
@@ -30,7 +30,7 @@ export default function Artist() {
       initialData={initialData}
       endpoint="chart/top/artists"
       render={({ data, page, onNext, onPrev }) => (
-        <div className="flex flex-col gap-5 w-full">
+        <div className="flex flex-col gap-5 text-sm md:text-[16px] w-11/12 max-w-[1000px]">
           <div className="flex gap-15 mx-auto">
             <button className="default" onClick={onPrev} disabled={page <= 1}>
               Prev
@@ -47,8 +47,9 @@ export default function Artist() {
             ranked
             separators
             data={data}
-            className="w-11/12 sm:w-[600px]"
+            className="w-full"
             type="artist"
+            slug=""
           />
           <div className="flex gap-15 mx-auto">
             <button className="default" onClick={onPrev} disabled={page <= 1}>

@@ -21,7 +21,6 @@ import (
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/db/sqlite"
 	"github.com/gabehf/koito/internal/models"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -741,13 +740,12 @@ func TestArtistReplaceImage(t *testing.T) {
 	response := new(handlers.ReplaceImageResponse)
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(response))
 	require.NotEmpty(t, response.Image)
-	newid, err := uuid.Parse(response.Image)
 	require.NoError(t, err)
 
 	a, err := store.GetArtist(context.Background(), db.GetArtistOpts{ID: 1})
 	require.NoError(t, err)
 	assert.NotNil(t, a.Image)
-	assert.Equal(t, newid, *a.Image)
+	assert.Contains(t, a.Image.Small, response.Image)
 }
 
 func TestAlbumReplaceImage(t *testing.T) {
@@ -779,13 +777,12 @@ func TestAlbumReplaceImage(t *testing.T) {
 	response := new(handlers.ReplaceImageResponse)
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(response))
 	require.NotEmpty(t, response.Image)
-	newid, err := uuid.Parse(response.Image)
 	require.NoError(t, err)
 
 	a, err := store.GetAlbum(context.Background(), db.GetAlbumOpts{ID: 1})
 	require.NoError(t, err)
 	assert.NotNil(t, a.Image)
-	assert.Equal(t, newid, *a.Image)
+	assert.Contains(t, a.Image.Small, response.Image)
 }
 
 func TestSetPrimaryArtist(t *testing.T) {

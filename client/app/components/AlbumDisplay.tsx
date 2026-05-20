@@ -1,4 +1,4 @@
-import { imageUrl, type Album } from "api/api";
+import { type Album } from "api/api";
 import { Link } from "react-router";
 
 interface Props {
@@ -12,7 +12,7 @@ export default function AlbumDisplay({ album, size }: Props) {
       <div>
         <Link to={`/album/${album.id}`}>
           <img
-            src={imageUrl(album.image, "large")}
+            src={album.image.large}
             alt={album.title}
             style={{ width: size }}
           />

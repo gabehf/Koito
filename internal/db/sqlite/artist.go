@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
@@ -101,7 +102,7 @@ func (s *Sqlite) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.
 		MbzID:        parseNullableUUID(mbzID),
 		Name:         name.String,
 		Aliases:      aliases,
-		Image:        parseNullableUUID(image),
+		Image:        catalog.BuildImageList(parseNullableUUID(image)),
 		ListenCount:  listenCount,
 		TimeListened: timeListened,
 		FirstListen:  firstListenUnix,
@@ -330,7 +331,7 @@ func (s *Sqlite) GetArtistsForAlbum(ctx context.Context, id int32) ([]*models.Ar
 			return nil, err
 		}
 		a.MbzID = parseNullableUUID(mbzID)
-		a.Image = parseNullableUUID(image)
+		a.Image = catalog.BuildImageList(parseNullableUUID(image))
 		a.IsPrimary = isPrimary == 1
 		artists = append(artists, &a)
 	}
@@ -359,7 +360,7 @@ func (s *Sqlite) GetArtistsForTrack(ctx context.Context, id int32) ([]*models.Ar
 			return nil, err
 		}
 		a.MbzID = parseNullableUUID(mbzID)
-		a.Image = parseNullableUUID(image)
+		a.Image = catalog.BuildImageList(parseNullableUUID(image))
 		a.IsPrimary = isPrimary == 1
 		artists = append(artists, &a)
 	}
@@ -418,7 +419,7 @@ func (s *Sqlite) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpt
 		}
 
 		a.MbzID = parseNullableUUID(mbzID)
-		a.Image = parseNullableUUID(image)
+		a.Image = catalog.BuildImageList(parseNullableUUID(image))
 		item.Item = &a
 		artists = append(artists, item)
 	}
@@ -455,7 +456,7 @@ func (s *Sqlite) ArtistsWithoutImages(ctx context.Context, from int32) ([]*model
 			return nil, err
 		}
 		a.MbzID = parseNullableUUID(mbzID)
-		a.Image = parseNullableUUID(image)
+		a.Image = catalog.BuildImageList(parseNullableUUID(image))
 		artists = append(artists, &a)
 	}
 	return artists, rows.Err()

@@ -1,12 +1,14 @@
 import { useDeferredValue, useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { search, type SearchResponse } from "api/api";
-import SearchResults from "../SearchResults";
+import SearchResults from "./SearchModal/SearchResults";
 import type {
   MergeFunc,
   MergeSearchCleanerFunc,
 } from "~/routes/MediaItems/MediaLayout";
 import { useNavigate } from "react-router";
+import SubHeader from "../primitives/SubHeader";
+import { AsyncButton } from "../AsyncButton";
 
 interface Props {
   open: boolean;
@@ -23,10 +25,12 @@ export default function MergeModal(props: Props) {
   const [data, setData] = useState<SearchResponse>();
   const deferredQuery = useDeferredValue(query);
   const [mergeTarget, setMergeTarget] = useState<{ title: string; id: number }>(
-    { title: "", id: 0 }
+    { title: "", id: 0 },
   );
   const [mergeOrderReversed, setMergeOrderReversed] = useState(false);
   const [replaceImage, setReplaceImage] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
   const navigate = useNavigate();
 
   const closeMergeModal = () => {
@@ -41,11 +45,8 @@ export default function MergeModal(props: Props) {
     setMergeTarget({ title: title, id: id });
   };
 
-  useEffect(() => {
-    console.log("mergeTarget", mergeTarget);
-  }, [mergeTarget]);
-
   const doMerge = () => {
+    setLoading(true);
     let from, to;
     if (!mergeOrderReversed) {
       from = mergeTarget;
@@ -59,17 +60,21 @@ export default function MergeModal(props: Props) {
       .then((r) => {
         if (r.ok) {
           if (mergeOrderReversed) {
+            setLoading(false);
             navigate(`/${props.type.toLowerCase()}/${mergeTarget.id}`);
             closeMergeModal();
           } else {
+            setLoading(false);
             window.location.reload();
           }
         } else {
-          // TODO: handle error
-          console.log(r);
+          r.json().then((r) => setError(r.error));
         }
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+      });
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -83,39 +88,41 @@ export default function MergeModal(props: Props) {
 
   return (
     <Modal isOpen={props.open} onClose={closeMergeModal}>
-      <h3>Merge {props.type}s</h3>
+      <SubHeader>Merge {props.type}s</SubHeader>
       <div className="flex flex-col items-center">
         <input
           type="text"
           autoFocus
           defaultValue={props.currentTitle}
           // i find my stupid a(n) logic to be a little silly so im leaving it in even if its not optimal
-          placeholder={`Search for a${props.type.toLowerCase()[0] === "a" ? "n" : ""
-            } ${props.type.toLowerCase()} to be merged into the current ${props.type.toLowerCase()}`}
+          placeholder={`Search for a${
+            props.type.toLowerCase()[0] === "a" ? "n" : ""
+          } ${props.type.toLowerCase()} to be merged into the current ${props.type.toLowerCase()}`}
           className="w-full mx-auto fg bg rounded p-2"
-          onFocus={(e) => { setQuery(e.target.value); e.target.select()}}
+          onFocus={(e) => {
+            setQuery(e.target.value);
+            e.target.select();
+          }}
           onChange={(e) => setQuery(e.target.value)}
         />
         <SearchResults selectorMode data={data} onSelect={toggleSelect} />
         {mergeTarget.id !== 0 ? (
-          <>
+          <div className="flex flex-col items-center">
             {mergeOrderReversed ? (
-              <p className="mt-5">
+              <p className="mt-5 mb-5">
                 <strong>{props.currentTitle}</strong> will be merged into{" "}
                 <strong>{mergeTarget.title}</strong>
               </p>
             ) : (
-              <p className="mt-5">
+              <p className="mt-5 mb-5">
                 <strong>{mergeTarget.title}</strong> will be merged into{" "}
                 <strong>{props.currentTitle}</strong>
               </p>
             )}
-            <button
-              className="hover:cursor-pointer px-5 py-2 rounded-md mt-5 bg-(--color-bg) hover:bg-(--color-bg-tertiary)"
-              onClick={doMerge}
-            >
+            <AsyncButton onClick={doMerge} loading={loading}>
               Merge Items
-            </button>
+            </AsyncButton>
+            {error && <div className="error">{error}</div>}
             <div className="flex items-center gap-2 mt-3">
               <input
                 type="checkbox"
@@ -137,7 +144,7 @@ export default function MergeModal(props: Props) {
                 <label htmlFor="replace-image">Replace image</label>
               </div>
             )}
-          </>
+          </div>
         ) : (
           ""
         )}

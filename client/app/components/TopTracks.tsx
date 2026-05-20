@@ -1,46 +1,59 @@
 import { useQuery } from "@tanstack/react-query";
-import ArtistLinks from "./ArtistLinks";
-import { getTopTracks, imageUrl, type getItemsArgs } from "api/api";
+import {
+  apiFetch,
+  type PaginatedResponse,
+  type Ranked,
+  type Track,
+} from "api/api";
 import { Link } from "react-router";
-import TopListSkeleton from "./skeletons/TopListSkeleton";
-import { useEffect } from "react";
-import TopItemList from "./TopItemList";
+import TopItemList, { TopItemListSkeleton } from "./TopItemList";
+import CardHeader from "./primitives/CardHeader";
 
 interface Props {
   limit: number;
   period: string;
+  showSeeMore?: boolean;
   artistId?: Number;
   albumId?: Number;
 }
 
+const getTopTracks = (args: {
+  limit: number;
+  period: string;
+  artist_id?: number;
+  album_id?: number;
+  page: number;
+}) =>
+  apiFetch<PaginatedResponse<Ranked<Track>>>("/apis/web/v1/top/tracks", args);
+
 const TopTracks = (props: Props) => {
+  const args = {
+    limit: props.limit,
+    period: props.period,
+    artist_id: props.artistId as number | undefined,
+    album_id: props.albumId as number | undefined,
+    page: 0,
+  };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: [
-      "top/tracks",
-      {
-        limit: props.limit,
-        period: props.period,
-        artist_id: props.artistId,
-        album_id: props.albumId,
-        page: 0,
-      },
-    ],
-    queryFn: ({ queryKey }) => getTopTracks(queryKey[1] as getItemsArgs),
+    queryKey: ["top/tracks", args],
+    queryFn: () => getTopTracks(args),
   });
 
   const header = "Top tracks";
 
   if (isPending) {
     return (
-      <div className="w-[300px]">
-        <h3>{header}</h3>
-        <p>Loading...</p>
+      <div className="min-w-[350px] sm:w-[450px] xl:max-w-[450px]">
+        <CardHeader isOffset>{header}</CardHeader>
+        <div className="mt-7">
+          <TopItemListSkeleton count={props.limit} ranked type="track" />
+        </div>
       </div>
     );
   } else if (isError) {
     return (
-      <div className="w-[300px]">
-        <h3>{header}</h3>
+      <div className="min-w-[350px] sm:w-[450px] xl:max-w-[450px]">
+        <CardHeader isOffset>{header}</CardHeader>
         <p className="error">Error: {error.message}</p>
       </div>
     );
@@ -51,16 +64,39 @@ const TopTracks = (props: Props) => {
   params += props.artistId ? `&artist_id=${props.artistId}` : "";
   params += props.albumId ? `&album_id=${props.albumId}` : "";
 
-  return (
-    <div>
-      <h3 className="hover:underline">
-        <Link to={`/chart/top/tracks?period=${props.period}${params}`}>
+  const slug = `/chart/top/tracks?period=${props.period}&limit=100${params}`;
+
+  if (!data.items[0]) {
+    return (
+      <div className="min-w-[350px] sm:w-[450px] xl:max-w-[450px]">
+        <CardHeader
+          isOffset
+          to={`/chart/top/tracks?period=${props.period}${params}`}
+        >
           {header}
-        </Link>
-      </h3>
-      <div className="max-w-[300px]">
-        <TopItemList type="track" data={data} />
-        {data.items.length < 1 ? "Nothing to show" : ""}
+        </CardHeader>
+        <p className="ml-6 mt-6">Nothing to show</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-w-[350px] sm:w-[450px] xl:max-w-[450px]">
+      <CardHeader
+        isOffset
+        to={`/chart/top/tracks?period=${props.period}${params}`}
+      >
+        {header}
+      </CardHeader>
+      <div className="mt-7">
+        <TopItemList
+          ranked
+          type="track"
+          data={data}
+          separators
+          slug={slug}
+          showSeeMore={props.showSeeMore}
+        />
       </div>
     </div>
   );

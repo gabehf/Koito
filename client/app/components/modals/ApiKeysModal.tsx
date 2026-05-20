@@ -3,6 +3,7 @@ import { createApiKey, deleteApiKey, getApiKeys, type ApiKey } from "api/api";
 import { AsyncButton } from "../AsyncButton";
 import { useEffect, useRef, useState } from "react";
 import { Copy, Trash } from "lucide-react";
+import SubHeader from "../primitives/SubHeader";
 
 type CopiedState = {
   x: number;
@@ -120,7 +121,7 @@ export default function ApiKeysModal() {
 
   return (
     <div className="">
-      <h3>API Keys</h3>
+      <SubHeader>API Keys</SubHeader>
       <div className="flex flex-col gap-4 relative">
         {displayData.map((v) => (
           <div className="flex gap-2">
@@ -150,6 +151,7 @@ export default function ApiKeysModal() {
               loading={loading}
               onClick={() => handleDeleteApiKey(v.id)}
               confirm
+              danger
             >
               <Trash size={16} />
             </AsyncButton>

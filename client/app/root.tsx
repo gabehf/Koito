@@ -77,7 +77,7 @@ export default function App() {
           <QueryClientProvider client={queryClient}>
             <div className="flex-col flex sm:flex-row">
               <Sidebar />
-              <div className="flex flex-col items-center mx-auto w-full ml-0 sm:ml-[40px]">
+              <div className="flex flex-col items-center mx-auto w-full ml-0 sm:ml-[58px]">
                 <Outlet />
                 <Footer />
               </div>
@@ -119,7 +119,7 @@ export function ErrorBoundary() {
         <Sidebar />
         <div className="flex">
           <div className="w-full flex flex-col">
-            <main className="pt-16 p-4 mx-auto flex-grow">
+            <main className="pt-16 p-4 w-4/5 min-w-[350px] mx-auto flex-grow">
               <div className="md:flex gap-4">
                 <img className="w-[200px] rounded mb-3" src="../yuu.jpg" />
                 <div>

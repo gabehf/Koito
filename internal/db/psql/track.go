@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
@@ -87,7 +88,7 @@ func (d *Psql) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Trac
 		MbzID:        t.MusicBrainzID,
 		Title:        t.Title,
 		AlbumID:      t.ReleaseID,
-		Image:        t.Image,
+		Image:        catalog.BuildImageList(t.Image),
 		Duration:     t.Duration,
 		AllTimeRank:  rank.Rank,
 		ListenCount:  count,
