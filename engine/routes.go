@@ -32,6 +32,8 @@ func bindRoutes(
 			AllowedMethods: []string{"GET", "OPTIONS", "HEAD"},
 		}))
 	}
+	r.Use(chimiddleware.GetHead)
+
 	r.With(chimiddleware.RequestSize(5<<20)).
 		Get("/image/{image_id}/{filename}", handlers.ImageHandler(db))
 
