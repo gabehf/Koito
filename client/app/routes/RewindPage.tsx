@@ -183,15 +183,15 @@ export default function RewindPage() {
                 ))}
               </div>
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              id="show-time-checkbox"
-              type="checkbox"
-              checked={showTime}
-              onChange={(e) => setShowTime(e.target.checked)}
-            />
-            <label htmlFor="show-time-checkbox">Show time listened?</label>
+            <div className="flex items-center gap-2">
+              <input
+                id="show-time-checkbox"
+                type="checkbox"
+                checked={showTime}
+                onChange={(e) => setShowTime(e.target.checked)}
+              />
+              <label htmlFor="show-time-checkbox">Show time listened?</label>
+            </div>
           </div>
         </div>
         <div className="flex flex-col items-center gap-4">

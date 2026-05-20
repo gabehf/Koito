@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { average } from "color.js";
 import { type PaginatedResponse } from "api/api";
 import PeriodSelector from "~/components/PeriodSelector";
+import { useAppContext } from "~/providers/AppProvider";
 
 interface ChartLayoutProps<T> {
   title: "Top Albums" | "Top Tracks" | "Top Artists" | "Last Played";
@@ -27,6 +28,8 @@ export default function ChartLayout<T>({
   const fetcher = useFetcher();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { firstActivity } = useAppContext();
 
   const currentParams = new URLSearchParams(location.search);
   const currentPage = parseInt(currentParams.get("page") || "1", 10);
@@ -128,8 +131,15 @@ export default function ChartLayout<T>({
   const handleNextPage = () => setPage(currentPage + 1);
   const handlePrevPage = () => setPage(currentPage - 1);
 
+  const now = new Date();
+
+  const yearLowerLimit =
+    firstActivity?.getFullYear() || now.setFullYear(now.getFullYear() - 10);
+
   const yearOptions = Array.from(
-    { length: 10 },
+    {
+      length: now.getFullYear() - yearLowerLimit + 1,
+    },
     (_, i) => `${new Date().getFullYear() - i}`,
   );
   const monthOptions = Array.from({ length: 12 }, (_, i) => `${i + 1}`);
@@ -139,7 +149,6 @@ export default function ChartLayout<T>({
     let from: Date;
     let to: Date;
 
-    const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth(); // 0-indexed
     const currentDate = now.getDate();
