@@ -1,4 +1,4 @@
-FROM node AS frontend
+FROM --platform=$BUILDPLATFORM node AS frontend
 
 ARG KOITO_VERSION
 ENV VITE_KOITO_VERSION=$KOITO_VERSION
@@ -39,7 +39,7 @@ FROM debian:bookworm-slim AS final
 WORKDIR /app
 
 RUN apt-get update && \
-	apt-get install -y --no-install-recommends libvips42  && \
+	apt-get install -y libvips42  && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend /app/app ./app
