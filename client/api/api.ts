@@ -336,6 +336,7 @@ type SimpleTrack = {
   id: number;
   title: string;
   artists: SimpleArtists[];
+  image: ImageList;
 };
 type Artist = {
   id: number;
