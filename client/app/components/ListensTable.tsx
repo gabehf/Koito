@@ -32,7 +32,7 @@ export default function ListensTable({
               <Link to={`/track/${npData.track.id}`}>
                 <Image
                   src={npData.track.image.small}
-                  size={64}
+                  size={32}
                   alt={npData.track.title}
                 />
               </Link>
