@@ -149,8 +149,6 @@ func getTestGetenv() func(string) string {
 			return "true"
 		case cfg.LOG_LEVEL_ENV:
 			return "debug"
-		case cfg.DATABASE_URL_ENV:
-			return "bleh"
 		case cfg.SQLITE_ENABLED:
 			return "true"
 		case cfg.CONFIG_DIR_ENV:
