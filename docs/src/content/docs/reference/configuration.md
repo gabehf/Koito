@@ -11,20 +11,6 @@ The suffix `_FILE` is also supported for every environment variable. This allows
 If the environment variable is defined without **and** with the suffix at the same time, the content of the environment variable without the `_FILE` suffix will have the higher priority.
 :::
 
-##### KOITO_DATABASE_URL
-
-- Required: `true` if you have not yet migrated to SQLite (PostgreSQL support will be deprecated in v0.2.0 onwards)
-- Description: A Postgres connection URI. See https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS for more information.
-
-##### KOITO_SQLITE_ENABLED
-
-- Default: `false` (will always be enabled in v0.2.0 onwards)
-- Description: Enables SQLite instead of PostgreSQL as the database engine. Automatically migrates data from PostgreSQL if `KOITO_DATABASE_URL` is also set.
-
-:::danger
-`KOITO_DATABASE_URL` will be deprecated in v0.2.0 onwards, and SQLite will be the only database supported in future versions. In future versions of Koito v0.2.0 onwards, migration to SQLite will not be optional, so it is recommended to migrate manually first, creating an Export of your data first to ensure you don't lose any precious listening data.
-:::
-
 ##### KOITO_DEFAULT_USERNAME
 
 - Default: `admin`
@@ -168,3 +154,21 @@ If the environment variable is defined without **and** with the suffix at the sa
 
 - Default: No CORS policy
 - Description: A comma separated list of origins to allow CORS requests from. The special value `*` allows CORS requests from all origins.
+
+:::danger
+Environment variables below this notice are deprecated, and will not work with current versions of Koito.
+:::
+
+##### KOITO_SQLITE_ENABLED
+
+- Deprecated as of: `v0.2.1`
+- Deprecated because: SQLite is the only supported database as of `v0.2.1`.
+- Default: `false` (will always be enabled in `v0.2.0` onwards)
+- Description: Enables SQLite instead of PostgreSQL as the database engine. Automatically migrates data from PostgreSQL if `KOITO_DATABASE_URL` is also set on versions `v0.1.8` to `v0.1.10`.
+
+##### KOITO_DATABASE_URL
+
+- Deprecated as of: `v0.2.1`
+- Deprecated because: PostgreSQL is no longer a supported database as of `v0.2.1`.
+- Required: `true` if you have not yet migrated to SQLite (PostgreSQL support will be deprecated in `v0.2.0` onwards)
+- Description: A Postgres connection URI. See https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS for more information. Having this set will cause automatic migration to SQLite on versions `v0.2.X`. On `v0.3.X` or higher, having this set will cause the application to fail to start.

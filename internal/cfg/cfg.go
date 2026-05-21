@@ -117,6 +117,12 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 
 	cfg.databaseUrl = getenv(DATABASE_URL_ENV)
 
+	if cfg.databaseUrl != "" {
+		return nil, fmt.Errorf(`loadConfig: %s must not be set! If you are still using PostgreSQL on any version v0.1.X, `+
+			`you **must** upgrade to v0.2.1 before any future upgrades so that your data can be migrated to SQLite. `+
+			`View the release notes for v0.2.1 for more information.`, DATABASE_URL_ENV)
+	}
+
 	cfg.bindAddr = getenv(BIND_ADDR_ENV)
 	var err error
 	cfg.listenPort, err = strconv.Atoi(getenv(LISTEN_PORT_ENV))

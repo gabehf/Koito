@@ -4,29 +4,32 @@ description: Guide on how to install Koito to start tracking your listening hist
 ---
 
 ## Docker
+
 By far the easiest way to get up and running with Koito is using docker. Here is an example Docker Compose file to get you up and running in minutes:
+
 ```yaml title="compose.yaml"
 services:
   koito:
     image: gabehf/koito:latest
     container_name: koito
-    environment:
-      - KOITO_SQLITE_ENABLED=true # will not be needed after v0.2.0
     ports:
       - "4110:4110"
     volumes:
       - ./koito:/etc/koito
     restart: unless-stopped
-
 ```
 
-`KOITO_SQLITE_ENABLED=true` is highly recommended for new installations, as PostgreSQL support will be deprecated in v0.2.0 onwards. After v0.2.0, you will not need `KOITO_SQLITE_ENABLED` anymore.
+:::note
+Koito uses SQLite for all new installations as of `v0.2.1`. If you are running a version older than that, you will need to set `KOITO_SQLITE_ENABLED=true`.
+:::
 
 You can find a full list of configuration options in the [configuration reference](/reference/configuration).
 
 ## Build from source
 
 If you don't want to use docker, you can also build the application from source.
+
+**Note that no support is provided when running Koito built from source.**
 
 First, you need to install dependencies. Koito relies on `make`, `yarn` for building the client, and `libvips-dev` to process images.
 
@@ -47,7 +50,7 @@ make build
 When the build is finished, you can run the executable at the root of the directory.
 
 ```sh
-KOITO_SQLITE_ENABLED=true ./koito
+./koito
 ```
 
 Then, navigate your browser to `localhost:4110` to enter your Koito instance.

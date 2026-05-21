@@ -24,7 +24,6 @@ import (
 	"github.com/gabehf/koito/internal/importer"
 	"github.com/gabehf/koito/internal/logger"
 	mbz "github.com/gabehf/koito/internal/mbz"
-	"github.com/gabehf/koito/internal/migrate"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/go-chi/chi/v5"
@@ -111,18 +110,6 @@ func Run(
 			l.Fatal().Err(err).Msg("Engine: Failed to create import directory")
 			return err
 		}
-	}
-
-	if cfg.DatabaseUrl() != "" {
-		l.Info().Msg("Engine: Running Postgres to SQLite migration")
-		if err := migrate.Migrate(ctx, l); err != nil {
-			l.Fatal().Err(err).Msg("Engine: Migration failed")
-			return err
-		}
-		l.Info().Msg("Engine: Your data was automatically migrated to SQLite. " +
-			"Please check and make sure that all your data was migrated successfully, " +
-			"then remove " + cfg.DATABASE_URL_ENV + " from your configuration or else Koito will fail to start.")
-		l.Info().Msg("Engine: Migration complete; proceeding with SQLite")
 	}
 
 	if cfg.SqliteEnabled() {
