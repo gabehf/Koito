@@ -91,7 +91,7 @@ export default function Track() {
               {formatDate(new Date(track.first_listen * 1000), dateFormat)}
             </p>
           )}
-        </div>
+        </>
       }
     >
       <div className="flex flex-col gap-10 md:gap-20 mt-14">

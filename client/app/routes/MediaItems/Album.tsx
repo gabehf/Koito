@@ -83,7 +83,7 @@ export default function Album() {
               {formatDate(new Date(album.first_listen * 1000), dateFormat)}
             </p>
           )}
-        </div>
+        </>
       }
     >
       <div className="flex flex-col gap-10 md:gap-12 mt-8 max-w-[1400px]">
