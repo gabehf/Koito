@@ -16,7 +16,7 @@ func ExportHandler(store db.ExportStore) http.HandlerFunc {
 		w.Header().Set("Content-Disposition", `attachment; filename="koito_export.json"`)
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
-		l.Debug().Msg("ExportHandler: Recieved request for export file")
+		l.Debug().Msg("ExportHandler: Received request for export file")
 		u := middleware.GetUserFromContext(ctx)
 		if u == nil {
 			l.Debug().Msg("ExportHandler: Unauthorized access")

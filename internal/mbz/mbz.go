@@ -82,7 +82,7 @@ func (c *MusicBrainzClient) queue(ctx context.Context, req *http.Request) ([]byt
 			done <- queue.RequestResult{Err: err}
 			return
 		} else if resp.StatusCode >= 300 || resp.StatusCode < 200 {
-			err = fmt.Errorf("recieved non-ok status from MusicBrainz: %s", resp.Status)
+			err = fmt.Errorf("received non-ok status from MusicBrainz: %s", resp.Status)
 			done <- queue.RequestResult{Body: nil, Err: err}
 		}
 		defer resp.Body.Close()
