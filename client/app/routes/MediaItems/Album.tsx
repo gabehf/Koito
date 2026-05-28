@@ -4,11 +4,9 @@ import { mergeAlbums, type Album } from "api/api";
 import LastPlayed from "~/components/LastPlayed";
 import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
-import { timeListenedString, formatDate } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
 import MediaItemNote from "~/components/MediaItemNote";
 import ArtistAlbums from "~/components/ArtistAlbums";
-import { useAppContext } from "~/providers/AppProvider";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const res = await fetch(`/apis/web/v1/album/${params.id}`);
@@ -22,7 +20,6 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function Album() {
   const album = useLoaderData() as Album;
   const period = "all_time";
-  const { dateFormat } = useAppContext();
 
   console.log(album);
 
@@ -54,35 +51,17 @@ export default function Album() {
           {album.artists.length > 0 && !album.is_various_artists && (
             <p>
               By{" "}
-              {
-                <span key={album.artists[0].id}>
-                  <Link
-                    className="hover:underline"
-                    to={`/artist/${album.artists[0].id}`}
-                  >
-                    {album.artists[0].name}
-                  </Link>
-                </span>
-              }
+              <span key={album.artists[0].id}>
+                <Link
+                  className="hover:underline"
+                  to={`/artist/${album.artists[0].id}`}
+                >
+                  {album.artists[0].name}
+                </Link>
+              </span>
             </p>
           )}
           {album.is_various_artists && <p>By Various Artists</p>}
-          {album.listen_count !== 0 && (
-            <p>
-              {album.listen_count} play{album.listen_count > 1 ? "s" : ""}
-            </p>
-          )}
-          {album.time_listened !== 0 && (
-            <p title={Math.floor(album.time_listened / 60 / 60) + " hours"}>
-              {timeListenedString(album.time_listened)}
-            </p>
-          )}
-          {album.first_listen > 0 && (
-            <p title={new Date(album.first_listen * 1000).toLocaleString()}>
-              Listening since{" "}
-              {formatDate(new Date(album.first_listen * 1000), dateFormat)}
-            </p>
-          )}
         </>
       }
     >
@@ -112,4 +91,3 @@ export default function Album() {
     </MediaLayout>
   );
 }
-

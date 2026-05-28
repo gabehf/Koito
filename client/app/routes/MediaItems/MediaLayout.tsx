@@ -10,7 +10,7 @@ import DeleteModal from "~/components/modals/DeleteModal";
 import EditModal from "~/components/modals/EditModal/EditModal";
 import AddListenModal from "~/components/modals/AddListenModal";
 import MbzIcon from "~/components/icons/MbzIcon";
-import { timeListenedString } from "~/utils/utils";
+import { timeListenedString, formatDate } from "~/utils/utils";
 import { Link } from "react-router";
 import useWindowWidth from "~/hooks/useWindowWidth";
 
@@ -48,7 +48,7 @@ export default function MediaLayout(props: Props) {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [addListenModalOpen, setAddListenModalOpen] = useState(false);
-  const { user } = useAppContext();
+  const { user, dateFormat } = useAppContext();
 
   useEffect(() => {
     average(props.img.xs, { amount: 1 }).then((color) => {
@@ -131,7 +131,7 @@ export default function MediaLayout(props: Props) {
               {props.firstListen > 0 && (
                 <p title={new Date(props.firstListen * 1000).toLocaleString()}>
                   Listening since{" "}
-                  {new Date(props.firstListen * 1000).toLocaleDateString()}
+                  {formatDate(new Date(props.firstListen * 1000), dateFormat)}
                 </p>
               )}
             </div>

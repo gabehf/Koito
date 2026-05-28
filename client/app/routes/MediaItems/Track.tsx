@@ -3,9 +3,7 @@ import { mergeTracks, type Album, type Artist, type Track } from "api/api";
 import LastPlayed from "~/components/LastPlayed";
 import MediaLayout from "./MediaLayout";
 import ActivityGrid from "~/components/ActivityGrid";
-import { timeListenedString, formatDate } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
-import { useAppContext } from "~/providers/AppProvider";
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   let res = await fetch(`/apis/web/v1/track/${params.id}`);
@@ -26,7 +24,6 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function Track() {
   const { track, album } = useLoaderData();
   const period = "all_time";
-  const { dateFormat } = useAppContext();
 
   return (
     <MediaLayout
@@ -75,22 +72,6 @@ export default function Track() {
               {album.title}
             </Link>
           </p>
-          {track.listen_count !== 0 && (
-            <p>
-              {track.listen_count} play{track.listen_count > 1 ? "s" : ""}
-            </p>
-          )}
-          {track.time_listened !== 0 && (
-            <p title={Math.floor(track.time_listened / 60 / 60) + " hours"}>
-              {timeListenedString(track.time_listened)}
-            </p>
-          )}
-          {track.first_listen > 0 && (
-            <p title={new Date(track.first_listen * 1000).toLocaleString()}>
-              Listening since{" "}
-              {formatDate(new Date(track.first_listen * 1000), dateFormat)}
-            </p>
-          )}
         </>
       }
     >
