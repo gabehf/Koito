@@ -196,7 +196,10 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	rawDateFormat := getenv(DATE_FORMAT_ENV)
 	if rawDateFormat != "" {
 		validFormat := regexp.MustCompile(`^(DD|MM|YYYY)([-/.](DD|MM|YYYY)){2}$`)
-		if !validFormat.MatchString(rawDateFormat) {
+		if !validFormat.MatchString(rawDateFormat) ||
+			!strings.Contains(rawDateFormat, "DD") ||
+			!strings.Contains(rawDateFormat, "MM") ||
+			!strings.Contains(rawDateFormat, "YYYY") {
 			return nil, fmt.Errorf("loadConfig: %s must use DD, MM, and YYYY tokens with a single / - or . separator (e.g. DD/MM/YYYY)", DATE_FORMAT_ENV)
 		}
 	}
