@@ -28,7 +28,7 @@ const getRewindParams = (): { month: number; year: number } => {
   }
 };
 
-function timeSince(date: Date) {
+function timeSince(date: Date, format: string = "") {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -44,12 +44,7 @@ function timeSince(date: Date) {
 
   // 1 day
   if (seconds > 86400) {
-    const dateString = date.toLocaleDateString([], {
-      month: "numeric",
-      year: "2-digit",
-      day: "numeric",
-    });
-
+    const dateString = formatDate(date, format);
     const timeString = date.toLocaleTimeString([], {
       timeStyle: "short",
     });
