@@ -379,3 +379,12 @@ func TestArtistStringParse(t *testing.T) {
 		assert.ElementsMatch(t, out, artists)
 	}
 }
+
+func TestInferArtistNamesFromSourceIDs(t *testing.T) {
+	assert.Equal(t,
+		[]string{"Pineapple StormTv", "Sant", "Tiago Mac"},
+		catalog.InferArtistNamesFromSourceIDs("Pineapple StormTv, Sant, Tiago Mac", []string{"spotify:1", "spotify:2", "spotify:3"}),
+	)
+	assert.Nil(t, catalog.InferArtistNamesFromSourceIDs("Tyler, The Creator", []string{"spotify:1"}))
+	assert.Nil(t, catalog.InferArtistNamesFromSourceIDs("Earth, Wind & Fire, Foo", []string{"spotify:1", "spotify:2"}))
+}
