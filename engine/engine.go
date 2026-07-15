@@ -189,11 +189,12 @@ func Run(
 
 	l.Debug().Msg("Engine: Initializing image sources")
 	images.Initialize(images.ImageSourceOpts{
-		UserAgent:      cfg.UserAgent(),
-		EnableCAA:      !cfg.CoverArtArchiveDisabled(),
-		EnableDeezer:   !cfg.DeezerDisabled(),
-		EnableSubsonic: cfg.SubsonicEnabled(),
-		EnableLastFM:   cfg.LastFMApiKey() != "",
+		UserAgent:             cfg.UserAgent(),
+		EnableCAA:             !cfg.CoverArtArchiveDisabled(),
+		EnableDeezer:          !cfg.DeezerDisabled(),
+		EnableSubsonic:        cfg.SubsonicEnabled(),
+		EnableLastFM:          cfg.LastFMApiKey() != "",
+		EnableOriginThumbnail: !cfg.OriginThumbnailDisabled(),
 	})
 	l.Info().Msg("Engine: Image sources initialized")
 

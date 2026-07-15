@@ -36,6 +36,7 @@ const (
 	DISABLE_DEEZER_ENV             = "KOITO_DISABLE_DEEZER"
 	DISABLE_COVER_ART_ARCHIVE_ENV  = "KOITO_DISABLE_COVER_ART_ARCHIVE"
 	DISABLE_MUSICBRAINZ_ENV        = "KOITO_DISABLE_MUSICBRAINZ"
+	DISABLE_ORIGIN_THUMBNAIL_ENV   = "KOITO_DISABLE_ORIGIN_THUMBNAIL"
 	SUBSONIC_URL_ENV               = "KOITO_SUBSONIC_URL"
 	SUBSONIC_PARAMS_ENV            = "KOITO_SUBSONIC_PARAMS"
 	LASTFM_API_KEY_ENV             = "KOITO_LASTFM_API_KEY"
@@ -72,6 +73,7 @@ type config struct {
 	disableDeezer          bool
 	disableCAA             bool
 	disableMusicBrainz     bool
+	disableOriginThumbnail bool
 	subsonicUrl            string
 	subsonicParams         string
 	lastfmApiKey           string
@@ -168,6 +170,7 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg.disableDeezer = parseBool(getenv(DISABLE_DEEZER_ENV))
 	cfg.disableCAA = parseBool(getenv(DISABLE_COVER_ART_ARCHIVE_ENV))
 	cfg.disableMusicBrainz = parseBool(getenv(DISABLE_MUSICBRAINZ_ENV))
+	cfg.disableOriginThumbnail = parseBool(getenv(DISABLE_ORIGIN_THUMBNAIL_ENV))
 	cfg.subsonicUrl = getenv(SUBSONIC_URL_ENV)
 	cfg.subsonicParams = getenv(SUBSONIC_PARAMS_ENV)
 	cfg.subsonicEnabled = cfg.subsonicUrl != "" && cfg.subsonicParams != ""

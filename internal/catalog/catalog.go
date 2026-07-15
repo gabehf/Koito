@@ -56,6 +56,7 @@ type SubmitListenOpts struct {
 	ReleaseTitle       string
 	ReleaseMbzID       uuid.UUID
 	ReleaseGroupMbzID  uuid.UUID
+	OriginUrl          string // e.g. the source video URL; used as a last-resort album image fallback
 	Time               time.Time
 
 	UserID       int32
@@ -117,6 +118,7 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 		Mbzc:              opts.MbzCaller,
 		Artists:           artists,
 		SkipCacheImage:    opts.SkipCacheImage,
+		OriginUrl:         opts.OriginUrl,
 	})
 	if err != nil {
 		l.Error().Err(err).Msg("Failed to associate release group to listen")

@@ -69,6 +69,7 @@ type LbzAdditionalInfo struct {
 	Duration                int32    `json:"duration,omitempty"`
 	Tags                    []string `json:"tags,omitempty"`
 	AlbumArtist             string   `json:"albumartist,omitempty"`
+	OriginUrl               string   `json:"origin_url,omitempty"`
 }
 
 const (
@@ -225,6 +226,7 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 				Client:             client,
 				IsNowPlaying:       req.ListenType == ListenTypePlayingNow,
 				SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
+				OriginUrl:          payload.TrackMeta.AdditionalInfo.OriginUrl,
 			}
 
 			_, err, shared := sfGroup.Do(buildCaolescingKey(payload), func() (interface{}, error) {

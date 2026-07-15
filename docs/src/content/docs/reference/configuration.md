@@ -99,6 +99,11 @@ If the environment variable is defined without **and** with the suffix at the sa
 - Default: `false`
 - Description: Disables Cover Art Archive as a source for finding album images.
 
+##### KOITO_DISABLE_ORIGIN_THUMBNAIL
+
+- Default: `false`
+- Description: Disables using the thumbnail of the `origin_url` submitted with a listen (e.g. a YouTube/YouTube Music video URL) as a last-resort source for album images, used when no other enabled provider finds a match.
+
 ##### KOITO_DISABLE_MUSICBRAINZ
 
 - Default: `false`

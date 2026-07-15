@@ -13,20 +13,22 @@ import (
 )
 
 type ImageSource struct {
-	deezerEnabled   bool
-	deezerC         *DeezerClient
-	subsonicEnabled bool
-	subsonicC       *SubsonicClient
-	lastfmEnabled   bool
-	lastfmC         *LastFMClient
-	caaEnabled      bool
+	deezerEnabled          bool
+	deezerC                *DeezerClient
+	subsonicEnabled        bool
+	subsonicC              *SubsonicClient
+	lastfmEnabled          bool
+	lastfmC                *LastFMClient
+	caaEnabled             bool
+	originThumbnailEnabled bool
 }
 type ImageSourceOpts struct {
-	UserAgent      string
-	EnableCAA      bool
-	EnableDeezer   bool
-	EnableSubsonic bool
-	EnableLastFM   bool
+	UserAgent             string
+	EnableCAA             bool
+	EnableDeezer          bool
+	EnableSubsonic        bool
+	EnableLastFM          bool
+	EnableOriginThumbnail bool
 }
 
 var once sync.Once
@@ -42,6 +44,7 @@ type AlbumImageOpts struct {
 	Album             string
 	ReleaseMbzID      *uuid.UUID
 	ReleaseGroupMbzID *uuid.UUID
+	OriginUrl string
 }
 
 const caaBaseUrl = "https://coverartarchive.org"
@@ -63,6 +66,9 @@ func Initialize(opts ImageSourceOpts) {
 		if opts.EnableLastFM {
 			imgsrc.lastfmEnabled = true
 			imgsrc.lastfmC = NewLastFMClient()
+		}
+		if opts.EnableOriginThumbnail {
+			imgsrc.originThumbnailEnabled = true
 		}
 	})
 }
@@ -163,11 +169,20 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 		img, err := imgsrc.deezerC.GetAlbumImages(ctx, opts.Artists, opts.Album)
 		if err != nil {
 			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Deezer")
-			return "", err
+		} else if img != "" {
+			return img, nil
 		}
-		return img, nil
 	}
-	l.Warn().Msg("GetAlbumImage: No image providers are enabled")
+	if imgsrc.originThumbnailEnabled && opts.OriginUrl != "" {
+		l.Debug().Msg("Attempting to find album image from origin URL")
+		img, err := resolveOriginThumbnail(opts.OriginUrl)
+		if err != nil {
+			l.Debug().Err(err).Msg("GetAlbumImage: Could not find album image from origin URL")
+		} else if img != "" {
+			return img, nil
+		}
+	}
+	l.Warn().Msg("GetAlbumImage: No image providers were able to find a match")
 	return "", nil
 }
 

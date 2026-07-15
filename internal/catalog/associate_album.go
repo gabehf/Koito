@@ -24,6 +24,7 @@ type AssociateAlbumOpts struct {
 	TrackName         string // required
 	Mbzc              mbz.MusicBrainzCaller
 	SkipCacheImage    bool
+	OriginUrl         string // e.g. the source video URL; used as a last-resort album image fallback
 }
 
 func AssociateAlbum(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpts) (*models.Album, error) {
@@ -127,6 +128,7 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, o
 			Artists:      utils.UniqueIgnoringCase(slices.Concat(utils.FlattenMbzArtistCreditNames(release.ArtistCredit), utils.FlattenArtistNames(opts.Artists))),
 			Album:        release.Title,
 			ReleaseMbzID: &opts.ReleaseMbzID,
+			OriginUrl:    opts.OriginUrl,
 		})
 
 		if err == nil && imgUrl != "" {
@@ -214,6 +216,7 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 			Artists:      utils.FlattenArtistNames(opts.Artists),
 			Album:        opts.ReleaseName,
 			ReleaseMbzID: &opts.ReleaseMbzID,
+			OriginUrl:    opts.OriginUrl,
 		})
 		if err == nil && imgUrl != "" {
 			imgid = uuid.New()

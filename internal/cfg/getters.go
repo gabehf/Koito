@@ -108,6 +108,12 @@ func CoverArtArchiveDisabled() bool {
 	return globalConfig.disableCAA
 }
 
+func OriginThumbnailDisabled() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.disableOriginThumbnail
+}
+
 func MusicBrainzDisabled() bool {
 	lock.RLock()
 	defer lock.RUnlock()
