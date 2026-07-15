@@ -104,6 +104,15 @@ func StatsHandler(store statsStore) http.HandlerFunc {
 
 		l.Debug().Msg("StatsHandler: Successfully fetched statistics")
 
+		var avgDailyPlays, tracksPerArtist, albumsPerArtist float32
+		if activeDays != 0 {
+			avgDailyPlays = float32(listens) / float32(activeDays)
+		}
+		if artists != 0 {
+			tracksPerArtist = float32(tracks) / float32(artists)
+			albumsPerArtist = float32(albums) / float32(artists)
+		}
+
 		resp := &StatsResponse{
 			ListenCount:     listens,
 			TrackCount:      tracks,
@@ -111,9 +120,9 @@ func StatsHandler(store statsStore) http.HandlerFunc {
 			ArtistCount:     artists,
 			MinutesListened: timeListenedS / 60,
 			DaysActive:      activeDays,
-			AvgDailyPlays:   float32(listens) / float32(activeDays),
-			TracksPerArtist: float32(tracks) / float32(artists),
-			AlbumsPerArtist: float32(albums) / float32(artists),
+			AvgDailyPlays:   avgDailyPlays,
+			TracksPerArtist: tracksPerArtist,
+			AlbumsPerArtist: albumsPerArtist,
 			LongestStreak:   longestStreak,
 		}
 

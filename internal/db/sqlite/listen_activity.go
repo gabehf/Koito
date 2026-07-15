@@ -210,7 +210,7 @@ func (s *Sqlite) GetListenStreak(ctx context.Context, opts db.ListenActivityOpts
 
 func (s *Sqlite) GetActiveDays(ctx context.Context, tz *time.Location) (int, error) {
 
-	now := time.Now()
+	now := time.Now().In(tz)
 	eodUnix := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, tz).Unix()
 
 	rows, err := s.db.QueryContext(ctx, `

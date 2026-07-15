@@ -305,9 +305,14 @@ func WriteError(w http.ResponseWriter, message string, code int) {
 
 // Sets content type and status code, and encodes data to json
 func WriteJSON(w http.ResponseWriter, status int, data any) {
+	body, err := json.Marshal(data)
+	if err != nil {
+		WriteError(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	w.Write(body)
 }
 
 // Returns true if more than one string is not empty
