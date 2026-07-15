@@ -26,6 +26,7 @@ type AssociateArtistsOpts struct {
 	Mbzc          mbz.MusicBrainzCaller
 
 	SkipCacheImage bool
+	OriginUrl      string // e.g. the source video URL; used as a last-resort artist image fallback
 }
 
 func AssociateArtists(ctx context.Context, d db.ArtistStore, opts AssociateArtistsOpts) ([]*models.Artist, error) {
@@ -128,7 +129,8 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 
 			var imgid uuid.UUID
 			imgUrl, imgErr := images.GetArtistImage(ctx, images.ArtistImageOpts{
-				Aliases: []string{a.Artist},
+				Aliases:   []string{a.Artist},
+				OriginUrl: opts.OriginUrl,
 			})
 			if imgErr == nil && imgUrl != "" {
 				imgid = uuid.New()
@@ -241,7 +243,8 @@ func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []st
 
 	var imgid uuid.UUID
 	imgUrl, err := images.GetArtistImage(ctx, images.ArtistImageOpts{
-		Aliases: aliases,
+		Aliases:   aliases,
+		OriginUrl: opts.OriginUrl,
 	})
 	if err == nil && imgUrl != "" {
 		imgid = uuid.New()
@@ -290,7 +293,8 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 		if errors.Is(err, db.ErrNotFound) {
 			var imgid uuid.UUID
 			imgUrl, err := images.GetArtistImage(ctx, images.ArtistImageOpts{
-				Aliases: []string{name},
+				Aliases:   []string{name},
+				OriginUrl: opts.OriginUrl,
 			})
 			if err == nil && imgUrl != "" {
 				imgid = uuid.New()

@@ -37,6 +37,7 @@ var imgsrc ImageSource
 type ArtistImageOpts struct {
 	Aliases []string
 	MBID    *uuid.UUID
+	OriginUrl string
 }
 
 type AlbumImageOpts struct {
@@ -79,7 +80,8 @@ func Shutdown() {
 
 func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	l := logger.FromContext(ctx)
-	if !imgsrc.deezerEnabled && !imgsrc.subsonicEnabled && !imgsrc.lastfmEnabled {
+	originFallbackAvailable := imgsrc.originThumbnailEnabled && opts.OriginUrl != ""
+	if !imgsrc.deezerEnabled && !imgsrc.subsonicEnabled && !imgsrc.lastfmEnabled && !originFallbackAvailable {
 		l.Warn().Msg("GetArtistImage: No image providers are enabled")
 		return "", nil
 	}
@@ -112,6 +114,15 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 		}
 	} else {
 		l.Debug().Msg("GetArtistImage: LastFM image fetching is disabled")
+	}
+	if originFallbackAvailable {
+		l.Debug().Msg("Attempting to find artist image from origin URL (channel avatar)")
+		img, err := resolveOriginArtistImage(opts.OriginUrl)
+		if err != nil {
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from origin URL")
+		} else if img != "" {
+			return img, nil
+		}
 	}
 	return "", nil
 }

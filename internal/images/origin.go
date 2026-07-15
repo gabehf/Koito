@@ -1,9 +1,14 @@
 package images
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/gabehf/koito/internal/cfg"
 )
 
 // originThumbnailResolver turns a page URL into an ordered list of candidate thumbnail URLs to try.
@@ -11,6 +16,13 @@ type originThumbnailResolver func(u *url.URL) []string
 
 var originThumbnailResolvers = []originThumbnailResolver{
 	youtubeThumbnailCandidates,
+}
+
+// originArtistImageResolver turns a page URL into a single candidate artist/uploader image URL.
+type originArtistImageResolver func(u *url.URL) (string, error)
+
+var originArtistImageResolvers = []originArtistImageResolver{
+	youtubeChannelAvatar,
 }
 
 // resolveOriginThumbnail extracts a usable image URL from the URL of the page a listen was submitted from.
@@ -73,4 +85,87 @@ func isYoutubeVideoID(id string) bool {
 		}
 	}
 	return true
+}
+
+// resolveOriginArtistImage extracts a usable artist/uploader image URL from the URL of the page a listen was submitted from.
+func resolveOriginArtistImage(originUrl string) (string, error) {
+	u, err := url.Parse(originUrl)
+	if err != nil {
+		return "", fmt.Errorf("resolveOriginArtistImage: could not parse origin URL: %w", err)
+	}
+
+	for _, resolve := range originArtistImageResolvers {
+		candidate, err := resolve(u)
+		if err != nil || candidate == "" {
+			continue // try the next resolver rather than failing outright
+		}
+		if err := ValidateImageURL(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+
+	return "", nil
+}
+
+type youtubeOembedResponse struct {
+	AuthorUrl string `json:"author_url"`
+}
+
+func youtubeChannelAvatar(u *url.URL) (string, error) {
+	id := youtubeVideoID(u)
+	if id == "" {
+		return "", nil
+	}
+	channelRef, err := youtubeChannelRef(id)
+	if err != nil || channelRef == "" {
+		return "", err
+	}
+	// unavatar.io resolves a channel ID or @handle to the channel's current avatar image.
+	return "https://unavatar.io/youtube/" + url.PathEscape(channelRef), nil
+}
+
+// youtubeChannelRef resolves a video ID to its uploading channel's ID or @handle.
+func youtubeChannelRef(videoID string) (string, error) {
+	oembedUrl := "https://www.youtube.com/oembed?format=json&url=" +
+		url.QueryEscape("https://www.youtube.com/watch?v="+videoID)
+
+	req, err := http.NewRequest(http.MethodGet, oembedUrl, nil)
+	if err != nil {
+		return "", fmt.Errorf("youtubeChannelRef: %w", err)
+	}
+	req.Header.Set("User-Agent", cfg.UserAgent())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("youtubeChannelRef: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("youtubeChannelRef: unexpected status code %d", resp.StatusCode)
+	}
+
+	var data youtubeOembedResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return "", fmt.Errorf("youtubeChannelRef: %w", err)
+	}
+	if data.AuthorUrl == "" {
+		return "", errors.New("youtubeChannelRef: no author_url in oEmbed response")
+	}
+
+	authorUrl, err := url.Parse(data.AuthorUrl)
+	if err != nil {
+		return "", fmt.Errorf("youtubeChannelRef: %w", err)
+	}
+
+	// author_url path is one of: "/channel/UCxxxx", "/@handle", "/c/Name", "/user/Name"
+	ref := strings.Trim(authorUrl.Path, "/")
+	if idx := strings.LastIndex(ref, "/"); idx != -1 {
+		ref = ref[idx+1:]
+	}
+	if ref == "" {
+		return "", errors.New("youtubeChannelRef: could not extract channel reference")
+	}
+
+	return ref, nil
 }

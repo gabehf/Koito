@@ -96,6 +96,7 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 			Mbzc:           opts.MbzCaller,
 			TrackTitle:     opts.TrackTitle,
 			SkipCacheImage: opts.SkipCacheImage,
+			OriginUrl:      opts.OriginUrl,
 		})
 	if err != nil {
 		l.Err(err).Msg("Failed to associate artists to listen")
