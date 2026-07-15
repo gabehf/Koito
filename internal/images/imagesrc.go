@@ -35,8 +35,8 @@ var once sync.Once
 var imgsrc ImageSource
 
 type ArtistImageOpts struct {
-	Aliases []string
-	MBID    *uuid.UUID
+	Aliases   []string
+	MBID      *uuid.UUID
 	OriginUrl string
 }
 
@@ -45,7 +45,7 @@ type AlbumImageOpts struct {
 	Album             string
 	ReleaseMbzID      *uuid.UUID
 	ReleaseGroupMbzID *uuid.UUID
-	OriginUrl string
+	OriginUrl         string
 }
 
 const caaBaseUrl = "https://coverartarchive.org"
@@ -95,6 +95,15 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	} else {
 		l.Debug().Msg("GetArtistImage: Subsonic image fetching is disabled")
 	}
+	if originFallbackAvailable {
+		l.Debug().Msg("Attempting to find artist image from origin URL (channel avatar)")
+		img, err := resolveOriginArtistImage(opts.OriginUrl)
+		if err != nil {
+			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from origin URL")
+		} else if img != "" {
+			return img, nil
+		}
+	}
 	if imgsrc.deezerEnabled {
 		img, err := imgsrc.deezerC.GetArtistImages(ctx, opts.Aliases)
 		if err != nil {
@@ -115,15 +124,6 @@ func GetArtistImage(ctx context.Context, opts ArtistImageOpts) (string, error) {
 	} else {
 		l.Debug().Msg("GetArtistImage: LastFM image fetching is disabled")
 	}
-	if originFallbackAvailable {
-		l.Debug().Msg("Attempting to find artist image from origin URL (channel avatar)")
-		img, err := resolveOriginArtistImage(opts.OriginUrl)
-		if err != nil {
-			l.Debug().Err(err).Msg("GetArtistImage: Could not find artist image from origin URL")
-		} else if img != "" {
-			return img, nil
-		}
-	}
 	return "", nil
 }
 
@@ -138,6 +138,15 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 			return img, nil
 		}
 		l.Debug().Msg("Could not find album cover from Subsonic")
+	}
+	if imgsrc.originThumbnailEnabled && opts.OriginUrl != "" {
+		l.Debug().Msg("Attempting to find album image from origin URL")
+		img, err := resolveOriginThumbnail(opts.OriginUrl)
+		if err != nil {
+			l.Debug().Err(err).Msg("GetAlbumImage: Could not find album image from origin URL")
+		} else if img != "" {
+			return img, nil
+		}
 	}
 	if imgsrc.caaEnabled {
 		l.Debug().Msg("Attempting to find album image from CoverArtArchive")
@@ -180,15 +189,6 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 		img, err := imgsrc.deezerC.GetAlbumImages(ctx, opts.Artists, opts.Album)
 		if err != nil {
 			l.Debug().Err(err).Msg("GetAlbumImage: Could not find artist image from Deezer")
-		} else if img != "" {
-			return img, nil
-		}
-	}
-	if imgsrc.originThumbnailEnabled && opts.OriginUrl != "" {
-		l.Debug().Msg("Attempting to find album image from origin URL")
-		img, err := resolveOriginThumbnail(opts.OriginUrl)
-		if err != nil {
-			l.Debug().Err(err).Msg("GetAlbumImage: Could not find album image from origin URL")
 		} else if img != "" {
 			return img, nil
 		}

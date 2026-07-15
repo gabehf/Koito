@@ -227,6 +227,7 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 				IsNowPlaying:       req.ListenType == ListenTypePlayingNow,
 				SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
 				OriginUrl:          payload.TrackMeta.AdditionalInfo.OriginUrl,
+				SkipCacheImage:     req.ListenType == ListenTypeImport && !cfg.FetchImagesDuringImport(),
 			}
 
 			_, err, shared := sfGroup.Do(buildCaolescingKey(payload), func() (interface{}, error) {
