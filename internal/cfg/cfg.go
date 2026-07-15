@@ -51,6 +51,7 @@ const (
 	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
 	LOGIN_GATE_ENV                 = "KOITO_LOGIN_GATE"
 	FORCE_TZ                       = "KOITO_FORCE_TZ"
+	IMPORT_CONCURRENCY_ENV         = "KOITO_IMPORT_CONCURRENCY"
 )
 
 type config struct {
@@ -91,6 +92,7 @@ type config struct {
 	artistSeparators       []*regexp.Regexp
 	loginGate              bool
 	forceTZ                *time.Location
+	importConcurrency      int
 }
 
 var (
@@ -134,6 +136,10 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg.musicBrainzRateLimit, err = strconv.Atoi(getenv(MUSICBRAINZ_RATE_LIMIT_ENV))
 	if err != nil {
 		cfg.musicBrainzRateLimit = 1
+	}
+	cfg.importConcurrency, err = strconv.Atoi(getenv(IMPORT_CONCURRENCY_ENV))
+	if err != nil || cfg.importConcurrency < 1 {
+		cfg.importConcurrency = 8
 	}
 	cfg.musicBrainzUrl = getenv(MUSICBRAINZ_URL_ENV)
 	if cfg.musicBrainzUrl == "" {

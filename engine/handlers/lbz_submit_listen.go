@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,6 +18,7 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -136,113 +138,35 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 			return
 		}
 
+		if req.ListenType != ListenTypePlayingNow && req.ListenType != ListenTypeSingle && req.ListenType != ListenTypeImport {
+			l.Debug().Msg("LbzSubmitListenHandler: No listen type provided, assuming 'single'")
+			req.ListenType = "single"
+		}
+
 		for _, payload := range req.Payload {
 			if payload.TrackMeta.ArtistName == "" || payload.TrackMeta.TrackName == "" {
 				l.Debug().Msg("LbzSubmitListenHandler: Artist name or track name are missing")
 				utils.WriteError(w, "Artist name or track name are missing", http.StatusBadRequest)
 				return
 			}
+		}
 
-			if req.ListenType != ListenTypePlayingNow && req.ListenType != ListenTypeSingle && req.ListenType != ListenTypeImport {
-				l.Debug().Msg("LbzSubmitListenHandler: No listen type provided, assuming 'single'")
-				req.ListenType = "single"
-			}
+		g := new(errgroup.Group)
+		g.SetLimit(cfg.ImportConcurrency())
 
-			artistMbzIDs, err := utils.ParseUUIDSlice(payload.TrackMeta.AdditionalInfo.ArtistMBIDs)
-			if err != nil {
-				l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Failed to parse one or more UUIDs")
-			}
-			if len(artistMbzIDs) < 1 {
-				l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Attempting to parse artist UUIDs from mbid_mapping")
-				utils.ParseUUIDSlice(payload.TrackMeta.MBIDMapping.ArtistMBIDs)
-				if err != nil {
-					l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Failed to parse one or more UUIDs")
-				}
-			}
-			rgMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.ReleaseGroupMBID)
-			if err != nil {
-				rgMbzID = uuid.Nil
-			}
-			releaseMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.ReleaseMBID)
-			if err != nil {
-				releaseMbzID, err = uuid.Parse(payload.TrackMeta.MBIDMapping.ReleaseMBID)
-				if err != nil {
-					releaseMbzID = uuid.Nil
-				}
-			}
-			recordingMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.RecordingMBID)
-			if err != nil {
-				recordingMbzID, err = uuid.Parse(payload.TrackMeta.MBIDMapping.RecordingMBID)
-				if err != nil {
-					recordingMbzID = uuid.Nil
-				}
-			}
-
-			var client string
-			if payload.TrackMeta.AdditionalInfo.MediaPlayer != "" {
-				client = payload.TrackMeta.AdditionalInfo.MediaPlayer
-			} else if payload.TrackMeta.AdditionalInfo.SubmissionClient != "" {
-				client = payload.TrackMeta.AdditionalInfo.SubmissionClient
-			}
-
-			var duration int32
-			if payload.TrackMeta.AdditionalInfo.Duration != 0 {
-				duration = payload.TrackMeta.AdditionalInfo.Duration
-			} else if payload.TrackMeta.AdditionalInfo.DurationMs != 0 {
-				duration = payload.TrackMeta.AdditionalInfo.DurationMs / 1000
-			}
-
-			var listenedAt = time.Now()
-			if payload.ListenedAt != 0 {
-				listenedAt = time.Unix(payload.ListenedAt, 0)
-			}
-
-			var artistMbidMap []catalog.ArtistMbidMap
-			for _, a := range payload.TrackMeta.MBIDMapping.Artists {
-				if a.ArtistMBID == "" || a.ArtistName == "" {
-					continue
-				}
-				mbid, err := uuid.Parse(a.ArtistMBID)
-				if err != nil {
-					l.Debug().AnErr("error", err).Msgf("LbzSubmitListenHandler: Failed to parse UUID for artist '%s'", a.ArtistName)
-				}
-				artistMbidMap = append(artistMbidMap, catalog.ArtistMbidMap{Artist: a.ArtistName, Mbid: mbid})
-			}
-
-			opts := catalog.SubmitListenOpts{
-				MbzCaller:          mbzc,
-				ArtistNames:        payload.TrackMeta.AdditionalInfo.ArtistNames,
-				Artist:             payload.TrackMeta.ArtistName,
-				ArtistMbzIDs:       artistMbzIDs,
-				TrackTitle:         payload.TrackMeta.TrackName,
-				RecordingMbzID:     recordingMbzID,
-				ReleaseTitle:       payload.TrackMeta.ReleaseName,
-				ReleaseMbzID:       releaseMbzID,
-				ReleaseGroupMbzID:  rgMbzID,
-				ArtistMbidMappings: artistMbidMap,
-				Duration:           duration,
-				Time:               listenedAt,
-				UserID:             u.ID,
-				Client:             client,
-				IsNowPlaying:       req.ListenType == ListenTypePlayingNow,
-				SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
-				OriginUrl:          payload.TrackMeta.AdditionalInfo.OriginUrl,
-				SkipCacheImage:     req.ListenType == ListenTypeImport && !cfg.FetchImagesDuringImport(),
-			}
-
-			_, err, shared := sfGroup.Do(buildCaolescingKey(payload), func() (interface{}, error) {
-				return 0, catalog.SubmitListen(r.Context(), store, opts)
+		for _, payload := range req.Payload {
+			payload := payload
+			g.Go(func() error {
+				return processListenPayload(r.Context(), l, store, mbzc, req, payload, u.ID)
 			})
-			if shared {
-				l.Info().Msg("LbzSubmitListenHandler: Duplicate requests detected; results were coalesced")
-			}
-			if err != nil {
-				l.Err(err).Msg("LbzSubmitListenHandler: Failed to submit listen")
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte("{\"status\": \"internal server error\"}"))
-				return
-			}
+		}
+
+		if err := g.Wait(); err != nil {
+			l.Err(err).Msg("LbzSubmitListenHandler: Failed to submit listen")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte("{\"status\": \"internal server error\"}"))
+			return
 		}
 
 		l.Debug().Msg("LbzSubmitListenHandler: Successfully processed listens")
@@ -250,6 +174,106 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte("{\"status\": \"ok\"}"))
 	}
+}
+
+func processListenPayload(
+	ctx context.Context,
+	l *zerolog.Logger,
+	store submitListenHandlerStore,
+	mbzc mbz.MusicBrainzCaller,
+	req LbzSubmitListenRequest,
+	payload LbzSubmitListenPayload,
+	userID int32,
+) error {
+	artistMbzIDs, err := utils.ParseUUIDSlice(payload.TrackMeta.AdditionalInfo.ArtistMBIDs)
+	if err != nil {
+		l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Failed to parse one or more UUIDs")
+	}
+	if len(artistMbzIDs) < 1 {
+		l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Attempting to parse artist UUIDs from mbid_mapping")
+		utils.ParseUUIDSlice(payload.TrackMeta.MBIDMapping.ArtistMBIDs)
+		if err != nil {
+			l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Failed to parse one or more UUIDs")
+		}
+	}
+	rgMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.ReleaseGroupMBID)
+	if err != nil {
+		rgMbzID = uuid.Nil
+	}
+	releaseMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.ReleaseMBID)
+	if err != nil {
+		releaseMbzID, err = uuid.Parse(payload.TrackMeta.MBIDMapping.ReleaseMBID)
+		if err != nil {
+			releaseMbzID = uuid.Nil
+		}
+	}
+	recordingMbzID, err := uuid.Parse(payload.TrackMeta.AdditionalInfo.RecordingMBID)
+	if err != nil {
+		recordingMbzID, err = uuid.Parse(payload.TrackMeta.MBIDMapping.RecordingMBID)
+		if err != nil {
+			recordingMbzID = uuid.Nil
+		}
+	}
+
+	var client string
+	if payload.TrackMeta.AdditionalInfo.MediaPlayer != "" {
+		client = payload.TrackMeta.AdditionalInfo.MediaPlayer
+	} else if payload.TrackMeta.AdditionalInfo.SubmissionClient != "" {
+		client = payload.TrackMeta.AdditionalInfo.SubmissionClient
+	}
+
+	var duration int32
+	if payload.TrackMeta.AdditionalInfo.Duration != 0 {
+		duration = payload.TrackMeta.AdditionalInfo.Duration
+	} else if payload.TrackMeta.AdditionalInfo.DurationMs != 0 {
+		duration = payload.TrackMeta.AdditionalInfo.DurationMs / 1000
+	}
+
+	var listenedAt = time.Now()
+	if payload.ListenedAt != 0 {
+		listenedAt = time.Unix(payload.ListenedAt, 0)
+	}
+
+	var artistMbidMap []catalog.ArtistMbidMap
+	for _, a := range payload.TrackMeta.MBIDMapping.Artists {
+		if a.ArtistMBID == "" || a.ArtistName == "" {
+			continue
+		}
+		mbid, err := uuid.Parse(a.ArtistMBID)
+		if err != nil {
+			l.Debug().AnErr("error", err).Msgf("LbzSubmitListenHandler: Failed to parse UUID for artist '%s'", a.ArtistName)
+		}
+		artistMbidMap = append(artistMbidMap, catalog.ArtistMbidMap{Artist: a.ArtistName, Mbid: mbid})
+	}
+
+	opts := catalog.SubmitListenOpts{
+		MbzCaller:          mbzc,
+		ArtistNames:        payload.TrackMeta.AdditionalInfo.ArtistNames,
+		Artist:             payload.TrackMeta.ArtistName,
+		ArtistMbzIDs:       artistMbzIDs,
+		TrackTitle:         payload.TrackMeta.TrackName,
+		RecordingMbzID:     recordingMbzID,
+		ReleaseTitle:       payload.TrackMeta.ReleaseName,
+		ReleaseMbzID:       releaseMbzID,
+		ReleaseGroupMbzID:  rgMbzID,
+		ArtistMbidMappings: artistMbidMap,
+		Duration:           duration,
+		Time:               listenedAt,
+		UserID:             userID,
+		Client:             client,
+		IsNowPlaying:       req.ListenType == ListenTypePlayingNow,
+		SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
+		OriginUrl:          payload.TrackMeta.AdditionalInfo.OriginUrl,
+		SkipCacheImage:     req.ListenType == ListenTypeImport && !cfg.FetchImagesDuringImport(),
+	}
+
+	_, err, shared := sfGroup.Do(buildCaolescingKey(payload), func() (interface{}, error) {
+		return 0, catalog.SubmitListen(ctx, store, opts)
+	})
+	if shared {
+		l.Info().Msg("LbzSubmitListenHandler: Duplicate requests detected; results were coalesced")
+	}
+	return err
 }
 
 func doLbzRelay(requestBytes []byte, l *zerolog.Logger) {
@@ -319,12 +343,5 @@ func doLbzRelay(requestBytes []byte, l *zerolog.Logger) {
 }
 
 func buildCaolescingKey(p LbzSubmitListenPayload) string {
-	// the key not including the listen_type introduces the very rare possibility of a playing_now
-	// request taking precedence over a single, meaning that a listen will not be logged when it
-	// should, however that would require a playing_now request to fire a few seconds before a 'single'
-	// of the same track, which should never happen outside of misbehaving clients
-	//
-	// this could be fixed by restructuring the database inserts for idempotency, which would
-	// eliminate the need to coalesce responses, however i'm not gonna do that right now
-	return fmt.Sprintf("%s:%s:%s", p.TrackMeta.ArtistName, p.TrackMeta.TrackName, p.TrackMeta.ReleaseName)
+	return fmt.Sprintf("%s:%s:%s:%d", p.TrackMeta.ArtistName, p.TrackMeta.TrackName, p.TrackMeta.ReleaseName, p.ListenedAt)
 }

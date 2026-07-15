@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
@@ -80,6 +81,10 @@ func matchTrackByMbzID(ctx context.Context, d db.TrackStore, opts AssociateTrack
 
 func matchTrackByTrackInfo(ctx context.Context, d db.TrackStore, opts AssociateTrackOpts) (*models.Track, error) {
 	l := logger.FromContext(ctx)
+
+	unlock := lockKey(fmt.Sprintf("track:%d:%s", opts.AlbumID, strings.ToLower(opts.TrackName)))
+	defer unlock()
+
 	// try provided track title
 	track, err := d.GetTrack(ctx, db.GetTrackOpts{
 		Title:     opts.TrackName,

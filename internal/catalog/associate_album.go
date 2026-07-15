@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/gabehf/koito/imagecache"
 	"github.com/gabehf/koito/internal/db"
@@ -47,6 +48,19 @@ func AssociateAlbum(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpt
 
 func matchAlbumByMbzReleaseID(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpts) (*models.Album, error) {
 	l := logger.FromContext(ctx)
+
+	// serialize the check-then-create sequence per release MBID so concurrent
+	// callers (e.g. a parallelized import) can't both create a duplicate album
+	// for the same MBID. This is a different keyspace than matchAlbumByTitle's
+	// (artist, title) key, since MusicBrainz's canonical release title can differ
+	// from the submitted release name and isn't known until after the lookup
+	// succeeds. That leaves a narrow residual race: a concurrent no-MBID listen
+	// for the same release could still create a duplicate album row before this
+	// one resolves. Acceptable for now since a given source/batch is very likely
+	// to consistently supply (or consistently omit) release_mbid.
+	unlock := lockKey("album:mbz:" + opts.ReleaseMbzID.String())
+	defer unlock()
+
 	a, err := d.GetAlbum(ctx, db.GetAlbumOpts{MusicBrainzID: opts.ReleaseMbzID})
 	if err == nil {
 		l.Debug().Msgf("Found release '%s' by MusicBrainz Release ID", a.Title)
@@ -191,6 +205,9 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 	} else {
 		releaseName = opts.TrackName
 	}
+
+	unlock := lockKey(fmt.Sprintf("album:%d:%s", opts.Artists[0].ID, strings.ToLower(releaseName)))
+	defer unlock()
 
 	a, err := d.GetAlbum(ctx, db.GetAlbumOpts{
 		Title:    releaseName,

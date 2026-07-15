@@ -76,92 +76,96 @@ func AssociateArtists(ctx context.Context, d db.ArtistStore, opts AssociateArtis
 }
 
 func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts AssociateArtistsOpts) ([]*models.Artist, error) {
-	l := logger.FromContext(ctx)
 	var result []*models.Artist
 
 	for _, a := range opts.ArtistMbidMap {
-		artist, err := d.GetArtist(ctx, db.GetArtistOpts{
-			MusicBrainzID: a.Mbid,
-		})
-		if err == nil {
-			l.Debug().Msgf("Artist '%s' found by MusicBrainz ID", artist.Name)
-			result = append(result, artist)
-			continue
-		}
-		if !errors.Is(err, db.ErrNotFound) {
-			return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
-		}
-
-		artist, err = d.GetArtist(ctx, db.GetArtistOpts{
-			Name: a.Artist,
-		})
-		if err == nil {
-			l.Debug().Msgf("Artist '%s' found by Name", a.Artist)
-			if artist.MbzID == nil {
-				err := d.UpdateArtist(ctx, db.UpdateArtistOpts{
-					ID:            artist.ID,
-					MusicBrainzID: a.Mbid,
-				})
-				if err != nil {
-					l.Err(err).Msg("matchArtistsByMBIDMappings: failed to update artist with MusicBrainz ID")
-					return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
-				}
-				l.Debug().Msgf("Updated artist '%s' with MusicBrainz ID", artist.Name)
-			} else {
-				l.Warn().Msgf("Attempted to update artist %s with MusicBrainz ID, but an existing ID was already found", artist.Name)
-			}
-			err = d.UpdateArtist(ctx, db.UpdateArtistOpts{ID: artist.ID, MusicBrainzID: a.Mbid})
-			if err != nil {
-				l.Err(err).Msgf("matchArtistsByMBIDMappings: Failed to associate artist '%s' with MusicBrainz ID", artist.Name)
-			} else {
-				artist.MbzID = &a.Mbid
-			}
-			result = append(result, artist)
-			continue
-		}
-		if !errors.Is(err, db.ErrNotFound) {
-			return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
-		}
-
-		artist, err = resolveAliasOrCreateArtist(ctx, a.Mbid, opts.ArtistNames, d, opts)
+		artist, err := matchOrCreateArtistByMbidMapping(ctx, a, d, opts)
 		if err != nil {
-			l.Warn().AnErr("error", err).Msg("matchArtistsByMBIDMappings: MusicBrainz unreachable, creating new artist with provided MusicBrainz ID mapping")
-
-			var imgid uuid.UUID
-			var imgUrl string
-			if !opts.SkipCacheImage {
-				var imgErr error
-				imgUrl, imgErr = images.GetArtistImage(ctx, images.ArtistImageOpts{
-					Aliases:   []string{a.Artist},
-					OriginUrl: opts.OriginUrl,
-				})
-				if imgErr == nil && imgUrl != "" {
-					imgid = uuid.New()
-					l.Debug().Msg("Downloading artist image from source...")
-					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
-						l.Err(dlErr).Msg("Failed to cache image")
-					}
-				} else {
-					l.Err(imgErr).Msgf("matchArtistsByMBIDMappings: Failed to get artist image for artist '%s'", a.Artist)
-				}
-			}
-
-			artist, err = d.SaveArtist(ctx, db.SaveArtistOpts{
-				Name:          a.Artist,
-				MusicBrainzID: a.Mbid,
-				Image:         imgid,
-				ImageSrc:      imgUrl,
-			})
-			if err != nil {
-				l.Err(err).Msgf("matchArtistsByMBIDMappings: Failed to create artist '%s' in database", a.Artist)
-				return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
-			}
+			return nil, fmt.Errorf("matchArtistsByMBIDMappings: %w", err)
 		}
-
 		result = append(result, artist)
 	}
 
 	return result, nil
+}
+
+func matchOrCreateArtistByMbidMapping(ctx context.Context, a ArtistMbidMap, d db.ArtistStore, opts AssociateArtistsOpts) (*models.Artist, error) {
+	l := logger.FromContext(ctx)
+
+	unlock := lockKey("artist:" + strings.ToLower(a.Artist))
+	defer unlock()
+
+	artist, err := d.GetArtist(ctx, db.GetArtistOpts{
+		MusicBrainzID: a.Mbid,
+	})
+	if err == nil {
+		l.Debug().Msgf("Artist '%s' found by MusicBrainz ID", artist.Name)
+		return artist, nil
+	}
+	if !errors.Is(err, db.ErrNotFound) {
+		return nil, err
+	}
+
+	artist, err = d.GetArtist(ctx, db.GetArtistOpts{
+		Name: a.Artist,
+	})
+	if err == nil {
+		l.Debug().Msgf("Artist '%s' found by Name", a.Artist)
+		if artist.MbzID == nil {
+			if err := d.UpdateArtist(ctx, db.UpdateArtistOpts{
+				ID:            artist.ID,
+				MusicBrainzID: a.Mbid,
+			}); err != nil {
+				l.Err(err).Msg("matchOrCreateArtistByMbidMapping: failed to update artist with MusicBrainz ID")
+				return nil, err
+			}
+			artist.MbzID = &a.Mbid
+			l.Debug().Msgf("Updated artist '%s' with MusicBrainz ID", artist.Name)
+		} else {
+			l.Warn().Msgf("Attempted to update artist %s with MusicBrainz ID, but an existing ID was already found", artist.Name)
+		}
+		return artist, nil
+	}
+	if !errors.Is(err, db.ErrNotFound) {
+		return nil, err
+	}
+
+	artist, err = resolveAliasOrCreateArtist(ctx, a.Mbid, opts.ArtistNames, d, opts)
+	if err != nil {
+		l.Warn().AnErr("error", err).Msg("matchOrCreateArtistByMbidMapping: MusicBrainz unreachable, creating new artist with provided MusicBrainz ID mapping")
+
+		var imgid uuid.UUID
+		var imgUrl string
+		if !opts.SkipCacheImage {
+			var imgErr error
+			imgUrl, imgErr = images.GetArtistImage(ctx, images.ArtistImageOpts{
+				Aliases:   []string{a.Artist},
+				OriginUrl: opts.OriginUrl,
+			})
+			if imgErr == nil && imgUrl != "" {
+				imgid = uuid.New()
+				l.Debug().Msg("Downloading artist image from source...")
+				if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
+					l.Err(dlErr).Msg("Failed to cache image")
+				}
+			} else {
+				l.Err(imgErr).Msgf("matchOrCreateArtistByMbidMapping: Failed to get artist image for artist '%s'", a.Artist)
+			}
+		}
+
+		artist, err = d.SaveArtist(ctx, db.SaveArtistOpts{
+			Name:          a.Artist,
+			MusicBrainzID: a.Mbid,
+			Image:         imgid,
+			ImageSrc:      imgUrl,
+		})
+		if err != nil {
+			l.Err(err).Msgf("matchOrCreateArtistByMbidMapping: Failed to create artist '%s' in database", a.Artist)
+			return nil, err
+		}
+	}
+
+	return artist, nil
 }
 
 func matchArtistsByMBID(ctx context.Context, d db.ArtistStore, opts AssociateArtistsOpts, existing []*models.Artist) ([]*models.Artist, error) {
@@ -177,23 +181,12 @@ func matchArtistsByMBID(ctx context.Context, d db.ArtistStore, opts AssociateArt
 			l.Warn().Msg("Provided artist has uuid.Nil MusicBrainzID")
 			return matchArtistsByNames(ctx, opts.ArtistNames, result, d, opts)
 		}
-		a, err := d.GetArtist(ctx, db.GetArtistOpts{
-			MusicBrainzID: id,
-		})
-		if err == nil {
-			l.Debug().Msgf("Artist '%s' found by MusicBrainz ID", a.Name)
-			result = append(result, a)
-			continue
-		}
-		if !errors.Is(err, db.ErrNotFound) {
-			return nil, err
-		}
 
 		if len(opts.ArtistNames) < 1 {
 			opts.ArtistNames = slices.Concat(opts.ArtistNames, ParseArtists(opts.ArtistName, opts.TrackTitle, cfg.ArtistSeparators()))
 		}
 
-		a, err = resolveAliasOrCreateArtist(ctx, id, opts.ArtistNames, d, opts)
+		a, err := matchOrCreateArtistByMbzID(ctx, id, d, opts)
 		if err != nil {
 			l.Warn().Msg("MusicBrainz unreachable, falling back to artist name matching")
 			return matchArtistsByNames(ctx, opts.ArtistNames, result, d, opts)
@@ -203,6 +196,26 @@ func matchArtistsByMBID(ctx context.Context, d db.ArtistStore, opts AssociateArt
 	}
 
 	return result, nil
+}
+
+func matchOrCreateArtistByMbzID(ctx context.Context, id uuid.UUID, d db.ArtistStore, opts AssociateArtistsOpts) (*models.Artist, error) {
+	l := logger.FromContext(ctx)
+
+	unlock := lockKey("artist:mbid:" + id.String())
+	defer unlock()
+
+	a, err := d.GetArtist(ctx, db.GetArtistOpts{
+		MusicBrainzID: id,
+	})
+	if err == nil {
+		l.Debug().Msgf("Artist '%s' found by MusicBrainz ID", a.Name)
+		return a, nil
+	}
+	if !errors.Is(err, db.ErrNotFound) {
+		return nil, err
+	}
+
+	return resolveAliasOrCreateArtist(ctx, id, opts.ArtistNames, d, opts)
 }
 
 func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []string, d db.ArtistStore, opts AssociateArtistsOpts) (*models.Artist, error) {
@@ -284,44 +297,56 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 			l.Debug().Msgf("Artist '%s' already found, skipping...", name)
 			continue
 		}
-		a, err := d.GetArtist(ctx, db.GetArtistOpts{
-			Name: name,
-		})
-		if err == nil {
-			l.Debug().Msgf("Artist '%s' found in DB", name)
-			result = append(result, a)
-			continue
-		}
-		if errors.Is(err, db.ErrNotFound) {
-			var imgid uuid.UUID
-			var imgUrl string
-			if !opts.SkipCacheImage {
-				var err error
-				imgUrl, err = images.GetArtistImage(ctx, images.ArtistImageOpts{
-					Aliases:   []string{name},
-					OriginUrl: opts.OriginUrl,
-				})
-				if err == nil && imgUrl != "" {
-					imgid = uuid.New()
-					l.Debug().Msg("Downloading artist image from source...")
-					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
-						l.Err(dlErr).Msg("Failed to cache image")
-					}
-				} else if err != nil {
-					l.Debug().AnErr("error", err).Msgf("Failed to get artist images for %s", name)
-				}
-			}
-			a, err = d.SaveArtist(ctx, db.SaveArtistOpts{Name: name, Image: imgid, ImageSrc: imgUrl})
-			if err != nil {
-				return nil, fmt.Errorf("matchArtistsByNames: %w", err)
-			}
-			l.Info().Msgf("Created artist '%s' with artist name", name)
-			result = append(result, a)
-		} else {
+
+		unlock := lockKey("artist:" + strings.ToLower(name))
+		a, err := matchOrCreateArtistByName(ctx, name, d, opts)
+		unlock()
+		if err != nil {
 			return nil, fmt.Errorf("matchArtistsByNames: %w", err)
 		}
+		result = append(result, a)
 	}
 	return result, nil
+}
+
+func matchOrCreateArtistByName(ctx context.Context, name string, d db.ArtistStore, opts AssociateArtistsOpts) (*models.Artist, error) {
+	l := logger.FromContext(ctx)
+	a, err := d.GetArtist(ctx, db.GetArtistOpts{
+		Name: name,
+	})
+	if err == nil {
+		l.Debug().Msgf("Artist '%s' found in DB", name)
+		return a, nil
+	}
+	if !errors.Is(err, db.ErrNotFound) {
+		return nil, err
+	}
+
+	var imgid uuid.UUID
+	var imgUrl string
+	if !opts.SkipCacheImage {
+		var imgErr error
+		imgUrl, imgErr = images.GetArtistImage(ctx, images.ArtistImageOpts{
+			Aliases:   []string{name},
+			OriginUrl: opts.OriginUrl,
+		})
+		if imgErr == nil && imgUrl != "" {
+			imgid = uuid.New()
+			l.Debug().Msg("Downloading artist image from source...")
+			if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
+				l.Err(dlErr).Msg("Failed to cache image")
+			}
+		} else if imgErr != nil {
+			l.Debug().AnErr("error", imgErr).Msgf("Failed to get artist images for %s", name)
+		}
+	}
+
+	a, err = d.SaveArtist(ctx, db.SaveArtistOpts{Name: name, Image: imgid, ImageSrc: imgUrl})
+	if err != nil {
+		return nil, err
+	}
+	l.Info().Msgf("Created artist '%s' with artist name", name)
+	return a, nil
 }
 
 func artistExists(name string, artists []*models.Artist) bool {

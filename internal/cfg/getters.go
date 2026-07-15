@@ -48,6 +48,12 @@ func MusicBrainzRateLimit() int {
 	return globalConfig.musicBrainzRateLimit
 }
 
+func ImportConcurrency() int {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.importConcurrency
+}
+
 func LogLevel() int {
 	lock.RLock()
 	defer lock.RUnlock()
