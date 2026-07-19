@@ -167,3 +167,14 @@ type GetInterestOpts struct {
 	ArtistID int32
 	TrackID  int32
 }
+type ListUserFeedbackOpts struct {
+	UserID int32
+	Score  *int // nil = all; 1 or -1 to filter
+	Limit  int
+	Offset int
+}
+
+type GetFeedbackForRecordingsOpts struct {
+	UserID int32
+	MBIDs  []uuid.UUID
+}

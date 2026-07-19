@@ -118,3 +118,36 @@ func GetTrackInterestHandler(store db.ListenStore) http.HandlerFunc {
 		utils.WriteJSON(w, http.StatusOK, interest)
 	}
 }
+
+// GetTrackFeedbackHandler returns feedback score for a track.
+func GetTrackFeedbackHandler(store db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		l := logger.FromContext(ctx)
+
+		trackID, err := utils.ParseIDParam(r, "id")
+		if err != nil {
+			l.Debug().AnErr("error", err).Msg("GetTrackFeedbackHandler: Invalid track id")
+			utils.WriteError(w, "invalid track id", http.StatusBadRequest)
+			return
+		}
+
+		user, err := store.GetAdminUser(ctx)
+		if err != nil || user == nil {
+			l.Err(err).Msg("GetTrackFeedbackHandler: Failed to get admin user")
+			utils.WriteError(w, "failed to retrieve feedback", http.StatusInternalServerError)
+			return
+		}
+
+		score, err := store.GetTrackFeedback(ctx, user.ID, trackID)
+		if err != nil {
+			l.Err(err).Msg("GetTrackFeedbackHandler: Failed to get feedback")
+			utils.WriteError(w, "failed to retrieve feedback", http.StatusInternalServerError)
+			return
+		}
+
+		utils.WriteJSON(w, http.StatusOK, struct {
+			Score int `json:"score"`
+		}{Score: score})
+	}
+}

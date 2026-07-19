@@ -289,6 +289,7 @@ func (s *Sqlite) PurgeAllData(ctx context.Context) error {
 	// Order respects foreign-key dependencies; cascades clean up junction and
 	// alias tables automatically.
 	for _, stmt := range []string{
+		`DELETE FROM recording_feedback`,
 		`DELETE FROM listens`,
 		`DELETE FROM tracks`,
 		`DELETE FROM releases`,

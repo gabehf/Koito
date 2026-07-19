@@ -288,6 +288,22 @@ async function getRewindStats(args: timeframe): Promise<RewindStats> {
   return handleJson<RewindStats>(r);
 }
 
+async function getTrackFeedback(trackId: number): Promise<TrackFeedback> {
+  return apiFetch<TrackFeedback>(`/apis/web/v1/track/${trackId}/feedback`);
+}
+
+async function setTrackFeedback(
+  trackId: number,
+  score: number,
+): Promise<TrackFeedback> {
+  const r = await fetch(`/apis/web/v1/track/${trackId}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ score }),
+  });
+  return handleJson<TrackFeedback>(r);
+}
+
 export {
   getTopAlbums,
   search,
@@ -315,6 +331,8 @@ export {
   getExport,
   submitListen,
   getRewindStats,
+  getTrackFeedback,
+  setTrackFeedback,
 };
 type ImageList = {
   xs: string;
@@ -441,6 +459,9 @@ type NowPlaying = {
   currently_playing: boolean;
   track: Track;
 };
+type TrackFeedback = {
+  score: number;
+};
 type RewindStats = {
   title: string;
   top_artists: Ranked<Artist>[];
@@ -481,4 +502,5 @@ export type {
   Stats,
   RewindStats,
   ImageList,
+  TrackFeedback,
 };

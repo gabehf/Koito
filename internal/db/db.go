@@ -110,6 +110,13 @@ type ExportStore interface {
 	GetExportPage(ctx context.Context, opts GetExportPageOpts) ([]*ExportItem, error)
 }
 
+type FeedbackStore interface {
+	GetTrackFeedback(ctx context.Context, userID, trackID int32) (int, error)
+	SetTrackFeedback(ctx context.Context, userID, trackID int32, score int) error
+	ListUserFeedback(ctx context.Context, opts ListUserFeedbackOpts) ([]RecordingFeedback, int64, error)
+	GetFeedbackForRecordings(ctx context.Context, opts GetFeedbackForRecordingsOpts) ([]RecordingFeedback, error)
+}
+
 type DB interface {
 	ArtistStore
 	AlbumStore
@@ -118,6 +125,7 @@ type DB interface {
 	UserStore
 	ImageStore
 	ExportStore
+	FeedbackStore
 	Ping(ctx context.Context) error
 	Close(ctx context.Context)
 	PurgeAllData(ctx context.Context) error
