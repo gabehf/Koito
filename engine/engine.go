@@ -187,11 +187,34 @@ func Run(
 		}
 	}
 
+	if cfg.JellyfinEnabled() {
+		l.Debug().Msg("Engine: Checking Jellyfin configuration")
+		req, err := http.NewRequest(http.MethodGet, cfg.JellyfinUrl()+"/System/Info", nil)
+		if err != nil {
+			l.Fatal().Err(err).Msg("Engine: Failed to build Jellyfin ping request")
+		}
+		req.Header.Set("X-Emby-Token", cfg.JellyfinApiKey())
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			l.Fatal().Err(err).Msg("Engine: Failed to contact Jellyfin server! Ensure the provided URL is correct")
+		} else {
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+				l.Fatal().Msg("Engine: Provided Jellyfin API key is invalid")
+			} else if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+				l.Fatal().Int("status", resp.StatusCode).Msg("Engine: Unexpected response from Jellyfin")
+			} else {
+				l.Info().Msg("Engine: Jellyfin credentials validated successfully")
+			}
+		}
+	}
+
 	l.Debug().Msg("Engine: Initializing image sources")
 	images.Initialize(images.ImageSourceOpts{
 		UserAgent:      cfg.UserAgent(),
 		EnableCAA:      !cfg.CoverArtArchiveDisabled(),
 		EnableDeezer:   !cfg.DeezerDisabled(),
+		EnableJellyfin: cfg.JellyfinEnabled(),
 		EnableSubsonic: cfg.SubsonicEnabled(),
 		EnableLastFM:   cfg.LastFMApiKey() != "",
 	})

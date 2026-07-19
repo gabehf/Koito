@@ -132,6 +132,30 @@ func SubsonicParams() string {
 	return globalConfig.subsonicParams
 }
 
+func JellyfinEnabled() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.jellyfinEnabled
+}
+
+func JellyfinUrl() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.jellyfinUrl
+}
+
+func JellyfinApiKey() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.jellyfinApiKey
+}
+
+func JellyfinUserID() string {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.jellyfinUserID
+}
+
 func LastFMApiKey() string {
 	lock.RLock()
 	defer lock.RUnlock()

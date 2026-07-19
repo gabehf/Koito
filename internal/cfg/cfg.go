@@ -38,6 +38,9 @@ const (
 	DISABLE_MUSICBRAINZ_ENV        = "KOITO_DISABLE_MUSICBRAINZ"
 	SUBSONIC_URL_ENV               = "KOITO_SUBSONIC_URL"
 	SUBSONIC_PARAMS_ENV            = "KOITO_SUBSONIC_PARAMS"
+	JELLYFIN_URL_ENV               = "KOITO_JELLYFIN_URL"
+	JELLYFIN_API_KEY_ENV           = "KOITO_JELLYFIN_API_KEY"
+	JELLYFIN_USER_ID_ENV           = "KOITO_JELLYFIN_USER_ID"
 	LASTFM_API_KEY_ENV             = "KOITO_LASTFM_API_KEY"
 	SKIP_IMPORT_ENV                = "KOITO_SKIP_IMPORT"
 	ALLOWED_HOSTS_ENV              = "KOITO_ALLOWED_HOSTS"
@@ -74,8 +77,12 @@ type config struct {
 	disableMusicBrainz     bool
 	subsonicUrl            string
 	subsonicParams         string
-	lastfmApiKey           string
 	subsonicEnabled        bool
+	jellyfinUrl            string
+	jellyfinApiKey         string
+	jellyfinUserID         string
+	jellyfinEnabled        bool
+	lastfmApiKey           string
 	skipImport             bool
 	fetchImageDuringImport bool
 	allowedHosts           []string
@@ -171,8 +178,15 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 	cfg.subsonicUrl = getenv(SUBSONIC_URL_ENV)
 	cfg.subsonicParams = getenv(SUBSONIC_PARAMS_ENV)
 	cfg.subsonicEnabled = cfg.subsonicUrl != "" && cfg.subsonicParams != ""
-	if cfg.subsonicEnabled && (cfg.subsonicUrl == "" || cfg.subsonicParams == "") {
+	if (cfg.subsonicUrl != "") != (cfg.subsonicParams != "") {
 		return nil, fmt.Errorf("loadConfig: invalid configuration: both %s and %s must be set in order to use subsonic image fetching", SUBSONIC_URL_ENV, SUBSONIC_PARAMS_ENV)
+	}
+	cfg.jellyfinUrl = strings.TrimRight(getenv(JELLYFIN_URL_ENV), "/")
+	cfg.jellyfinApiKey = getenv(JELLYFIN_API_KEY_ENV)
+	cfg.jellyfinUserID = getenv(JELLYFIN_USER_ID_ENV)
+	cfg.jellyfinEnabled = cfg.jellyfinUrl != "" && cfg.jellyfinApiKey != ""
+	if (cfg.jellyfinUrl != "") != (cfg.jellyfinApiKey != "") {
+		return nil, fmt.Errorf("loadConfig: invalid configuration: both %s and %s must be set in order to use jellyfin image fetching", JELLYFIN_URL_ENV, JELLYFIN_API_KEY_ENV)
 	}
 	cfg.lastfmApiKey = getenv(LASTFM_API_KEY_ENV)
 	cfg.skipImport = parseBool(getenv(SKIP_IMPORT_ENV))
