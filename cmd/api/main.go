@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
-	"log"
 
 	"github.com/gabehf/koito/engine"
 )
