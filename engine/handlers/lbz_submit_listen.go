@@ -69,6 +69,7 @@ type LbzAdditionalInfo struct {
 	Duration                int32    `json:"duration,omitempty"`
 	Tags                    []string `json:"tags,omitempty"`
 	AlbumArtist             string   `json:"albumartist,omitempty"`
+	SpotifyArtistIDs        []string `json:"spotify_artist_ids,omitempty"`
 }
 
 const (
@@ -153,7 +154,7 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 			}
 			if len(artistMbzIDs) < 1 {
 				l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Attempting to parse artist UUIDs from mbid_mapping")
-				utils.ParseUUIDSlice(payload.TrackMeta.MBIDMapping.ArtistMBIDs)
+				artistMbzIDs, err = utils.ParseUUIDSlice(payload.TrackMeta.MBIDMapping.ArtistMBIDs)
 				if err != nil {
 					l.Debug().AnErr("error", err).Msg("LbzSubmitListenHandler: Failed to parse one or more UUIDs")
 				}
@@ -208,9 +209,14 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 				artistMbidMap = append(artistMbidMap, catalog.ArtistMbidMap{Artist: a.ArtistName, Mbid: mbid})
 			}
 
+			artistNames := payload.TrackMeta.AdditionalInfo.ArtistNames
+			if len(artistNames) < 1 {
+				artistNames = catalog.InferArtistNamesFromSourceIDs(payload.TrackMeta.ArtistName, payload.TrackMeta.AdditionalInfo.SpotifyArtistIDs)
+			}
+
 			opts := catalog.SubmitListenOpts{
 				MbzCaller:          mbzc,
-				ArtistNames:        payload.TrackMeta.AdditionalInfo.ArtistNames,
+				ArtistNames:        artistNames,
 				Artist:             payload.TrackMeta.ArtistName,
 				ArtistMbzIDs:       artistMbzIDs,
 				TrackTitle:         payload.TrackMeta.TrackName,

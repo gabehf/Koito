@@ -215,8 +215,33 @@ var (
 	inlineFeatPattern = regexp.MustCompile(`(?i)[fF]eat\. ([^()\[\]]+)$`)
 
 	// Delimiters only used inside feat. sections
-	featSplitDelimiters = regexp.MustCompile(`(?i)\s*(?:,|&|and|·)\s*`)
+	featSplitDelimiters  = regexp.MustCompile(`(?i)\s*(?:,|&|and|·)\s*`)
+	commaArtistDelimiter = regexp.MustCompile(`\s*,\s*`)
 )
+
+// InferArtistNamesFromSourceIDs splits artist credits when a source gives one
+// external artist ID per comma-delimited name but no explicit artist_names list.
+func InferArtistNamesFromSourceIDs(artist string, sourceIDs []string) []string {
+	if len(sourceIDs) < 2 {
+		return nil
+	}
+
+	parts := commaArtistDelimiter.Split(artist, -1)
+	if len(parts) != len(sourceIDs) {
+		return nil
+	}
+
+	artists := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			return nil
+		}
+		artists = append(artists, part)
+	}
+
+	return artists
+}
 
 // ParseArtists extracts all contributing artist names from the artist and title strings
 func ParseArtists(artist string, title string, addlSeparators []*regexp.Regexp) []string {
