@@ -55,6 +55,7 @@ func bindRoutes(
 			r.Get("/track/{id}/artists", handlers.GetArtistsForTrackHandler(db)) // done
 			r.Get("/track/{id}/aliases", handlers.GetTrackAliasesHandler(db))    // done
 			r.Get("/track/{id}/interest", handlers.GetTrackInterestHandler(db))  // done
+			r.Get("/track/{id}/feedback", handlers.GetTrackFeedbackHandler(db))
 
 			r.Get("/top/tracks", handlers.GetTopTracksHandler(db))
 			r.Get("/top/albums", handlers.GetTopAlbumsHandler(db))
@@ -118,6 +119,7 @@ func bindRoutes(
 			r.Patch("/track/{id}", handlers.UpdateTrackHandler(db))
 			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))
 			r.Patch("/track/{id}/artists/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db))
+			r.Post("/track/{id}/feedback", handlers.SubmitTrackFeedbackHandler(db))
 
 			r.Post("/listens", handlers.SubmitListenWithIDHandler(db))
 			r.Delete("/listens", handlers.DeleteListenHandler(db))
@@ -144,7 +146,14 @@ func bindRoutes(
 		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
 			Post("/submit-listens", handlers.LbzSubmitListenHandler(db, mbz))
 		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
+			Post("/feedback/recording-feedback", handlers.LbzSubmitRecordingFeedbackHandler(db))
+		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
 			Get("/validate-token", handlers.LbzValidateTokenHandler())
+
+		// Feedback reads: LB-compatible paths; {user_name} ignored for now (single-user).
+		r.Get("/feedback/user/{user_name}/get-feedback", handlers.LbzGetUserFeedbackHandler(db))
+		r.Get("/feedback/user/{user_name}/get-feedback-for-recordings", handlers.LbzGetFeedbackForRecordingsHandler(db))
+		r.Post("/feedback/user/{user_name}/get-feedback-for-recordings", handlers.LbzGetFeedbackForRecordingsHandler(db))
 	})
 
 	// serve react client

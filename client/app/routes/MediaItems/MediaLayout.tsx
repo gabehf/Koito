@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { average } from "color.js";
-import { type ImageList, type SearchResponse } from "api/api";
+import {
+  getTrackFeedback,
+  setTrackFeedback,
+  type ImageList,
+  type SearchResponse,
+} from "api/api";
 import ImageDropHandler from "~/components/ImageDropHandler";
-import { Edit, ImageIcon, Merge, Plus, Trash } from "lucide-react";
+import { Edit, Heart, ImageIcon, Merge, Plus, Trash } from "lucide-react";
 import { useAppContext } from "~/providers/AppProvider";
 import MergeModal from "~/components/modals/MergeModal";
 import ImageReplaceModal from "~/components/modals/ImageReplaceModal";
@@ -13,6 +18,7 @@ import MbzIcon from "~/components/icons/MbzIcon";
 import { timeListenedString } from "~/utils/utils";
 import { Link } from "react-router";
 import useWindowWidth from "~/hooks/useWindowWidth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type MergeFunc = (
   from: number,
@@ -48,13 +54,38 @@ export default function MediaLayout(props: Props) {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [addListenModalOpen, setAddListenModalOpen] = useState(false);
+  const [feedbackPending, setFeedbackPending] = useState(false);
   const { user } = useAppContext();
+  const queryClient = useQueryClient();
+  const feedbackQueryKey = ["track-feedback", props.id] as const;
 
   useEffect(() => {
     average(props.img.xs, { amount: 1 }).then((color) => {
       setBgColor(`rgba(${color[0]},${color[1]},${color[2]},0.2)`);
     });
   }, [props.img]);
+
+  const { data: feedback } = useQuery({
+    queryKey: feedbackQueryKey,
+    queryFn: () => getTrackFeedback(props.id),
+    enabled: !!user && props.type === "Track",
+  });
+  const loved = feedback?.score === 1;
+
+  const toggleLove = async () => {
+    if (feedbackPending || props.type !== "Track") return;
+    const previous = feedback ?? { score: 0 };
+    const next = { score: loved ? 0 : 1 };
+    queryClient.setQueryData(feedbackQueryKey, next);
+    setFeedbackPending(true);
+    try {
+      await setTrackFeedback(props.id, next.score);
+    } catch {
+      queryClient.setQueryData(feedbackQueryKey, previous);
+    } finally {
+      setFeedbackPending(false);
+    }
+  };
 
   const replaceImageCallback = () => {
     window.location.reload();
@@ -152,6 +183,18 @@ export default function MediaLayout(props: Props) {
               <>
                 {props.type === "Track" && (
                   <>
+                    <button
+                      title={loved ? "Unlove" : "Love"}
+                      className="hover:cursor-pointer"
+                      disabled={feedbackPending}
+                      onClick={toggleLove}
+                    >
+                      <Heart
+                        size={iconSize}
+                        fill={loved ? "currentColor" : "none"}
+                        className="hover:stroke-(--color-fg-secondary) hover:text-(--color-fg-secondary)"
+                      />
+                    </button>
                     <button
                       title="Add Listen"
                       className="hover:cursor-pointer"

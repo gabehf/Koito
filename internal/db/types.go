@@ -55,3 +55,8 @@ type InterestBucket struct {
 	BucketEnd   time.Time `json:"bucket_end"`
 	ListenCount int64     `json:"listen_count"`
 }
+type RecordingFeedback struct {
+	RecordingMBID *uuid.UUID
+	Score         int
+	CreatedAt     int64
+}

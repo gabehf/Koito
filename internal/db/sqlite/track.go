@@ -571,6 +571,18 @@ func (s *Sqlite) MergeTracks(ctx context.Context, fromId, toId int32) error {
 		return fmt.Errorf("MergeTracks: redirect listens: %w", err)
 	}
 
+	// redirect feedback; keep destination row on (user_id, track_id) conflict
+	if _, err := tx.ExecContext(ctx, `
+		INSERT OR IGNORE INTO recording_feedback (user_id, track_id, score, created_at, updated_at)
+		SELECT user_id, ?, score, created_at, updated_at
+		FROM recording_feedback WHERE track_id = ?`, toId, fromId); err != nil {
+		return fmt.Errorf("MergeTracks: redirect feedback: %w", err)
+	}
+	if _, err := tx.ExecContext(ctx,
+		`DELETE FROM recording_feedback WHERE track_id = ?`, fromId); err != nil {
+		return fmt.Errorf("MergeTracks: delete source feedback: %w", err)
+	}
+
 	if fromRelease != toRelease {
 		// associate fromId's artists with toId's release
 		rows, err := tx.QueryContext(ctx,

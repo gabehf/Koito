@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/gabehf/koito/engine/middleware"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/utils"
@@ -72,5 +73,42 @@ func AddTrackArtistsHandler(store db.DB) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// SubmitTrackFeedbackHandler sets the current user's feedback score for a track.
+func SubmitTrackFeedbackHandler(store db.FeedbackStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		l := logger.FromContext(ctx)
+
+		u := middleware.GetUserFromContext(ctx)
+		if u == nil {
+			utils.WriteError(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		trackID, err := utils.ParseIDParam(r, "id")
+		if err != nil {
+			l.Debug().AnErr("error", err).Msg("SubmitTrackFeedbackHandler: Invalid track id")
+			utils.WriteError(w, "invalid track id", http.StatusBadRequest)
+			return
+		}
+
+		body, err := utils.DecodeBody[struct {
+			Score int `json:"score"`
+		}](r)
+		if err != nil || (body.Score != 1 && body.Score != -1 && body.Score != 0) {
+			utils.WriteError(w, "score must be 1, 0, or -1", http.StatusBadRequest)
+			return
+		}
+
+		if err := store.SetTrackFeedback(ctx, u.ID, trackID, body.Score); err != nil {
+			l.Err(err).Msg("SubmitTrackFeedbackHandler: Failed to save feedback")
+			utils.WriteError(w, "failed to save feedback", http.StatusInternalServerError)
+			return
+		}
+
+		utils.WriteJSON(w, http.StatusOK, body)
 	}
 }
