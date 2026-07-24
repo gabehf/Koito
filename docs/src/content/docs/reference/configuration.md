@@ -117,6 +117,25 @@ If the environment variable is defined without **and** with the suffix at the sa
   changing these parameters, check the logs!
   :::
 
+##### KOITO_JELLYFIN_URL
+
+- Required: `true` if KOITO_JELLYFIN_API_KEY is set
+- Description: The URL of your Jellyfin server. For example, `https://jellyfin.mydomain.com`. When set, Jellyfin is tried first for album and artist images (before Subsonic, Cover Art Archive, Last.fm, and Deezer).
+
+##### KOITO_JELLYFIN_API_KEY
+
+- Required: `true` if KOITO_JELLYFIN_URL is set
+- Description: A Jellyfin API key (Dashboard → API Keys) used to search the library and fetch Primary images.
+  :::caution
+  If Koito is unable to validate your Jellyfin configuration, it will fail to start. If you notice your container isn't running after
+  changing these parameters, check the logs!
+  :::
+
+##### KOITO_JELLYFIN_USER_ID
+
+- Required: `false`
+- Description: Optional Jellyfin user ID. When set, item searches use `/Users/{id}/Items` instead of `/Items`. Use this if library queries with only an API key return empty results.
+
 ##### KOITO_LASTFM_API_KEY
 
 - Required: `false`

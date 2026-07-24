@@ -45,6 +45,7 @@ export default defineConfig({
           label: "Quickstart",
           items: [
             { label: "Setup with Navidrome", slug: "quickstart/navidrome" },
+            { label: "Setup with Jellyfin", slug: "quickstart/jellyfin" },
           ],
         },
         {
