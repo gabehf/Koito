@@ -87,43 +87,48 @@ func matchTrackByTrackInfo(ctx context.Context, d db.TrackStore, opts AssociateT
 		ArtistIDs: opts.ArtistIDs,
 	})
 	if err == nil {
-		l.Debug().Msgf("Track '%s' found by title, release and artist match", track.Title)
-		return track, nil
+		if opts.TrackMbzID == uuid.Nil || track.MbzID == nil || *track.MbzID == uuid.Nil || *track.MbzID == opts.TrackMbzID {
+			l.Debug().Msgf("Track '%s' found by title, release and artist match", track.Title)
+			return track, nil
+		}
+		// Two distinct recordings sharing same title, fall through to create a new track
+		l.Debug().Msgf("Track '%s' found but has a different MusicBrainz ID (%s != %s)",
+			track.Title, track.MbzID.String(), opts.TrackMbzID.String())
 	} else if !errors.Is(err, db.ErrNotFound) {
 		return nil, fmt.Errorf("matchTrackByTrackInfo: %w", err)
-	} else {
-		if opts.TrackMbzID != uuid.Nil {
-			mbzTrack, err := opts.Mbzc.GetTrack(ctx, opts.TrackMbzID)
+	}
+
+	if opts.TrackMbzID != uuid.Nil {
+		mbzTrack, err := opts.Mbzc.GetTrack(ctx, opts.TrackMbzID)
+		if err == nil {
+			track, err := d.GetTrack(ctx, db.GetTrackOpts{
+				Title:     mbzTrack.Title,
+				ReleaseID: opts.AlbumID,
+				ArtistIDs: opts.ArtistIDs,
+			})
 			if err == nil {
-				track, err := d.GetTrack(ctx, db.GetTrackOpts{
-					Title:     mbzTrack.Title,
-					ReleaseID: opts.AlbumID,
-					ArtistIDs: opts.ArtistIDs,
-				})
-				if err == nil {
-					if track.MbzID == nil || *track.MbzID == uuid.Nil || *track.MbzID == opts.TrackMbzID {
-						l.Debug().Msgf("Track '%s' found by MusicBrainz title, release and artist match", opts.TrackName)
-						return track, nil
-					}
+				if track.MbzID == nil || *track.MbzID == uuid.Nil || *track.MbzID == opts.TrackMbzID {
+					l.Debug().Msgf("Track '%s' found by MusicBrainz title, release and artist match", opts.TrackName)
+					return track, nil
 				}
 			}
 		}
-		l.Debug().Msgf("Track '%s' could not be found by title and artist match", opts.TrackName)
-		t, err := d.SaveTrack(ctx, db.SaveTrackOpts{
-			RecordingMbzID: opts.TrackMbzID,
-			AlbumID:        opts.AlbumID,
-			Title:          opts.TrackName,
-			ArtistIDs:      opts.ArtistIDs,
-			Duration:       opts.Duration,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("matchTrackByTrackInfo: %w", err)
-		}
-		if opts.TrackMbzID == uuid.Nil {
-			l.Info().Msgf("Created track '%s' with title and artist", opts.TrackName)
-		} else {
-			l.Info().Msgf("Created track '%s' with MusicBrainz Recording ID", opts.TrackName)
-		}
-		return t, nil
 	}
+	l.Debug().Msgf("Track '%s' could not be found by title and artist match", opts.TrackName)
+	t, err := d.SaveTrack(ctx, db.SaveTrackOpts{
+		RecordingMbzID: opts.TrackMbzID,
+		AlbumID:        opts.AlbumID,
+		Title:          opts.TrackName,
+		ArtistIDs:      opts.ArtistIDs,
+		Duration:       opts.Duration,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("matchTrackByTrackInfo: %w", err)
+	}
+	if opts.TrackMbzID == uuid.Nil {
+		l.Info().Msgf("Created track '%s' with title and artist", opts.TrackName)
+	} else {
+		l.Info().Msgf("Created track '%s' with MusicBrainz Recording ID", opts.TrackName)
+	}
+	return t, nil
 }
