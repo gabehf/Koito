@@ -449,11 +449,11 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 				ORDER BY listen_count DESC, track_id
 				LIMIT ? OFFSET ?
 			)
-			SELECT r.track_id, twt.title, twt.musicbrainz_id, twt.release_id, rls.image, r.listen_count, r.rank, r.total_count
-			FROM RankedTracks r
-			JOIN tracks_with_title twt ON twt.id = r.track_id
+			SELECT rt.track_id, twt.title, twt.musicbrainz_id, twt.release_id, rls.image, rt.listen_count, rt.rank, rt.total_count
+			FROM RankedTracks rt
+			JOIN tracks_with_title twt ON twt.id = rt.track_id
 			JOIN releases rls ON twt.release_id = rls.id
-			ORDER BY r.rank, r.track_id`
+			ORDER BY rt.rank, rt.track_id`
 
 		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.AlbumID, opts.Limit, offset)
 
@@ -474,21 +474,27 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 				ORDER BY listen_count DESC, track_id
 				LIMIT ? OFFSET ?
 			)
-			SELECT r.track_id, twt.title, twt.musicbrainz_id, twt.release_id, rls.image, r.listen_count, r.rank, r.total_count
-			FROM RankedTracks r
-			JOIN tracks_with_title twt ON twt.id = r.track_id
+			SELECT rt.track_id, twt.title, twt.musicbrainz_id, twt.release_id, rls.image, rt.listen_count, rt.rank, rt.total_count
+			FROM RankedTracks rt
+			JOIN tracks_with_title twt ON twt.id = rt.track_id
 			JOIN releases rls ON twt.release_id = rls.id
-			ORDER BY r.rank, r.track_id`
+			ORDER BY rt.rank, rt.track_id`
 
 		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.ArtistID, opts.Limit, offset)
 
 	default:
 		query := `
 			WITH TrackCounts AS (
-				SELECT track_id, COUNT(*) AS listen_count
-				FROM listens
-				WHERE listened_at BETWEEN ? AND ?
-				GROUP BY track_id
+				SELECT l.track_id, COUNT(*) AS listen_count
+				FROM listens l
+				JOIN tracks t ON l.track_id = t.id
+				JOIN releases r ON t.release_id = r.id
+				JOIN artist_tracks at ON l.track_id = at.track_id AND at.is_primary = 1
+				JOIN artists a ON at.artist_id = a.id
+				WHERE l.listened_at BETWEEN ? AND ?
+				  AND a.exclude_from_top_lists = 0
+				  AND r.exclude_from_top_lists = 0
+				GROUP BY l.track_id
 			),
 			RankedTracks AS (
 				SELECT track_id, listen_count,
@@ -498,11 +504,11 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 				ORDER BY listen_count DESC, track_id
 				LIMIT ? OFFSET ?
 			)
-			SELECT r.track_id, twt.title, twt.musicbrainz_id, twt.release_id, rls.image, r.listen_count, r.rank, r.total_count
-			FROM RankedTracks r
-			JOIN tracks_with_title twt ON twt.id = r.track_id
+			SELECT rt.track_id, twt.title, twt.musicbrainz_id, twt.release_id, rls.image, rt.listen_count, rt.rank, rt.total_count
+			FROM RankedTracks rt
+			JOIN tracks_with_title twt ON twt.id = rt.track_id
 			JOIN releases rls ON twt.release_id = rls.id
-			ORDER BY r.rank, r.track_id`
+			ORDER BY rt.rank, rt.track_id`
 
 		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	}

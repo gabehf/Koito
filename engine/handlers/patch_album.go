@@ -94,8 +94,9 @@ func UpdateAlbumHandler(store db.AlbumStore) http.HandlerFunc {
 		}
 
 		body, err := utils.DecodeBody[struct {
-			MBID             *string `json:"mbid"`
-			IsVariousArtists *bool   `json:"is_various_artists"`
+			MBID                *string `json:"mbid"`
+			IsVariousArtists    *bool   `json:"is_various_artists"`
+			ExcludeFromTopLists *bool   `json:"exclude_from_top_lists"`
 		}](r)
 		if err != nil {
 			l.Debug().Msg("UpdateAlbumHandler: Invalid request body")
@@ -103,7 +104,7 @@ func UpdateAlbumHandler(store db.AlbumStore) http.HandlerFunc {
 			return
 		}
 
-		if body.MBID == nil && body.IsVariousArtists == nil {
+		if body.MBID == nil && body.IsVariousArtists == nil && body.ExcludeFromTopLists == nil {
 			l.Debug().Msg("UpdateAlbumHandler: Request body contains no updatable fields")
 			utils.WriteError(w, "no updatable fields provided", http.StatusBadRequest)
 			return
@@ -124,6 +125,11 @@ func UpdateAlbumHandler(store db.AlbumStore) http.HandlerFunc {
 		if body.IsVariousArtists != nil {
 			updateOpts.VariousArtistsUpdate = true
 			updateOpts.VariousArtistsValue = *body.IsVariousArtists
+		}
+
+		if body.ExcludeFromTopLists != nil {
+			updateOpts.ExcludeFromTopListsUpdate = true
+			updateOpts.ExcludeFromTopListsValue = *body.ExcludeFromTopLists
 		}
 
 		if err = store.UpdateAlbum(ctx, updateOpts); err != nil {

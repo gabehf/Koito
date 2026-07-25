@@ -52,14 +52,19 @@ func NewInMemory() (*Sqlite, error) {
 	// Named in-memory URIs with cache=shared let multiple sql.DB connections
 	// share the same logical database within a process. A unique name per call
 	// prevents parallel test instances from seeing each other's data.
-	// SetMaxOpenConns(1) ensures goose and all subsequent queries use the same
-	// underlying connection (required for in-memory databases to persist).
+	//
+	// The shared-cache group is torn down once its last connection closes, so
+	// the pool must never drop to zero open connections. We deliberately leave
+	// MaxOpenConns/MaxIdleConns at their defaults (unbounded / 2) rather than
+	// capping at 1: Go's pool keeps idle connections around instead of closing
+	// them between queries, and callers that hold one query's *sql.Rows open
+	// while issuing another (e.g. an N+1 lookup per row) need a second
+	// connection available or they'll deadlock against a MaxOpenConns(1) cap.
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared&_pragma=foreign_keys(ON)", uuid.New().String())
 	sqldb, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite.NewInMemory: open: %w", err)
 	}
-	sqldb.SetMaxOpenConns(1)
 
 	if err := sqldb.Ping(); err != nil {
 		sqldb.Close()

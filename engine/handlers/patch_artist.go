@@ -54,7 +54,8 @@ func UpdateArtistHandler(store db.ArtistStore) http.HandlerFunc {
 		}
 
 		body, err := utils.DecodeBody[struct {
-			MBID *string `json:"mbid"`
+			MBID                *string `json:"mbid"`
+			ExcludeFromTopLists *bool   `json:"exclude_from_top_lists"`
 		}](r)
 		if err != nil {
 			l.Debug().Msg("UpdateArtistHandler: Invalid request body")
@@ -62,7 +63,7 @@ func UpdateArtistHandler(store db.ArtistStore) http.HandlerFunc {
 			return
 		}
 
-		if body.MBID == nil {
+		if body.MBID == nil && body.ExcludeFromTopLists == nil {
 			l.Debug().Msg("UpdateArtistHandler: Request body contains no updatable fields")
 			utils.WriteError(w, "no updatable fields provided", http.StatusBadRequest)
 			return
@@ -78,6 +79,11 @@ func UpdateArtistHandler(store db.ArtistStore) http.HandlerFunc {
 				return
 			}
 			updateOpts.MusicBrainzID = mbid
+		}
+
+		if body.ExcludeFromTopLists != nil {
+			updateOpts.ExcludeFromTopListsUpdate = true
+			updateOpts.ExcludeFromTopListsValue = *body.ExcludeFromTopLists
 		}
 
 		if err = store.UpdateArtist(ctx, updateOpts); err != nil {

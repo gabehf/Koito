@@ -49,7 +49,7 @@ export default function SetVariousArtists({ id }: Props) {
   };
 
   return (
-    <div className="w-full">
+    <div className="flex-grow">
       <SubHeader>Mark as Various Artists</SubHeader>
       <div className="flex flex-col gap-4">
         <select
