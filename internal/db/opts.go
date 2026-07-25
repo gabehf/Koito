@@ -92,19 +92,23 @@ type UpdateTrackOpts struct {
 }
 
 type UpdateArtistOpts struct {
-	ID            int32
-	MusicBrainzID uuid.UUID
-	Image         uuid.UUID
-	ImageSrc      string
+	ID                        int32
+	MusicBrainzID             uuid.UUID
+	Image                     uuid.UUID
+	ImageSrc                  string
+	ExcludeFromTopListsUpdate bool
+	ExcludeFromTopListsValue  bool
 }
 
 type UpdateAlbumOpts struct {
-	ID                   int32
-	MusicBrainzID        uuid.UUID
-	Image                uuid.UUID
-	ImageSrc             string
-	VariousArtistsUpdate bool
-	VariousArtistsValue  bool
+	ID                        int32
+	MusicBrainzID             uuid.UUID
+	Image                     uuid.UUID
+	ImageSrc                  string
+	VariousArtistsUpdate      bool
+	VariousArtistsValue       bool
+	ExcludeFromTopListsUpdate bool
+	ExcludeFromTopListsValue  bool
 }
 
 type UpdateUserOpts struct {

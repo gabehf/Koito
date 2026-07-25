@@ -268,6 +268,24 @@ function getAlbum(id: number): Promise<Album> {
     (r) => r.json() as Promise<Album>,
   );
 }
+function getArtist(id: number): Promise<Artist> {
+  return fetch(`/apis/web/v1/artist/${id}`).then(
+    (r) => r.json() as Promise<Artist>,
+  );
+}
+function updateExcludeFromTopLists(
+  type: string,
+  id: number,
+  val: boolean,
+): Promise<Response> {
+  return fetch(`/apis/web/v1/${type}/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ exclude_from_top_lists: val }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
 
 function deleteListen(listen: Listen): Promise<Response> {
   const ms = new Date(listen.time).getTime();
@@ -312,6 +330,8 @@ export {
   updateApiKeyLabel,
   deleteListen,
   getAlbum,
+  getArtist,
+  updateExcludeFromTopLists,
   getExport,
   submitListen,
   getRewindStats,
@@ -352,6 +372,7 @@ type Artist = {
   first_listen: number;
   is_primary: boolean;
   all_time_rank: number;
+  exclude_from_top_lists: boolean;
 };
 type Album = {
   id: number;
@@ -364,6 +385,7 @@ type Album = {
   time_listened: number;
   first_listen: number;
   all_time_rank: number;
+  exclude_from_top_lists: boolean;
 };
 type Alias = {
   id: number;

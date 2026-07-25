@@ -41,16 +41,17 @@ func (s *Sqlite) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.
 
 	var mbzID, image, imageSrc sql.NullString
 	var name, aliasesConcat sql.NullString
+	var excludeFromTopLists int
 	err := s.db.QueryRowContext(ctx, `
 		SELECT a.id, a.musicbrainz_id, a.image, a.image_source, awn.name,
-		       group_concat(aa.alias, '||') AS aliases
+		       a.exclude_from_top_lists, group_concat(aa.alias, '||') AS aliases
 		FROM artists_with_name awn
 		JOIN artists a ON a.id = awn.id
 		LEFT JOIN artist_aliases aa ON aa.artist_id = a.id
 		WHERE a.id = ?
 		GROUP BY a.id`,
 		opts.ID,
-	).Scan(&opts.ID, &mbzID, &image, &imageSrc, &name, &aliasesConcat)
+	).Scan(&opts.ID, &mbzID, &image, &imageSrc, &name, &excludeFromTopLists, &aliasesConcat)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("GetArtist: %w", db.ErrNotFound)
 	}
@@ -98,15 +99,16 @@ func (s *Sqlite) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.
 		opts.ID).Scan(&rank)
 
 	return &models.Artist{
-		ID:           opts.ID,
-		MbzID:        parseNullableUUID(mbzID),
-		Name:         name.String,
-		Aliases:      aliases,
-		Image:        catalog.BuildImageList(parseNullableUUID(image)),
-		ListenCount:  listenCount,
-		TimeListened: timeListened,
-		FirstListen:  firstListenUnix,
-		AllTimeRank:  rank,
+		ID:                  opts.ID,
+		MbzID:               parseNullableUUID(mbzID),
+		Name:                name.String,
+		Aliases:             aliases,
+		Image:               catalog.BuildImageList(parseNullableUUID(image)),
+		ListenCount:         listenCount,
+		TimeListened:        timeListened,
+		FirstListen:         firstListenUnix,
+		AllTimeRank:         rank,
+		ExcludeFromTopLists: excludeFromTopLists == 1,
 	}, nil
 }
 
@@ -222,6 +224,16 @@ func (s *Sqlite) UpdateArtist(ctx context.Context, opts db.UpdateArtistOpts) err
 			`UPDATE artists SET image = ?, image_source = ? WHERE id = ?`,
 			opts.Image.String(), opts.ImageSrc, opts.ID); err != nil {
 			return fmt.Errorf("UpdateArtist: image: %w", err)
+		}
+	}
+	if opts.ExcludeFromTopListsUpdate {
+		v := 0
+		if opts.ExcludeFromTopListsValue {
+			v = 1
+		}
+		if _, err := tx.ExecContext(ctx,
+			`UPDATE artists SET exclude_from_top_lists = ? WHERE id = ?`, v, opts.ID); err != nil {
+			return fmt.Errorf("UpdateArtist: exclude_from_top_lists: %w", err)
 		}
 	}
 	return tx.Commit()
@@ -380,7 +392,12 @@ func (s *Sqlite) GetTopArtistsPaginated(ctx context.Context, opts db.GetItemsOpt
 			SELECT at2.artist_id, COUNT(*) AS listen_count
 			FROM listens l
 			JOIN artist_tracks at2 ON l.track_id = at2.track_id
+			JOIN artists a ON at2.artist_id = a.id
+			JOIN tracks t ON at2.track_id = t.id
+			JOIN releases r ON t.release_id = r.id
 			WHERE l.listened_at BETWEEN ? AND ?
+			  AND a.exclude_from_top_lists = 0
+			  AND r.exclude_from_top_lists = 0
 			GROUP BY at2.artist_id
 		),
 		RankedArtists AS (

@@ -58,11 +58,11 @@ func (s *Sqlite) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Al
 func (s *Sqlite) getAlbumByID(ctx context.Context, id int32) (*models.Album, error) {
 	var ret models.Album
 	var mbzID, image, imageSrc sql.NullString
-	var variousArtists int
+	var variousArtists, excludeFromTopLists int
 	err := s.db.QueryRowContext(ctx, `
-		SELECT id, musicbrainz_id, image, image_source, various_artists, title
+		SELECT id, musicbrainz_id, image, image_source, various_artists, title, exclude_from_top_lists
 		FROM releases_with_title WHERE id = ? LIMIT 1`, id).
-		Scan(&ret.ID, &mbzID, &image, &imageSrc, &variousArtists, &ret.Title)
+		Scan(&ret.ID, &mbzID, &image, &imageSrc, &variousArtists, &ret.Title, &excludeFromTopLists)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("getAlbumByID: %w", db.ErrNotFound)
 	}
@@ -72,6 +72,7 @@ func (s *Sqlite) getAlbumByID(ctx context.Context, id int32) (*models.Album, err
 	ret.MbzID = parseNullableUUID(mbzID)
 	ret.Image = catalog.BuildImageList(parseNullableUUID(image))
 	ret.VariousArtists = variousArtists == 1
+	ret.ExcludeFromTopLists = excludeFromTopLists == 1
 
 	artists, err := s.artistsForRelease(ctx, id)
 	if err != nil {
@@ -299,6 +300,16 @@ func (s *Sqlite) UpdateAlbum(ctx context.Context, opts db.UpdateAlbumOpts) error
 			return fmt.Errorf("UpdateAlbum: various_artists: %w", err)
 		}
 	}
+	if opts.ExcludeFromTopListsUpdate {
+		v := 0
+		if opts.ExcludeFromTopListsValue {
+			v = 1
+		}
+		if _, err := tx.ExecContext(ctx,
+			`UPDATE releases SET exclude_from_top_lists = ? WHERE id = ?`, v, opts.ID); err != nil {
+			return fmt.Errorf("UpdateAlbum: exclude_from_top_lists: %w", err)
+		}
+	}
 	return tx.Commit()
 }
 
@@ -420,7 +431,7 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 				WHERE ar.artist_id = ? AND l.listened_at BETWEEN ? AND ?
 				GROUP BY t.release_id
 			),
-			RankedAlbums AS (
+			RankedReleases AS (
 				SELECT release_id, listen_count,
 					   RANK() OVER (ORDER BY listen_count DESC) AS rank,
 					   COUNT(*) OVER () AS total_count
@@ -428,10 +439,10 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 				ORDER BY listen_count DESC, release_id
 				LIMIT ? OFFSET ?
 			)
-			SELECT r.release_id, rwt.title, rwt.musicbrainz_id, rwt.image, rwt.various_artists, r.listen_count, r.rank, r.total_count
-			FROM RankedAlbums r
-			JOIN releases_with_title rwt ON rwt.id = r.release_id
-			ORDER BY r.rank, r.release_id`
+			SELECT rr.release_id, rwt.title, rwt.musicbrainz_id, rwt.image, rwt.various_artists, rr.listen_count, rr.rank, rr.total_count
+			FROM RankedReleases rr
+			JOIN releases_with_title rwt ON rwt.id = rr.release_id
+			ORDER BY rr.rank, rr.release_id`
 
 		rows, err = s.db.QueryContext(ctx, query, opts.ArtistID, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	} else {
@@ -440,10 +451,15 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 				SELECT t.release_id, COUNT(*) AS listen_count
 				FROM listens l
 				JOIN tracks t ON l.track_id = t.id
+				JOIN releases r ON t.release_id = r.id
+				JOIN artist_releases ar ON t.release_id = ar.release_id AND ar.is_primary = 1
+				JOIN artists a ON ar.artist_id = a.id
 				WHERE l.listened_at BETWEEN ? AND ?
+				  AND a.exclude_from_top_lists = 0
+				  AND r.exclude_from_top_lists = 0
 				GROUP BY t.release_id
 			),
-			RankedAlbums AS (
+			RankedReleases AS (
 				SELECT release_id, listen_count,
 					   RANK() OVER (ORDER BY listen_count DESC) AS rank,
 					   COUNT(*) OVER () AS total_count
@@ -451,10 +467,10 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 				ORDER BY listen_count DESC, release_id
 				LIMIT ? OFFSET ?
 			)
-			SELECT r.release_id, rwt.title, rwt.musicbrainz_id, rwt.image, rwt.various_artists, r.listen_count, r.rank, r.total_count
-			FROM RankedAlbums r
-			JOIN releases_with_title rwt ON rwt.id = r.release_id
-			ORDER BY r.rank, r.release_id`
+			SELECT rr.release_id, rwt.title, rwt.musicbrainz_id, rwt.image, rwt.various_artists, rr.listen_count, rr.rank, rr.total_count
+			FROM RankedReleases rr
+			JOIN releases_with_title rwt ON rwt.id = rr.release_id
+			ORDER BY rr.rank, rr.release_id`
 
 		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	}

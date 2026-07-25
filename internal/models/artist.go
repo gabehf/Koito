@@ -3,16 +3,17 @@ package models
 import "github.com/google/uuid"
 
 type Artist struct {
-	ID           int32      `json:"id"`
-	MbzID        *uuid.UUID `json:"musicbrainz_id"`
-	Name         string     `json:"name"`
-	Aliases      []string   `json:"aliases"`
-	Image        ImageList  `json:"image"`
-	ListenCount  int64      `json:"listen_count"`
-	TimeListened int64      `json:"time_listened"`
-	FirstListen  int64      `json:"first_listen"`
-	IsPrimary    bool       `json:"is_primary,omitempty"`
-	AllTimeRank  int64      `json:"all_time_rank"`
+	ID                  int32      `json:"id"`
+	MbzID               *uuid.UUID `json:"musicbrainz_id"`
+	Name                string     `json:"name"`
+	Aliases             []string   `json:"aliases"`
+	Image               ImageList  `json:"image"`
+	ListenCount         int64      `json:"listen_count"`
+	TimeListened        int64      `json:"time_listened"`
+	FirstListen         int64      `json:"first_listen"`
+	IsPrimary           bool       `json:"is_primary,omitempty"`
+	AllTimeRank         int64      `json:"all_time_rank"`
+	ExcludeFromTopLists bool       `json:"exclude_from_top_lists"`
 }
 
 type ImageList struct {
