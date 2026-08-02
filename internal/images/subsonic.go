@@ -109,12 +109,12 @@ func (c *SubsonicClient) getEntity(ctx context.Context, endpoint string, result 
 	return nil
 }
 
-func (c *SubsonicClient) GetAlbumImage(ctx context.Context, mbid *uuid.UUID, artist, album string) (string, error) {
+func (c *SubsonicClient) GetAlbumImage(ctx context.Context, mbid uuid.UUID, artist, album string) (string, error) {
 	l := logger.FromContext(ctx)
 	resp := new(SubsonicAlbumResponse)
 	l.Debug().Msgf("Finding album image for %s from artist %s", album, artist)
 	// first try mbid search
-	if mbid != nil {
+	if mbid != uuid.Nil {
 		l.Debug().Str("mbid", mbid.String()).Msg("Searching album image by MBID")
 		err := c.getEntity(ctx, fmt.Sprintf(subsonicAlbumSearchFmtStr, c.authParams, url.QueryEscape(mbid.String())), resp)
 		if err != nil {
@@ -143,12 +143,12 @@ func (c *SubsonicClient) GetAlbumImage(ctx context.Context, mbid *uuid.UUID, art
 	return "", fmt.Errorf("GetAlbumImage: failed to get album art from subsonic")
 }
 
-func (c *SubsonicClient) GetArtistImage(ctx context.Context, mbid *uuid.UUID, artist string) (string, error) {
+func (c *SubsonicClient) GetArtistImage(ctx context.Context, mbid uuid.UUID, artist string) (string, error) {
 	l := logger.FromContext(ctx)
 	resp := new(SubsonicArtistResponse)
 	l.Debug().Msgf("Finding artist image for %s", artist)
 	// first try mbid search
-	if mbid != nil {
+	if mbid != uuid.Nil {
 		l.Debug().Str("mbid", mbid.String()).Msg("Searching artist image by MBID")
 		err := c.getEntity(ctx, fmt.Sprintf(subsonicArtistSearchFmtStr, c.authParams, url.QueryEscape(mbid.String())), resp)
 		if err != nil {

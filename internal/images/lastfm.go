@@ -180,7 +180,7 @@ func overrideImgSize(url string) string {
 	return strings.Replace(url, "300x300", "600x600", 1)
 }
 
-func (c *LastFMClient) GetAlbumImage(ctx context.Context, mbid *uuid.UUID, artist, album string) (string, error) {
+func (c *LastFMClient) GetAlbumImage(ctx context.Context, mbid uuid.UUID, artist, album string) (string, error) {
 	l := logger.FromContext(ctx)
 	resp := new(lastFMAlbumResponse)
 	l.Debug().Msgf("Finding album image for %s from artist %s", album, artist)
@@ -194,7 +194,7 @@ func (c *LastFMClient) GetAlbumImage(ctx context.Context, mbid *uuid.UUID, artis
 	}
 
 	// 1. Try MBID search first
-	if mbid != nil {
+	if mbid != uuid.Nil {
 		l.Debug().Str("mbid", mbid.String()).Msg("Searching album image by MBID")
 		err := fetch(func(p url.Values) {
 			p.Set("mbid", mbid.String())
@@ -240,7 +240,7 @@ func (c *LastFMClient) GetAlbumImage(ctx context.Context, mbid *uuid.UUID, artis
 	return best, nil
 }
 
-func (c *LastFMClient) GetArtistImage(ctx context.Context, mbid *uuid.UUID, artist string) (string, error) {
+func (c *LastFMClient) GetArtistImage(ctx context.Context, mbid uuid.UUID, artist string) (string, error) {
 	l := logger.FromContext(ctx)
 	resp := new(lastFMArtistResponse)
 	l.Debug().Msgf("Finding artist image for %s", artist)
@@ -253,7 +253,7 @@ func (c *LastFMClient) GetArtistImage(ctx context.Context, mbid *uuid.UUID, arti
 	}
 
 	// 1. Try MBID search
-	if mbid != nil {
+	if mbid != uuid.Nil {
 		l.Debug().Str("mbid", mbid.String()).Msg("Searching artist image by MBID")
 		err := fetch(func(p url.Values) {
 			p.Set("mbid", mbid.String())

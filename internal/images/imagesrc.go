@@ -34,14 +34,14 @@ var imgsrc ImageSource
 
 type ArtistImageOpts struct {
 	Aliases []string
-	MBID    *uuid.UUID
+	MBID    uuid.UUID // optional
 }
 
 type AlbumImageOpts struct {
 	Artists           []string
 	Album             string
-	ReleaseMbzID      *uuid.UUID
-	ReleaseGroupMbzID *uuid.UUID
+	ReleaseMbzID      uuid.UUID // optional
+	ReleaseGroupMbzID uuid.UUID // optional
 }
 
 const caaBaseUrl = "https://coverartarchive.org"
@@ -124,7 +124,7 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 	}
 	if imgsrc.caaEnabled {
 		l.Debug().Msg("Attempting to find album image from CoverArtArchive")
-		if opts.ReleaseMbzID != nil && *opts.ReleaseMbzID != uuid.Nil {
+		if opts.ReleaseMbzID != uuid.Nil {
 			url := fmt.Sprintf(caaBaseUrl+"/release/%s/front", opts.ReleaseMbzID.String())
 			resp, err := http.DefaultClient.Head(url)
 			if err != nil {
@@ -137,7 +137,7 @@ func GetAlbumImage(ctx context.Context, opts AlbumImageOpts) (string, error) {
 				}
 			}
 		}
-		if opts.ReleaseGroupMbzID != nil && *opts.ReleaseGroupMbzID != uuid.Nil {
+		if opts.ReleaseGroupMbzID != uuid.Nil {
 			url := fmt.Sprintf(caaBaseUrl+"/release-group/%s/front", opts.ReleaseGroupMbzID.String())
 			resp, err := http.DefaultClient.Head(url)
 			if err != nil {

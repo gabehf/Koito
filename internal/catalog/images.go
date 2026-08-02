@@ -142,11 +142,16 @@ func FetchMissingAlbumImages(ctx context.Context, store db.AlbumStore) error {
 				Str("title", album.Title).
 				Msg("FetchMissingAlbumImages: Attempting to fetch missing album image")
 
+			var releaseMbzID uuid.UUID
+			if album.MbzID != nil {
+				releaseMbzID = *album.MbzID
+			}
+
 			var imgid uuid.UUID
 			imgUrl, imgErr := images.GetAlbumImage(ctx, images.AlbumImageOpts{
 				Artists:      utils.FlattenSimpleArtistNames(album.Artists),
 				Album:        album.Title,
-				ReleaseMbzID: album.MbzID,
+				ReleaseMbzID: releaseMbzID,
 			})
 			if imgErr == nil && imgUrl != "" {
 				imgid = uuid.New()
