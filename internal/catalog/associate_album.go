@@ -126,7 +126,7 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, o
 		imgUrl, err := images.GetAlbumImage(ctx, images.AlbumImageOpts{
 			Artists:      utils.UniqueIgnoringCase(slices.Concat(utils.FlattenMbzArtistCreditNames(release.ArtistCredit), utils.FlattenArtistNames(opts.Artists))),
 			Album:        release.Title,
-			ReleaseMbzID: &opts.ReleaseMbzID,
+			ReleaseMbzID: opts.ReleaseMbzID,
 		})
 
 		if err == nil && imgUrl != "" {
@@ -213,7 +213,7 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 		imgUrl, err := images.GetAlbumImage(ctx, images.AlbumImageOpts{
 			Artists:      utils.FlattenArtistNames(opts.Artists),
 			Album:        opts.ReleaseName,
-			ReleaseMbzID: &opts.ReleaseMbzID,
+			ReleaseMbzID: opts.ReleaseMbzID,
 		})
 		if err == nil && imgUrl != "" {
 			imgid = uuid.New()
