@@ -134,9 +134,8 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 				imgid = uuid.New()
 				if !opts.SkipCacheImage {
 					l.Debug().Msg("Downloading artist image from source...")
-					err = imagecache.DownloadImage(imgid, imgUrl)
-					if err != nil {
-						l.Err(err).Msg("Failed to cache image")
+					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
+						l.Err(dlErr).Msg("Failed to cache image")
 					}
 				}
 			} else {
@@ -247,9 +246,8 @@ func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []st
 		imgid = uuid.New()
 		if !opts.SkipCacheImage {
 			l.Debug().Msg("Downloading artist image from source...")
-			err = imagecache.DownloadImage(imgid, imgUrl)
-			if err != nil {
-				l.Err(err).Msg("Failed to cache image")
+			if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
+				l.Err(dlErr).Msg("Failed to cache image")
 			}
 		}
 	} else if err != nil {
@@ -296,9 +294,8 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 				imgid = uuid.New()
 				if !opts.SkipCacheImage {
 					l.Debug().Msg("Downloading artist image from source...")
-					err = imagecache.DownloadImage(imgid, imgUrl)
-					if err != nil {
-						l.Err(err).Msg("Failed to cache image")
+					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
+						l.Err(dlErr).Msg("Failed to cache image")
 					}
 				}
 			} else if err != nil {
