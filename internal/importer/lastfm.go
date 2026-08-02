@@ -116,7 +116,7 @@ func ImportLastFMFile(ctx context.Context, store importStore, mbzc mbz.MusicBrai
 				Client:             "lastfm",
 				Time:               ts,
 				UserID:             1,
-				SkipCacheImage:     !cfg.FetchImagesDuringImport(),
+				SkipImageLookup:    true,
 			}
 			err = catalog.SubmitListen(ctx, store, opts)
 			if err != nil {

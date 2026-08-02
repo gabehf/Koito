@@ -236,23 +236,33 @@ func Run(
 
 	l.Info().Msg("Engine: Beginning startup tasks...")
 
-	l.Debug().Msg("Engine: Checking import configuration")
-	if !cfg.SkipImport() {
-		go func() {
-			RunImporter(l, store, mbzC)
-		}()
-	}
+	go func() {
+		l.Info().Msg("Engine: Checking image cache migration status")
+		if err := catalog.MigrateImageCache(ctx, store); err != nil {
+			l.Err(err).Msg("Engine: Failed to migrate image cache")
+		}
+		l.Info().Msg("Engine: Pruning orphaned images")
+		if err := catalog.PruneOrphanedImages(ctx, store); err != nil {
+			l.Err(err).Msg("Engine: Failed to prune orphaned images")
+		}
 
-	l.Info().Msg("Engine: Pruning orphaned images")
-	go catalog.PruneOrphanedImages(logger.NewContext(l), store)
-	l.Info().Msg("Engine: Checking image cache migration status")
-	go catalog.MigrateImageCache(logger.NewContext(l), store)
+		l.Debug().Msg("Engine: Checking import configuration")
+		if !cfg.SkipImport() {
+			RunImporter(l, store, mbzC)
+		}
+
+		l.Info().Msg("Engine: Attempting to fetch missing artist images")
+		if err := catalog.FetchMissingArtistImages(ctx, store); err != nil {
+			l.Err(err).Msg("Engine: Failed to fetch missing artist images")
+		}
+		l.Info().Msg("Engine: Attempting to fetch missing album images")
+		if err := catalog.FetchMissingAlbumImages(ctx, store); err != nil {
+			l.Err(err).Msg("Engine: Failed to fetch missing album images")
+		}
+	}()
+
 	l.Info().Msg("Engine: Running duration backfill task")
 	go catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzC)
-	l.Info().Msg("Engine: Attempting to fetch missing artist images")
-	go catalog.FetchMissingArtistImages(ctx, store)
-	l.Info().Msg("Engine: Attempting to fetch missing album images")
-	go catalog.FetchMissingAlbumImages(ctx, store)
 
 	l.Info().Msg("Engine: Initialization finished")
 	quit := make(chan os.Signal, 1)
