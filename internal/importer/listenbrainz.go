@@ -153,7 +153,7 @@ func ImportListenBrainzFile(ctx context.Context, store importStore, mbzc mbz.Mus
 			Time:               ts,
 			UserID:             1,
 			Client:             client,
-			SkipCacheImage:     !cfg.FetchImagesDuringImport(),
+			SkipCacheImage:     true,
 		}
 		err = catalog.SubmitListen(ctx, store, opts)
 		if err != nil {

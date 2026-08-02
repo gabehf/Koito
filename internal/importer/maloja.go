@@ -79,7 +79,7 @@ func ImportMalojaFile(ctx context.Context, store importStore, mbzc mbz.MusicBrai
 			Time:           ts.Local(),
 			Client:         "maloja",
 			UserID:         1,
-			SkipCacheImage: !cfg.FetchImagesDuringImport(),
+			SkipCacheImage: true,
 		}
 		err = catalog.SubmitListen(ctx, store, opts)
 		if err != nil {

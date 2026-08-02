@@ -66,7 +66,7 @@ func ImportSpotifyFile(ctx context.Context, store importStore, mbzc mbz.MusicBra
 			Time:           item.Timestamp,
 			Client:         "spotify",
 			UserID:         1,
-			SkipCacheImage: !cfg.FetchImagesDuringImport(),
+			SkipCacheImage: true,
 		}
 		err = catalog.SubmitListen(ctx, store, opts)
 		if err != nil {
