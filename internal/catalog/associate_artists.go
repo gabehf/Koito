@@ -25,7 +25,7 @@ type AssociateArtistsOpts struct {
 	TrackTitle    string
 	Mbzc          mbz.MusicBrainzCaller
 
-	SkipCacheImage bool
+	SkipImageLookup bool
 }
 
 func AssociateArtists(ctx context.Context, d db.ArtistStore, opts AssociateArtistsOpts) ([]*models.Artist, error) {
@@ -132,7 +132,7 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 			})
 			if imgErr == nil && imgUrl != "" {
 				imgid = uuid.New()
-				if !opts.SkipCacheImage {
+				if !opts.SkipImageLookup {
 					l.Debug().Msg("Downloading artist image from source...")
 					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 						l.Err(dlErr).Msg("Failed to cache image")
@@ -244,7 +244,7 @@ func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []st
 	})
 	if err == nil && imgUrl != "" {
 		imgid = uuid.New()
-		if !opts.SkipCacheImage {
+		if !opts.SkipImageLookup {
 			l.Debug().Msg("Downloading artist image from source...")
 			if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 				l.Err(dlErr).Msg("Failed to cache image")
@@ -292,7 +292,7 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 			})
 			if err == nil && imgUrl != "" {
 				imgid = uuid.New()
-				if !opts.SkipCacheImage {
+				if !opts.SkipImageLookup {
 					l.Debug().Msg("Downloading artist image from source...")
 					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 						l.Err(dlErr).Msg("Failed to cache image")

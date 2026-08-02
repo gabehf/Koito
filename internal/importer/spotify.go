@@ -58,15 +58,15 @@ func ImportSpotifyFile(ctx context.Context, store importStore, mbzc mbz.MusicBra
 			continue
 		}
 		opts := catalog.SubmitListenOpts{
-			MbzCaller:      mbzc,
-			Artist:         item.ArtistName,
-			TrackTitle:     item.TrackName,
-			ReleaseTitle:   item.AlbumName,
-			Duration:       dur / 1000,
-			Time:           item.Timestamp,
-			Client:         "spotify",
-			UserID:         1,
-			SkipCacheImage: true,
+			MbzCaller:       mbzc,
+			Artist:          item.ArtistName,
+			TrackTitle:      item.TrackName,
+			ReleaseTitle:    item.AlbumName,
+			Duration:        dur / 1000,
+			Time:            item.Timestamp,
+			Client:          "spotify",
+			UserID:          1,
+			SkipImageLookup: true,
 		}
 		err = catalog.SubmitListen(ctx, store, opts)
 		if err != nil {

@@ -23,7 +23,7 @@ type AssociateAlbumOpts struct {
 	ReleaseName       string
 	TrackName         string // required
 	Mbzc              mbz.MusicBrainzCaller
-	SkipCacheImage    bool
+	SkipImageLookup   bool
 }
 
 func AssociateAlbum(ctx context.Context, d db.AlbumStore, opts AssociateAlbumOpts) (*models.Album, error) {
@@ -131,7 +131,7 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, o
 
 		if err == nil && imgUrl != "" {
 			imgid = uuid.New()
-			if !opts.SkipCacheImage {
+			if !opts.SkipImageLookup {
 				l.Debug().Msg("Downloading album image from source...")
 				if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 					l.Err(dlErr).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
@@ -214,7 +214,7 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 		})
 		if err == nil && imgUrl != "" {
 			imgid = uuid.New()
-			if !opts.SkipCacheImage {
+			if !opts.SkipImageLookup {
 				l.Debug().Msg("Downloading album image from source...")
 				if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 					l.Err(dlErr).Msg("matchAlbumByTitle: failed to cache image")

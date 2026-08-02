@@ -42,8 +42,8 @@ type SubmitListenOpts struct {
 	// artist, release, release group, and track in DB
 	SkipSaveListen bool
 
-	// When true, skips caching the images and only stores the image url in the db
-	SkipCacheImage bool
+	// When true, skips requests for album and artist images
+	SkipImageLookup bool
 
 	MbzCaller          mbz.MusicBrainzCaller
 	ArtistNames        []string
@@ -88,13 +88,13 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 		ctx,
 		store,
 		AssociateArtistsOpts{
-			ArtistMbzIDs:   opts.ArtistMbzIDs,
-			ArtistNames:    opts.ArtistNames,
-			ArtistName:     opts.Artist,
-			ArtistMbidMap:  opts.ArtistMbidMappings,
-			Mbzc:           opts.MbzCaller,
-			TrackTitle:     opts.TrackTitle,
-			SkipCacheImage: opts.SkipCacheImage,
+			ArtistMbzIDs:    opts.ArtistMbzIDs,
+			ArtistNames:     opts.ArtistNames,
+			ArtistName:      opts.Artist,
+			ArtistMbidMap:   opts.ArtistMbidMappings,
+			Mbzc:            opts.MbzCaller,
+			TrackTitle:      opts.TrackTitle,
+			SkipImageLookup: opts.SkipImageLookup,
 		})
 	if err != nil {
 		l.Err(err).Msg("Failed to associate artists to listen")
@@ -116,7 +116,7 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 		TrackName:         opts.TrackTitle,
 		Mbzc:              opts.MbzCaller,
 		Artists:           artists,
-		SkipCacheImage:    opts.SkipCacheImage,
+		SkipImageLookup:   opts.SkipImageLookup,
 	})
 	if err != nil {
 		l.Error().Err(err).Msg("Failed to associate release group to listen")
