@@ -127,19 +127,21 @@ func matchArtistsByMBIDMappings(ctx context.Context, d db.ArtistStore, opts Asso
 			l.Warn().AnErr("error", err).Msg("matchArtistsByMBIDMappings: MusicBrainz unreachable, creating new artist with provided MusicBrainz ID mapping")
 
 			var imgid uuid.UUID
-			imgUrl, imgErr := images.GetArtistImage(ctx, images.ArtistImageOpts{
-				Aliases: []string{a.Artist},
-			})
-			if imgErr == nil && imgUrl != "" {
-				imgid = uuid.New()
-				if !opts.SkipImageLookup {
+			var imgUrl string
+			if !opts.SkipImageLookup {
+				var imgErr error
+				imgUrl, imgErr = images.GetArtistImage(ctx, images.ArtistImageOpts{
+					Aliases: []string{a.Artist},
+				})
+				if imgErr == nil && imgUrl != "" {
+					imgid = uuid.New()
 					l.Debug().Msg("Downloading artist image from source...")
 					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 						l.Err(dlErr).Msg("Failed to cache image")
 					}
+				} else {
+					l.Err(imgErr).Msgf("matchArtistsByMBIDMappings: Failed to get artist image for artist '%s'", a.Artist)
 				}
-			} else {
-				l.Err(imgErr).Msgf("matchArtistsByMBIDMappings: Failed to get artist image for artist '%s'", a.Artist)
 			}
 
 			artist, err = d.SaveArtist(ctx, db.SaveArtistOpts{
@@ -239,19 +241,21 @@ func resolveAliasOrCreateArtist(ctx context.Context, mbzID uuid.UUID, names []st
 	}
 
 	var imgid uuid.UUID
-	imgUrl, err := images.GetArtistImage(ctx, images.ArtistImageOpts{
-		Aliases: aliases,
-	})
-	if err == nil && imgUrl != "" {
-		imgid = uuid.New()
-		if !opts.SkipImageLookup {
+	var imgUrl string
+	if !opts.SkipImageLookup {
+		var imgErr error
+		imgUrl, imgErr = images.GetArtistImage(ctx, images.ArtistImageOpts{
+			Aliases: aliases,
+		})
+		if imgErr == nil && imgUrl != "" {
+			imgid = uuid.New()
 			l.Debug().Msg("Downloading artist image from source...")
 			if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 				l.Err(dlErr).Msg("Failed to cache image")
 			}
+		} else if imgErr != nil {
+			l.Warn().AnErr("error", imgErr).Msg("Failed to get artist image from ImageSrc")
 		}
-	} else if err != nil {
-		l.Warn().AnErr("error", err).Msg("Failed to get artist image from ImageSrc")
 	}
 
 	u, err := d.SaveArtist(ctx, db.SaveArtistOpts{
@@ -287,19 +291,21 @@ func matchArtistsByNames(ctx context.Context, names []string, existing []*models
 		}
 		if errors.Is(err, db.ErrNotFound) {
 			var imgid uuid.UUID
-			imgUrl, err := images.GetArtistImage(ctx, images.ArtistImageOpts{
-				Aliases: []string{name},
-			})
-			if err == nil && imgUrl != "" {
-				imgid = uuid.New()
-				if !opts.SkipImageLookup {
+			var imgUrl string
+			if !opts.SkipImageLookup {
+				var imgErr error
+				imgUrl, imgErr = images.GetArtistImage(ctx, images.ArtistImageOpts{
+					Aliases: []string{name},
+				})
+				if imgErr == nil && imgUrl != "" {
+					imgid = uuid.New()
 					l.Debug().Msg("Downloading artist image from source...")
 					if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 						l.Err(dlErr).Msg("Failed to cache image")
 					}
+				} else if imgErr != nil {
+					l.Debug().AnErr("error", imgErr).Msgf("Failed to get artist images for %s", name)
 				}
-			} else if err != nil {
-				l.Debug().AnErr("error", err).Msgf("Failed to get artist images for %s", name)
 			}
 			a, err = d.SaveArtist(ctx, db.SaveArtistOpts{Name: name, Image: imgid, ImageSrc: imgUrl})
 			if err != nil {

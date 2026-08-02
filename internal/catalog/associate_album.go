@@ -121,24 +121,25 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, o
 			}
 		}
 
-		l.Debug().Msg("Searching for album images...")
 		var imgid uuid.UUID
-		imgUrl, err := images.GetAlbumImage(ctx, images.AlbumImageOpts{
-			Artists:      utils.UniqueIgnoringCase(slices.Concat(utils.FlattenMbzArtistCreditNames(release.ArtistCredit), utils.FlattenArtistNames(opts.Artists))),
-			Album:        release.Title,
-			ReleaseMbzID: &opts.ReleaseMbzID,
-		})
-
-		if err == nil && imgUrl != "" {
-			imgid = uuid.New()
-			if !opts.SkipImageLookup {
+		var imgUrl string
+		if !opts.SkipImageLookup {
+			l.Debug().Msg("Searching for album images...")
+			var imgErr error
+			imgUrl, imgErr = images.GetAlbumImage(ctx, images.AlbumImageOpts{
+				Artists:      utils.UniqueIgnoringCase(slices.Concat(utils.FlattenMbzArtistCreditNames(release.ArtistCredit), utils.FlattenArtistNames(opts.Artists))),
+				Album:        release.Title,
+				ReleaseMbzID: &opts.ReleaseMbzID,
+			})
+			if imgErr == nil && imgUrl != "" {
+				imgid = uuid.New()
 				l.Debug().Msg("Downloading album image from source...")
 				if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 					l.Err(dlErr).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
 				}
+			} else if imgErr != nil {
+				l.Debug().Msgf("createOrUpdateAlbumWithMbzReleaseID: failed to get album images for %s: %s", release.Title, imgErr.Error())
 			}
-		} else if err != nil {
-			l.Debug().Msgf("createOrUpdateAlbumWithMbzReleaseID: failed to get album images for %s: %s", release.Title, err.Error())
 		}
 
 		album, err = d.SaveAlbum(ctx, db.SaveAlbumOpts{
@@ -207,21 +208,23 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 		return nil, fmt.Errorf("matchAlbumByTitle: %w", err)
 	} else {
 		var imgid uuid.UUID
-		imgUrl, err := images.GetAlbumImage(ctx, images.AlbumImageOpts{
-			Artists:      utils.FlattenArtistNames(opts.Artists),
-			Album:        opts.ReleaseName,
-			ReleaseMbzID: &opts.ReleaseMbzID,
-		})
-		if err == nil && imgUrl != "" {
-			imgid = uuid.New()
-			if !opts.SkipImageLookup {
+		var imgUrl string
+		if !opts.SkipImageLookup {
+			var imgErr error
+			imgUrl, imgErr = images.GetAlbumImage(ctx, images.AlbumImageOpts{
+				Artists:      utils.FlattenArtistNames(opts.Artists),
+				Album:        opts.ReleaseName,
+				ReleaseMbzID: &opts.ReleaseMbzID,
+			})
+			if imgErr == nil && imgUrl != "" {
+				imgid = uuid.New()
 				l.Debug().Msg("Downloading album image from source...")
 				if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
 					l.Err(dlErr).Msg("matchAlbumByTitle: failed to cache image")
 				}
+			} else if imgErr != nil {
+				l.Debug().AnErr("error", imgErr).Msgf("matchAlbumByTitle: failed to get album images for %s", opts.ReleaseName)
 			}
-		} else if err != nil {
-			l.Debug().AnErr("error", err).Msgf("matchAlbumByTitle: failed to get album images for %s", opts.ReleaseName)
 		}
 
 		a, err = d.SaveAlbum(ctx, db.SaveAlbumOpts{
