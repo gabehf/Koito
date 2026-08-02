@@ -137,9 +137,7 @@ func createOrUpdateAlbumWithMbzReleaseID(ctx context.Context, d db.AlbumStore, o
 					l.Err(dlErr).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
 				}
 			}
-		}
-
-		if err != nil {
+		} else if err != nil {
 			l.Debug().Msgf("createOrUpdateAlbumWithMbzReleaseID: failed to get album images for %s: %s", release.Title, err.Error())
 		}
 
@@ -219,11 +217,10 @@ func matchAlbumByTitle(ctx context.Context, d db.AlbumStore, opts AssociateAlbum
 			if !opts.SkipCacheImage {
 				l.Debug().Msg("Downloading album image from source...")
 				if dlErr := imagecache.DownloadImage(imgid, imgUrl); dlErr != nil {
-					l.Err(dlErr).Msg("createOrUpdateAlbumWithMbzReleaseID: failed to cache image")
+					l.Err(dlErr).Msg("matchAlbumByTitle: failed to cache image")
 				}
 			}
-		}
-		if err != nil {
+		} else if err != nil {
 			l.Debug().AnErr("error", err).Msgf("matchAlbumByTitle: failed to get album images for %s", opts.ReleaseName)
 		}
 
