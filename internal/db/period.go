@@ -13,6 +13,7 @@ const (
 	PeriodWeek    Period = "week"
 	PeriodMonth   Period = "month"
 	PeriodYear    Period = "year"
+	PeriodYTD     Period = "ytd"
 	PeriodAllTime Period = "all_time"
 )
 
@@ -31,6 +32,8 @@ func StartTimeFromPeriod(p Period) time.Time {
 		return now.AddDate(0, -1, 0)
 	case "year":
 		return now.AddDate(-1, 0, 0)
+	case "ytd":
+		return time.Date(now.Year(), time.January, 1, 0, 0, 0, 0, now.Location())
 	case "all_time":
 		return time.Time{}
 	default:
