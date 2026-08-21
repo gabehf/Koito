@@ -11,7 +11,7 @@ export default function PeriodSelector({
   current,
   disableCache = false,
 }: Props) {
-  const periods = ["day", "week", "month", "year", "all_time"];
+  const periods = ["day", "week", "month", "year", "ytd", "all_time"];
 
   const periodDisplay = (str: string) => {
     return str.split("_").map((w) =>
