@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch, type InterestBucket } from "api/api";
 import { useTheme } from "~/hooks/useTheme";
-import { Area, AreaChart } from "recharts";
+import { Area, AreaChart, XAxis, YAxis, Tooltip } from "recharts";
 import CardHeader from "./primitives/CardHeader";
 
 interface Props {
@@ -15,6 +15,36 @@ const getInterest = (args: { buckets: number; type: string; id: number }) =>
     `/apis/web/v1/${args.type.toLowerCase()}/${args.id}/interest`,
     args,
   );
+
+interface InterestTooltipProps {
+  active?: boolean;
+  payload?: { payload: InterestBucket }[];
+}
+
+function InterestTooltip({ active, payload }: InterestTooltipProps) {
+  if (!active || !payload || !payload.length) {
+    return null;
+  }
+  const bucket = payload[0].payload;
+  const start = new Date(bucket.bucket_start);
+  const end = new Date(bucket.bucket_end);
+  const range =
+    start.toDateString() === end.toDateString()
+      ? start.toLocaleDateString()
+      : `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`;
+
+  return (
+    <div className="bg-(--color-bg) color-fg border-1 border-(--color-bg-tertiary) px-3 py-2 rounded-lg text-[12px]">
+      <p className="text-(--color-fg-secondary)">{range}</p>
+      <p>
+        <span className="text-(--color-primary) font-semibold">
+          {bucket.listen_count}
+        </span>{" "}
+        play{bucket.listen_count !== 1 ? "s" : ""}
+      </p>
+    </div>
+  );
+}
 
 export default function InterestGraph({ buckets = 16, type, id }: Props) {
   const args = {
@@ -59,7 +89,7 @@ export default function InterestGraph({ buckets = 16, type, id }: Props) {
             height: "120px",
           }}
           data={data}
-          margin={{ top: 20, bottom: 15 }}
+          margin={{ top: 20, right: 10, bottom: 5, left: 0 }}
         >
           <defs>
             <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
@@ -67,6 +97,27 @@ export default function InterestGraph({ buckets = 16, type, id }: Props) {
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
+          <XAxis
+            dataKey="bucket_start"
+            tickFormatter={(v) => new Date(v).toLocaleDateString()}
+            stroke="var(--color-fg-tertiary)"
+            tick={{ fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            minTickGap={40}
+          />
+          <YAxis
+            allowDecimals={false}
+            stroke="var(--color-fg-tertiary)"
+            tick={{ fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            width={40}
+          />
+          <Tooltip
+            content={<InterestTooltip />}
+            cursor={{ stroke: "var(--color-fg-tertiary)", strokeWidth: 1 }}
+          />
           <Area
             dataKey="listen_count"
             type="natural"
