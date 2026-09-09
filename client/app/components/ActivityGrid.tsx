@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useAppContext } from "~/providers/AppProvider";
+import { formatDate } from "~/utils/utils";
 import Popup from "./Popup";
 import {
   apiFetch,
@@ -55,6 +57,7 @@ export default function ActivityGrid({
     queryFn: () => getActivity(args),
   });
 
+  const { dateFormat, weekStart } = useAppContext();
   const width = useWindowWidth();
 
   if (isPending) {
@@ -90,20 +93,28 @@ export default function ActivityGrid({
     listenMap.set(key, item.listens);
   }
 
-  let firstDay = 1;
-  try {
-    // This doesn't work in Firefox
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/getWeekInfo
-    firstDay = new Intl.Locale(navigator.language).getWeekInfo().firstDay;
-  } catch (err) {
-    console.log(err);
+  // Map day name → Intl firstDay integer (1=Mon … 7=Sun)
+  const weekStartMap: Record<string, number> = {
+    Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4,
+    Friday: 5, Saturday: 6, Sunday: 7,
+  };
+  let firstDay = weekStartMap[weekStart] ?? 0;
+  if (!firstDay) {
+    firstDay = 1;
+    try {
+      // This doesn't work in Firefox
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/getWeekInfo
+      firstDay = new Intl.Locale(navigator.language).getWeekInfo().firstDay;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  // Align the grid to calendar weeks (Monday = row 0, Sunday = row 6).
+  // Align the grid to calendar weeks.
   // Column 0 is the oldest week; the last column is the current (partial) week.
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const daysSinceMonday = (today.getDay() + (7 - firstDay)) % 7; // Mon=0 … Sun=6
+  const daysSinceMonday = (today.getDay() + (7 - firstDay)) % 7;
   const gridStart = new Date(today);
   gridStart.setDate(
     gridStart.getDate() - daysSinceMonday - (NUM_WEEKS - 1) * 7,
@@ -130,10 +141,10 @@ export default function ActivityGrid({
   const CELL_H = "h-[9px] sm:h-[10px]";
   const CELL_GAP = "gap-[2px] md:gap-[3px]";
   const CELL_RADIUS = "rounded-[2px]";
-  const DAY_LABELS =
-    firstDay == 1
-      ? ["Mon", "", "Wed", "", "Fri", "", "Sun"]
-      : ["Sun", "", "Tue", "", "Thu", "", "Sat"];
+  const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const DAY_LABELS = Array.from({ length: 7 }, (_, i) =>
+    i % 2 === 0 ? ALL_DAYS[(firstDay - 1 + i) % 7] : "",
+  );
 
   return (
     <div className="flex flex-col items-start">
@@ -165,7 +176,7 @@ export default function ActivityGrid({
                     position="top"
                     space={12}
                     extraClasses="left-2"
-                    inner={`${cell.date.toLocaleDateString()} ${
+                    inner={`${formatDate(cell.date, dateFormat)} ${
                       cell.listens
                     } plays`}
                   >

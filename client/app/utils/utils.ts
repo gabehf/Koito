@@ -28,7 +28,22 @@ const getRewindParams = (): { month: number; year: number } => {
   }
 };
 
-function timeSince(date: Date) {
+function formatDate(date: Date, dateFormat: string = ""): string {
+  if (!dateFormat) return date.toLocaleDateString();
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(date.getFullYear());
+  return dateFormat.replace("DD", dd).replace("MM", mm).replace("YYYY", yyyy);
+}
+
+function formatDateTime(date: Date, dateFormat: string = "", clockFormat: string = ""): string {
+  const timeOptions: Intl.DateTimeFormatOptions = { timeStyle: "short" };
+  if (clockFormat === "12h") timeOptions.hour12 = true;
+  if (clockFormat === "24h") timeOptions.hour12 = false;
+  return `${formatDate(date, dateFormat)} ${date.toLocaleTimeString([], timeOptions)}`;
+}
+
+function timeSince(date: Date, dateFormat: string = "", clockFormat: string = "") {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -42,18 +57,8 @@ function timeSince(date: Date) {
     { label: "second", seconds: 1 },
   ];
 
-  // 1 day
   if (seconds > 86400) {
-    const dateString = date.toLocaleDateString([], {
-      month: "numeric",
-      year: "2-digit",
-      day: "numeric",
-    });
-
-    const timeString = date.toLocaleTimeString([], {
-      timeStyle: "short",
-    });
-    return `${dateString} ${timeString}`;
+    return formatDateTime(date, dateFormat, clockFormat);
   }
 
   for (const interval of intervals) {
@@ -66,7 +71,7 @@ function timeSince(date: Date) {
   return "just now";
 }
 
-export { timeSince };
+export { formatDate, formatDateTime, timeSince };
 
 type hsl = {
   h: number;

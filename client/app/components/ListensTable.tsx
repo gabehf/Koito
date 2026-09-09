@@ -21,7 +21,7 @@ export default function ListensTable({
   hideArtists,
   onDelete,
 }: ListensTableProps) {
-  const { user } = useAppContext();
+  const { user, dateFormat, clockFormat } = useAppContext();
   const imgColSizeClasses = "py-3 min-w-8 sm:min-w-11";
   const imgSize = 32;
   const timeColClasses = "text-(--color-fg-tertiary) pr-2 sm:pr-4 sm:text-sm";
@@ -99,7 +99,7 @@ export default function ListensTable({
               className={`text-end whitespace-nowrap ${timeColClasses}`}
               title={new Date(item.time).toString()}
             >
-              {timeSince(new Date(item.time))}
+              {timeSince(new Date(item.time), dateFormat, clockFormat)}
             </td>
             <td className="hidden sm:table">
               <button

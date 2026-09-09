@@ -436,6 +436,9 @@ type ApiError = {
 };
 type Config = {
   default_theme: string;
+  date_format: string;
+  clock_format: string;
+  week_start: string;
 };
 type NowPlaying = {
   currently_playing: boolean;
