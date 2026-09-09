@@ -204,3 +204,9 @@ func ForceTZ() *time.Location {
 	defer lock.RUnlock()
 	return globalConfig.forceTZ
 }
+
+func CalendarPeriods() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.calendarPeriods
+}

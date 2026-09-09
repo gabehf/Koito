@@ -14,6 +14,19 @@ type Timeframe struct {
 	From     time.Time
 	To       time.Time
 	Timezone *time.Location
+
+	// CalendarAnchored and WeekStartDay only affect the Period-derived branch
+	// of TimeframeToTimeRange. CalendarAnchored's zero value (false) preserves
+	// rolling-window behavior, so callers that don't set it are unaffected.
+	// WeekStartDay's zero value is Sunday (time.Weekday's zero value), NOT
+	// Monday - a caller that sets CalendarAnchored but leaves WeekStartDay
+	// unset silently gets Sunday-anchored weeks. The Monday fallback promised
+	// by the KOITO_CALENDAR_PERIODS docs is enforced by the request-level
+	// caller (see resolveWeekStartDay in engine/handlers/handlers.go), not by
+	// this struct's zero value, so any future caller must set WeekStartDay
+	// explicitly when CalendarAnchored is true.
+	CalendarAnchored bool
+	WeekStartDay     time.Weekday
 }
 
 func TimeframeToTimeRange(tf Timeframe) (t1, t2 time.Time) {
@@ -96,7 +109,7 @@ func TimeframeToTimeRange(tf Timeframe) (t1, t2 time.Time) {
 	// ---------------------------------------------------------------------
 
 	if !tf.Period.IsZero() {
-		return StartTimeFromPeriod(tf.Period), now
+		return StartTimeFromPeriod(tf.Period, now, tf.CalendarAnchored, loc, tf.WeekStartDay), now
 	}
 
 	// ---------------------------------------------------------------------

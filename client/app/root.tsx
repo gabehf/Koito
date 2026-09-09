@@ -17,8 +17,10 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Footer from "./components/Footer";
 import { AppProvider } from "./providers/AppProvider";
 import { initTimezoneCookie } from "./tz";
+import { initWeekStartCookie } from "./weekStart";
 
 initTimezoneCookie();
+initWeekStartCookie();
 
 // Create a client
 const queryClient = new QueryClient();

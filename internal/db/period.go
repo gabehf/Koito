@@ -20,23 +20,76 @@ func (p Period) IsZero() bool {
 	return p == ""
 }
 
-func StartTimeFromPeriod(p Period) time.Time {
-	now := time.Now()
+// StartTimeFromPeriod returns the start time for the given period, as of now.
+//
+// When calendarAnchored is false, it returns a rolling window relative to now
+// (e.g. "week" means the last 7 days).
+//
+// When calendarAnchored is true, day/week/month/year resolve to calendar
+// boundaries computed in loc, with week boundaries starting on weekStart.
+func StartTimeFromPeriod(p Period, now time.Time, calendarAnchored bool, loc *time.Location, weekStart time.Weekday) time.Time {
+	if !calendarAnchored {
+		switch p {
+		case PeriodDay:
+			return now.AddDate(0, 0, -1)
+		case PeriodWeek:
+			return now.AddDate(0, 0, -7)
+		case PeriodMonth:
+			return now.AddDate(0, -1, 0)
+		case PeriodYear:
+			return now.AddDate(-1, 0, 0)
+		case PeriodAllTime:
+			return time.Time{}
+		default:
+			// default 1 day
+			return now.AddDate(0, 0, -1)
+		}
+	}
+
+	local := now.In(loc)
 	switch p {
-	case "day":
-		return now.AddDate(0, 0, -1)
-	case "week":
-		return now.AddDate(0, 0, -7)
-	case "month":
-		return now.AddDate(0, -1, 0)
-	case "year":
-		return now.AddDate(-1, 0, 0)
-	case "all_time":
+	case PeriodDay:
+		return calendarStartOfDay(local)
+	case PeriodWeek:
+		return calendarStartOfWeek(local, weekStart)
+	case PeriodMonth:
+		return calendarStartOfMonth(local)
+	case PeriodYear:
+		return calendarStartOfYear(local)
+	case PeriodAllTime:
 		return time.Time{}
 	default:
-		// default 1 day
-		return now.AddDate(0, 0, -1)
+		return calendarStartOfDay(local)
 	}
+}
+
+func calendarStartOfDay(t time.Time) time.Time {
+	y, m, d := t.Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
+}
+
+// calendarStartOfWeek returns 00:00 on the most recent occurrence of weekStart
+// on or before t's calendar day. This is distinct from startOfWeek/endOfWeek
+// in timeframe.go, which are fixed to ISO Monday and used only for the explicit
+// ?week=N ISO-week-number path - a different concept from a configurable
+// week-start day.
+func calendarStartOfWeek(t time.Time, weekStart time.Weekday) time.Time {
+	day := calendarStartOfDay(t)
+	diff := int(day.Weekday() - weekStart)
+	if diff < 0 {
+		diff += 7
+	}
+	return day.AddDate(0, 0, -diff)
+}
+
+func calendarStartOfMonth(t time.Time) time.Time {
+	y, m, _ := t.Date()
+	return time.Date(y, m, 1, 0, 0, 0, 0, t.Location())
+}
+
+func calendarStartOfYear(t time.Time) time.Time {
+	y, _, _ := t.Date()
+	return time.Date(y, 1, 1, 0, 0, 0, 0, t.Location())
 }
 
 type StepInterval string

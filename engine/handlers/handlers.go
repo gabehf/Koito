@@ -97,13 +97,15 @@ func TimeframeFromRequest(r *http.Request) db.Timeframe {
 	}
 
 	return db.Timeframe{
-		Period:   db.Period(q.Get("period")),
-		Year:     parseInt("year"),
-		Month:    parseInt("month"),
-		Week:     parseInt("week"),
-		FromUnix: parseInt64("from"),
-		ToUnix:   parseInt64("to"),
-		Timezone: parseTZ(r),
+		Period:           db.Period(q.Get("period")),
+		Year:             parseInt("year"),
+		Month:            parseInt("month"),
+		Week:             parseInt("week"),
+		FromUnix:         parseInt64("from"),
+		ToUnix:           parseInt64("to"),
+		Timezone:         parseTZ(r),
+		CalendarAnchored: cfg.CalendarPeriods(),
+		WeekStartDay:     resolveWeekStartDay(r),
 	}
 }
 
@@ -251,4 +253,20 @@ func parseTZ(r *http.Request) *time.Location {
 	}
 
 	return time.Now().Location()
+}
+
+// resolveWeekStartDay determines the effective first-day-of-week for
+// calendar-anchored "week" periods: the week_start_locale cookie, set
+// client-side once per browser from the browser's Intl-detected locale week
+// start (see client/app/weekStart.ts), falling back to Monday if the cookie
+// is absent or invalid. Stores the ISO weekday number (Monday=1..Sunday=7),
+// converted here to Go's time.Weekday (Sunday=0..Saturday=6).
+func resolveWeekStartDay(r *http.Request) time.Weekday {
+	if c, err := r.Cookie("week_start_locale"); err == nil {
+		if iso, err := strconv.Atoi(c.Value); err == nil && iso >= 1 && iso <= 7 {
+			return time.Weekday(iso % 7)
+		}
+	}
+
+	return time.Monday
 }

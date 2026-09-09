@@ -50,6 +50,7 @@ const (
 	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
 	LOGIN_GATE_ENV                 = "KOITO_LOGIN_GATE"
 	FORCE_TZ                       = "KOITO_FORCE_TZ"
+	CALENDAR_PERIODS_ENV           = "KOITO_CALENDAR_PERIODS"
 )
 
 type config struct {
@@ -89,6 +90,7 @@ type config struct {
 	artistSeparators       []*regexp.Regexp
 	loginGate              bool
 	forceTZ                *time.Location
+	calendarPeriods        bool
 }
 
 var (
@@ -226,6 +228,8 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 			return nil, fmt.Errorf("forced timezone '%s' is not a valid timezone", getenv(FORCE_TZ))
 		}
 	}
+
+	cfg.calendarPeriods = parseBool(getenv(CALENDAR_PERIODS_ENV))
 
 	switch strings.ToLower(getenv(LOG_LEVEL_ENV)) {
 	case "debug":
