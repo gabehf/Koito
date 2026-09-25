@@ -25,6 +25,12 @@ Koito uses SQLite for all new installations as of `v0.2.1`. If you are running a
 
 You can find a full list of configuration options in the [configuration reference](/reference/configuration).
 
+## Easypanel
+
+[Easypanel](https://easypanel.io) is a self-hosted Docker deployment platform, and it maintains a one-click deployment template for Koito, with a bundled Postgres database:
+
+[![Deploy on Easypanel](https://easypanel.io/img/deploy-on-easypanel-40.svg)](https://easypanel.io/templates/koito)
+
 ## Build from source
 
 If you don't want to use docker, you can also build the application from source.
