@@ -247,10 +247,10 @@ func Run(
 	go catalog.PruneOrphanedImages(logger.NewContext(l), store)
 	l.Info().Msg("Engine: Checking image cache migration status")
 	go catalog.MigrateImageCache(logger.NewContext(l), store)
-	l.Info().Msg("Engine: Running duration backfill task")
-	go catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzC)
-
+	
 	if cfg.BackfillMediaOnStartup() {
+		l.Info().Msg("Engine: Running duration backfill task")
+		go catalog.BackfillTrackDurationsFromMusicBrainz(ctx, store, mbzC)
 		l.Info().Msg("Engine: Attempting to fetch missing artist images")
 		go catalog.FetchMissingArtistImages(ctx, store)
 		l.Info().Msg("Engine: Attempting to fetch missing album images")
