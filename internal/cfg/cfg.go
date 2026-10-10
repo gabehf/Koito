@@ -47,6 +47,7 @@ const (
 	IMPORT_BEFORE_UNIX_ENV         = "KOITO_IMPORT_BEFORE_UNIX"
 	IMPORT_AFTER_UNIX_ENV          = "KOITO_IMPORT_AFTER_UNIX"
 	FETCH_IMAGES_DURING_IMPORT_ENV = "KOITO_FETCH_IMAGES_DURING_IMPORT"
+	BACKFILL_MEDIA_ON_STARTUP_ENV  = "KOITO_BACKFILL_MEDIA_ON_STARTUP"
 	ARTIST_SEPARATORS_ENV          = "KOITO_ARTIST_SEPARATORS_REGEX"
 	LOGIN_GATE_ENV                 = "KOITO_LOGIN_GATE"
 	FORCE_TZ                       = "KOITO_FORCE_TZ"
@@ -78,6 +79,7 @@ type config struct {
 	subsonicEnabled        bool
 	skipImport             bool
 	fetchImageDuringImport bool
+	backfillMediaOnStartup bool
 	allowedHosts           []string
 	allowAllHosts          bool
 	allowedOrigins         []string
@@ -164,6 +166,10 @@ func loadConfig(getenv func(string) string, version string) (*config, error) {
 
 	cfg.structuredLogging = parseBool(getenv(ENABLE_STRUCTURED_LOGGING_ENV))
 	cfg.fetchImageDuringImport = parseBool(getenv(FETCH_IMAGES_DURING_IMPORT_ENV))
+	cfg.backfillMediaOnStartup = true
+	if backfillMediaOnStartup := getenv(BACKFILL_MEDIA_ON_STARTUP_ENV); backfillMediaOnStartup != "" {
+		cfg.backfillMediaOnStartup = parseBool(backfillMediaOnStartup)
+	}
 
 	cfg.disableDeezer = parseBool(getenv(DISABLE_DEEZER_ENV))
 	cfg.disableCAA = parseBool(getenv(DISABLE_COVER_ART_ARCHIVE_ENV))
