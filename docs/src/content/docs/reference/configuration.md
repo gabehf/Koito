@@ -150,6 +150,11 @@ If the environment variable is defined without **and** with the suffix at the sa
 - Default: `false`
 - Description: When true, images will be downloaded and cached during imports.
 
+##### KOITO_BACKFILL_MEDIA_ON_STARTUP
+
+- Default: `true`
+- Description: When false, Koito will not fetch missing artist and album images during startup.
+
 ##### KOITO_CORS_ALLOWED_ORIGINS
 
 - Default: No CORS policy

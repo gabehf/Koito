@@ -187,6 +187,12 @@ func FetchImagesDuringImport() bool {
 	return globalConfig.fetchImageDuringImport
 }
 
+func BackfillMediaOnStartup() bool {
+	lock.RLock()
+	defer lock.RUnlock()
+	return globalConfig.backfillMediaOnStartup
+}
+
 func ArtistSeparators() []*regexp.Regexp {
 	lock.RLock()
 	defer lock.RUnlock()
