@@ -34,7 +34,7 @@ type LbzSubmitListenRequest struct {
 }
 
 type LbzSubmitListenPayload struct {
-	ListenedAt int64        `json:"listened_at,omitempty"`
+	ListenedAt float64      `json:"listened_at,omitempty"`
 	TrackMeta  LbzTrackMeta `json:"track_metadata"`
 }
 
@@ -193,7 +193,7 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 
 			var listenedAt = time.Now()
 			if payload.ListenedAt != 0 {
-				listenedAt = time.Unix(payload.ListenedAt, 0)
+				listenedAt = time.Unix(int64(payload.ListenedAt), 0)
 			}
 
 			var artistMbidMap []catalog.ArtistMbidMap
