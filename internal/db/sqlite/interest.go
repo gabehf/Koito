@@ -43,7 +43,7 @@ func (s *Sqlite) GetInterest(ctx context.Context, opts db.GetInterestOpts) ([]db
 		return nil, errors.New("GetInterest: artist id, album id, or track id must be provided")
 	}
 
-	rows, err := s.db.QueryContext(ctx, query, arg)
+	rows, err := s.queryContext(ctx, query, arg)
 	if err != nil {
 		return nil, fmt.Errorf("GetInterest: query: %w", err)
 	}

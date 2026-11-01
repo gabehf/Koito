@@ -1,6 +1,9 @@
+import { useParams } from "react-router";
+import { profilePath } from "../../../api/profile-paths";
+import { useProfile } from "~/providers/ProfileProvider";
 import { useDeferredValue, useEffect, useState } from "react";
 import { Modal } from "./Modal";
-import { search, type SearchResponse } from "api/api";
+import { type SearchResponse } from "api/api";
 import SearchResults from "./SearchModal/SearchResults";
 import type {
   MergeFunc,
@@ -21,6 +24,9 @@ interface Props {
 }
 
 export default function MergeModal(props: Props) {
+  const params = useParams();
+  const { api } = useProfile();
+
   const [query, setQuery] = useState(props.currentTitle);
   const [data, setData] = useState<SearchResponse>();
   const deferredQuery = useDeferredValue(query);
@@ -61,7 +67,12 @@ export default function MergeModal(props: Props) {
         if (r.ok) {
           if (mergeOrderReversed) {
             setLoading(false);
-            navigate(`/${props.type.toLowerCase()}/${mergeTarget.id}`);
+            navigate(
+              profilePath(
+                params.slug!,
+                `/${props.type.toLowerCase()}/${mergeTarget.id}`,
+              ),
+            );
             closeMergeModal();
           } else {
             setLoading(false);
@@ -78,13 +89,20 @@ export default function MergeModal(props: Props) {
   };
 
   useEffect(() => {
-    if (deferredQuery) {
-      search(deferredQuery).then((r) => {
-        r = props.mergeCleanerFunc(r, props.currentId);
-        setData(r);
+    if (!props.open || !deferredQuery) return;
+    let current = true;
+    api
+      .search(deferredQuery)
+      .then((result) => {
+        if (current) setData(props.mergeCleanerFunc(result, props.currentId));
+      })
+      .catch((error) => {
+        if (current && error.name !== "AbortError") setError(error.message);
       });
-    }
-  }, [deferredQuery]);
+    return () => {
+      current = false;
+    };
+  }, [deferredQuery, props.open, api, props.currentId]);
 
   return (
     <Modal isOpen={props.open} onClose={closeMergeModal}>

@@ -68,17 +68,17 @@ If the environment variable is defined without **and** with the suffix at the sa
 ##### KOITO_ENABLE_LBZ_RELAY
 
 - Default: `false`
-- Description: Set to `true` if you want to relay requests from the ListenBrainz endpoints on your Koito server to another ListenBrainz compatible server.
+- Description: Legacy bootstrap only: set to `true` to associate the URL/token below once with a single eligible existing profile. With multiple profiles, configure each destination in Settings → Administration. This flag does not globally enable or disable saved per-profile relays. See [relay setup](/guides/scrobbler/#forward-a-profile-to-another-server).
 
 ##### KOITO_LBZ_RELAY_URL
 
 - Required: `true` if relays are enabled.
-- Description: The URL to which relayed requests will be sent to.
+- Description: Legacy relay base URL, for example `https://api.listenbrainz.org/1`. Used only for the one-time profile association; later edits belong in Administration.
 
 ##### KOITO_LBZ_RELAY_TOKEN
 
 - Required: `true` if relays are enabled.
-- Description: The user token to send with the relayed ListenBrainz requests.
+- Description: External user token for the legacy one-time relay association. Saved tokens are visible only to administrators. Removing these environment variables does not remove a saved relay; disable and save it in Administration.
 
 ##### KOITO_CONFIG_DIR
 

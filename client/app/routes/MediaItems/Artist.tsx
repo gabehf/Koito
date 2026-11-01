@@ -1,3 +1,4 @@
+import { createProfileApi } from "api/api";
 import { useLoaderData, type LoaderFunctionArgs } from "react-router";
 import TopTracks from "~/components/TopTracks";
 import { mergeArtists, type Artist } from "api/api";
@@ -9,10 +10,11 @@ import { timeListenedString } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
 import MediaItemNote from "~/components/MediaItemNote";
 
-export async function clientLoader({ params }: LoaderFunctionArgs) {
-  const res = await fetch(`/apis/web/v1/artist/${params.id}`);
+export async function clientLoader({ params, request }: LoaderFunctionArgs) {
+  const api = createProfileApi(params.slug!, () => request.signal);
+  const res = await api.fetch(`/apis/web/v1/artist/${params.id}`);
   if (!res.ok) {
-    throw new Response("Failed to load artist", { status: 500 });
+    throw new Response("Failed to load artist", { status: res.status });
   }
   const artist: Artist = await res.json();
   return artist;

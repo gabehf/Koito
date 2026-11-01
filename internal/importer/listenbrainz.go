@@ -14,6 +14,7 @@ import (
 	"github.com/gabehf/koito/engine/handlers"
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
+	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/utils"
@@ -21,6 +22,9 @@ import (
 )
 
 func ImportListenBrainzExport(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, filename string) error {
+	if db.ProfileID(ctx) <= 0 {
+		return fmt.Errorf("explicit import profile required")
+	}
 	l := logger.FromContext(ctx)
 
 	r, err := zip.OpenReader(path.Join(path.Join(cfg.ConfigDir(), "import", filename)))
@@ -41,13 +45,13 @@ func ImportListenBrainzExport(ctx context.Context, store importStore, mbzc mbz.M
 
 			rc, err := f.Open()
 			if err != nil {
-				l.Err(err).Msgf("Failed to open %s\n", f.Name)
-				continue
+				return fmt.Errorf("open archive member: %w", err)
 			}
 
 			err = ImportListenBrainzFile(ctx, store, mbzc, rc, f.Name)
 			if err != nil {
-				l.Err(err).Msgf("Failed to import listens from file: %s", f.Name)
+				rc.Close()
+				return fmt.Errorf("import archive member: %w", err)
 			}
 
 			rc.Close()
@@ -57,6 +61,9 @@ func ImportListenBrainzExport(ctx context.Context, store importStore, mbzc mbz.M
 }
 
 func ImportListenBrainzFile(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, r io.Reader, filename string) error {
+	if db.ProfileID(ctx) <= 0 {
+		return fmt.Errorf("explicit import profile required")
+	}
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning ListenBrainz import on file: %s", filename)
 
@@ -151,7 +158,7 @@ func ImportListenBrainzFile(ctx context.Context, store importStore, mbzc mbz.Mus
 			ArtistMbidMappings: artistMbidMap,
 			Duration:           duration,
 			Time:               ts,
-			UserID:             1,
+			ProfileID:          db.ProfileID(ctx),
 			Client:             client,
 			SkipCacheImage:     !cfg.FetchImagesDuringImport(),
 		}
@@ -162,6 +169,9 @@ func ImportListenBrainzFile(ctx context.Context, store importStore, mbzc mbz.Mus
 		}
 		count++
 		throttleFunc()
+	}
+	if err := scanner.Err(); err != nil {
+		return err
 	}
 	l.Info().Msgf("Finished importing %s; imported %d items", filename, count)
 	return nil

@@ -1,3 +1,4 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type Artist, type SearchResponse } from "api/api";
 import { Trash } from "lucide-react";
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export default function ArtistManager({ type, id }: Props) {
+  const { profile, api } = useProfile();
+
   const [loading, setLoading] = useState(false);
   const [err, setError] = useState<string>();
   const [displayData, setDisplayData] = useState<Artist[]>([]);
@@ -19,11 +22,16 @@ export default function ArtistManager({ type, id }: Props) {
   const queryClient = useQueryClient();
 
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["get-artists-" + type.toLowerCase(), { id: id }],
+    queryKey: [
+      "profile",
+      profile.id,
+      "get-artists-" + type.toLowerCase(),
+      { id: id },
+    ],
     queryFn: () => {
-      return fetch(`/apis/web/v1/${type.toLowerCase()}/${id}/artists`).then(
-        (r) => r.json(),
-      ) as Promise<Artist[]>;
+      return api
+        .fetch(`/apis/web/v1/${type.toLowerCase()}/${id}/artists`)
+        .then((r) => r.json()) as Promise<Artist[]>;
     },
   });
 
@@ -50,21 +58,28 @@ export default function ArtistManager({ type, id }: Props) {
   const handleSetPrimary = (artist: Artist, val: boolean) => {
     setError(undefined);
     setLoading(true);
-    fetch(`/apis/web/v1/${type.toLowerCase()}/${id}/artists/${artist.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ is_primary: val }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then(async (r) => {
-      if (r.ok) {
-        await queryClient.invalidateQueries({
-          queryKey: ["get-artists-" + type.toLowerCase(), { id: id }],
-        });
-      } else {
-        r.json().then((r) => setError(r.error));
-      }
-    });
+    api
+      .fetch(`/apis/web/v1/${type.toLowerCase()}/${id}/artists/${artist.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_primary: val }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then(async (r) => {
+        if (r.ok) {
+          await queryClient.invalidateQueries({
+            queryKey: [
+              "profile",
+              profile.id,
+              "get-artists-" + type.toLowerCase(),
+              { id: id },
+            ],
+          });
+        } else {
+          r.json().then((r) => setError(r.error));
+        }
+      });
     setLoading(false);
   };
 
@@ -75,38 +90,52 @@ export default function ArtistManager({ type, id }: Props) {
       return;
     }
     setLoading(true);
-    fetch(`/apis/web/v1/${type}/${id}/artists`, {
-      method: "POST",
-      body: JSON.stringify({ artist_ids: [addArtistTarget.id] }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then(async (r) => {
-      if (r.ok) {
-        await queryClient.invalidateQueries({
-          queryKey: ["get-artists-" + type.toLowerCase(), { id: id }],
-        });
-      } else {
-        r.json().then((r) => setError(r.error));
-      }
-    });
+    api
+      .fetch(`/apis/web/v1/${type}/${id}/artists`, {
+        method: "POST",
+        body: JSON.stringify({ artist_ids: [addArtistTarget.id] }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then(async (r) => {
+        if (r.ok) {
+          await queryClient.invalidateQueries({
+            queryKey: [
+              "profile",
+              profile.id,
+              "get-artists-" + type.toLowerCase(),
+              { id: id },
+            ],
+          });
+        } else {
+          r.json().then((r) => setError(r.error));
+        }
+      });
     setLoading(false);
   };
 
   const handleDeleteArtist = (artist: number) => {
     setError(undefined);
     setLoading(true);
-    fetch(`/apis/web/v1/${type}/${id}/artists/${artist}`, {
-      method: "DELETE",
-    }).then(async (r) => {
-      if (r.ok) {
-        await queryClient.invalidateQueries({
-          queryKey: ["get-artists-" + type.toLowerCase(), { id: id }],
-        });
-      } else {
-        r.json().then((r) => setError(r.error));
-      }
-    });
+    api
+      .fetch(`/apis/web/v1/${type}/${id}/artists/${artist}`, {
+        method: "DELETE",
+      })
+      .then(async (r) => {
+        if (r.ok) {
+          await queryClient.invalidateQueries({
+            queryKey: [
+              "profile",
+              profile.id,
+              "get-artists-" + type.toLowerCase(),
+              { id: id },
+            ],
+          });
+        } else {
+          r.json().then((r) => setError(r.error));
+        }
+      });
     setLoading(false);
   };
 

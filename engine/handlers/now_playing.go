@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gabehf/koito/internal/db"
@@ -22,14 +24,19 @@ func NowPlayingHandler(store db.TrackStore) http.HandlerFunc {
 
 		l.Debug().Msg("NowPlayingHandler: Got request")
 
-		// Hardcoded user id as 1. Not great but it works until (if) multi-user is supported.
-		if trackIdI, ok := memkv.Store.Get("1"); !ok {
+		// The cache key follows the profile ID, not its editable URL slug.
+		if trackIdI, ok := memkv.Store.Get(fmt.Sprintf("now-playing:%d", db.ProfileID(ctx))); !ok {
 			utils.WriteJSON(w, http.StatusOK, NowPlayingResponse{CurrentlyPlaying: false})
 		} else if trackId, ok := trackIdI.(int32); !ok {
 			l.Debug().Msg("NowPlayingHandler: Failed type assertion for trackIdI")
 			utils.WriteError(w, "internal server error", http.StatusInternalServerError)
 		} else {
-			track, err := store.GetTrack(ctx, db.GetTrackOpts{ID: trackId})
+			track, err := store.GetTrack(ctx, db.GetTrackOpts{ID: trackId, AllowUnplayed: true})
+			if errors.Is(err, db.ErrNotFound) {
+				memkv.Store.Delete(fmt.Sprintf("now-playing:%d", db.ProfileID(ctx)))
+				utils.WriteJSON(w, 200, NowPlayingResponse{CurrentlyPlaying: false})
+				return
+			}
 			if err != nil {
 				l.Error().Err(err).Msg("NowPlayingHandler: Failed to get track from database")
 				utils.WriteError(w, "failed to fetch currently playing track from database", http.StatusInternalServerError)

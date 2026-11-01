@@ -11,6 +11,7 @@ import (
 
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
+	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/utils"
@@ -32,6 +33,9 @@ type MalojaTrack struct {
 }
 
 func ImportMalojaFile(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, filename string) error {
+	if db.ProfileID(ctx) <= 0 {
+		return fmt.Errorf("explicit import profile required")
+	}
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning maloja import on file: %s", filename)
 	file, err := os.Open(path.Join(cfg.ConfigDir(), "import", filename))
@@ -78,7 +82,7 @@ func ImportMalojaFile(ctx context.Context, store importStore, mbzc mbz.MusicBrai
 			ReleaseTitle:   item.Track.Album.Title,
 			Time:           ts.Local(),
 			Client:         "maloja",
-			UserID:         1,
+			ProfileID:      db.ProfileID(ctx),
 			SkipCacheImage: !cfg.FetchImagesDuringImport(),
 		}
 		err = catalog.SubmitListen(ctx, store, opts)

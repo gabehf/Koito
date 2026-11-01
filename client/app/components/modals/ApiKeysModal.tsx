@@ -1,5 +1,6 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useQuery } from "@tanstack/react-query";
-import { createApiKey, deleteApiKey, getApiKeys, type ApiKey } from "api/api";
+import { type ApiKey } from "api/api";
 import { AsyncButton } from "../AsyncButton";
 import { useEffect, useRef, useState } from "react";
 import { Copy, Trash } from "lucide-react";
@@ -12,6 +13,8 @@ type CopiedState = {
 };
 
 export default function ApiKeysModal() {
+  const { profile, api } = useProfile();
+
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setError] = useState<string>();
@@ -35,9 +38,9 @@ export default function ApiKeysModal() {
   };
 
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["api-keys"],
+    queryKey: ["profile", profile.id, "api-keys"],
     queryFn: () => {
-      return getApiKeys();
+      return api.getApiKeys();
     },
   });
 
@@ -97,7 +100,8 @@ export default function ApiKeysModal() {
       return;
     }
     setLoading(true);
-    createApiKey(input)
+    api
+      .createApiKey(input)
       .then((r) => {
         setDisplayData([r, ...displayData]);
         setInput("");
@@ -109,7 +113,7 @@ export default function ApiKeysModal() {
   const handleDeleteApiKey = (id: number) => {
     setError(undefined);
     setLoading(true);
-    deleteApiKey(id).then((r) => {
+    api.deleteApiKey(id).then((r) => {
       if (r.ok) {
         setDisplayData(displayData.filter((v) => v.id != id));
       } else {

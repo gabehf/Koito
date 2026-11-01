@@ -28,7 +28,7 @@ func (s *Sqlite) GetListenActivity(ctx context.Context, opts db.ListenActivityOp
 
 	switch {
 	case opts.ArtistID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
 			FROM listens l
 			JOIN artist_tracks at2 ON l.track_id = at2.track_id
@@ -37,7 +37,7 @@ func (s *Sqlite) GetListenActivity(ctx context.Context, opts db.ListenActivityOp
 			t1.Unix(), t2.Unix(), opts.ArtistID,
 		)
 	case opts.AlbumID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
 			FROM listens l
 			JOIN tracks t ON l.track_id = t.id
@@ -46,7 +46,7 @@ func (s *Sqlite) GetListenActivity(ctx context.Context, opts db.ListenActivityOp
 			t1.Unix(), t2.Unix(), opts.AlbumID,
 		)
 	case opts.TrackID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
 			FROM listens
 			WHERE listened_at >= ? AND listened_at < ? AND track_id = ?
@@ -54,7 +54,7 @@ func (s *Sqlite) GetListenActivity(ctx context.Context, opts db.ListenActivityOp
 			t1.Unix(), t2.Unix(), opts.TrackID,
 		)
 	default:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (listened_at / 3600) * 3600 AS hour_bucket, COUNT(*) AS listen_count
 			FROM listens
 			WHERE listened_at >= ? AND listened_at < ?
@@ -120,7 +120,7 @@ func (s *Sqlite) GetListenStreak(ctx context.Context, opts db.ListenActivityOpts
 
 	switch {
 	case opts.ArtistID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens l
 			JOIN artist_tracks at2 ON l.track_id = at2.track_id
@@ -130,7 +130,7 @@ func (s *Sqlite) GetListenStreak(ctx context.Context, opts db.ListenActivityOpts
 			endOfToday.Unix(), opts.ArtistID,
 		)
 	case opts.AlbumID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens l
 			JOIN tracks t ON l.track_id = t.id
@@ -140,7 +140,7 @@ func (s *Sqlite) GetListenStreak(ctx context.Context, opts db.ListenActivityOpts
 			endOfToday.Unix(), opts.AlbumID,
 		)
 	case opts.TrackID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens
 			WHERE listened_at <= ? AND track_id = ?
@@ -149,7 +149,7 @@ func (s *Sqlite) GetListenStreak(ctx context.Context, opts db.ListenActivityOpts
 			endOfToday.Unix(), opts.TrackID,
 		)
 	default:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens
 			WHERE listened_at <= ?
@@ -213,7 +213,7 @@ func (s *Sqlite) GetActiveDays(ctx context.Context, tz *time.Location) (int, err
 	now := time.Now()
 	eodUnix := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, tz).Unix()
 
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.queryContext(ctx, `
 		SELECT (listened_at / 86400) * 86400 AS day_bucket,
        	COUNT(*) AS listen_count
 		FROM listens
@@ -249,7 +249,7 @@ func (s *Sqlite) GetLongestListenStreak(ctx context.Context, opts db.ListenActiv
 
 	switch {
 	case opts.ArtistID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens l
 			JOIN artist_tracks at2 ON l.track_id = at2.track_id
@@ -259,7 +259,7 @@ func (s *Sqlite) GetLongestListenStreak(ctx context.Context, opts db.ListenActiv
 			endOfToday.Unix(), opts.ArtistID,
 		)
 	case opts.AlbumID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (l.listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens l
 			JOIN tracks t ON l.track_id = t.id
@@ -269,7 +269,7 @@ func (s *Sqlite) GetLongestListenStreak(ctx context.Context, opts db.ListenActiv
 			endOfToday.Unix(), opts.AlbumID,
 		)
 	case opts.TrackID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens
 			WHERE listened_at <= ? AND track_id = ?
@@ -278,7 +278,7 @@ func (s *Sqlite) GetLongestListenStreak(ctx context.Context, opts db.ListenActiv
 			endOfToday.Unix(), opts.TrackID,
 		)
 	default:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT (listened_at / 3600) * 3600 AS hour_bucket
 			FROM listens
 			WHERE listened_at <= ?

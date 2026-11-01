@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gabehf/koito/internal/db"
@@ -59,6 +59,7 @@ type SubmitListenOpts struct {
 	Time               time.Time
 
 	UserID       int32
+	ProfileID    int32
 	Client       string
 	IsNowPlaying bool
 }
@@ -74,7 +75,17 @@ type submitListenStore interface {
 	db.ListenStore
 }
 
+var submitListenMu sync.Mutex
+
 func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListenOpts) error {
+	// Shared catalog association is a read-then-create sequence. Serialize it so
+	// simultaneous profiles do not create duplicate artists/albums/tracks.
+	submitListenMu.Lock()
+	defer submitListenMu.Unlock()
+	if opts.ProfileID == 0 {
+		opts.ProfileID = db.ProfileID(ctx)
+	}
+	ctx = db.WithoutProfile(ctx) // Shared catalog identity; only the listen belongs to a profile.
 	l := logger.FromContext(ctx)
 
 	if opts.Artist == "" || opts.TrackTitle == "" {
@@ -177,9 +188,9 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 
 	if opts.IsNowPlaying {
 		if track.Duration == 0 {
-			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID)
+			memkv.Store.Set(fmt.Sprintf("now-playing:%d", opts.ProfileID), track.ID)
 		} else {
-			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID, time.Duration(track.Duration)*time.Second)
+			memkv.Store.Set(fmt.Sprintf("now-playing:%d", opts.ProfileID), track.ID, time.Duration(track.Duration)*time.Second)
 		}
 	}
 
@@ -190,10 +201,11 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 	l.Info().Msgf("Received listen: '%s' by %s, from release '%s'", track.Title, buildArtistStr(artists), rg.Title)
 
 	return store.SaveListen(ctx, db.SaveListenOpts{
-		TrackID: track.ID,
-		Time:    opts.Time,
-		UserID:  opts.UserID,
-		Client:  opts.Client,
+		TrackID:   track.ID,
+		Time:      opts.Time,
+		UserID:    opts.UserID,
+		ProfileID: opts.ProfileID,
+		Client:    opts.Client,
 	})
 }
 

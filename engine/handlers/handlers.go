@@ -96,8 +96,12 @@ func TimeframeFromRequest(r *http.Request) db.Timeframe {
 		return i
 	}
 
+	period := db.Period(q.Get("period"))
+	if period.IsZero() {
+		period = db.PeriodAllTime
+	}
 	return db.Timeframe{
-		Period:   db.Period(q.Get("period")),
+		Period:   period,
 		Year:     parseInt("year"),
 		Month:    parseInt("month"),
 		Week:     parseInt("week"),

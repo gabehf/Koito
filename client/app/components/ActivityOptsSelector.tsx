@@ -1,3 +1,4 @@
+import { useOptionalProfile } from "~/providers/ProfileProvider";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -16,6 +17,14 @@ export default function ActivityOptsSelector({
   currentRange,
   disableCache = false,
 }: Props) {
+  const profile = useOptionalProfile()?.profile;
+  const storageScope = `${profile?.id ?? "global"}:${
+    window.location.pathname
+      .split("/")
+      .slice(profile ? 2 : 1)
+      .join("/") || "home"
+  }`;
+
   const stepPeriods = ["day", "week", "month"];
   const rangePeriods = [105, 182, 364];
   const [collapsed, setCollapsed] = useState(true);
@@ -24,8 +33,8 @@ export default function ActivityOptsSelector({
     setCollapsed(val);
     if (!disableCache) {
       localStorage.setItem(
-        "activity_configuring_" + window.location.pathname.split("/")[1],
-        String(!val)
+        "activity_configuring_" + storageScope,
+        String(!val),
       );
     }
   };
@@ -33,20 +42,14 @@ export default function ActivityOptsSelector({
   const setStep = (val: string) => {
     stepSetter(val);
     if (!disableCache) {
-      localStorage.setItem(
-        "activity_step_" + window.location.pathname.split("/")[1],
-        val
-      );
+      localStorage.setItem("activity_step_" + storageScope, val);
     }
   };
 
   const setRange = (val: number) => {
     rangeSetter(val);
     if (!disableCache) {
-      localStorage.setItem(
-        "activity_range_" + window.location.pathname.split("/")[1],
-        String(val)
-      );
+      localStorage.setItem("activity_range_" + storageScope, String(val));
     }
   };
 
@@ -54,17 +57,13 @@ export default function ActivityOptsSelector({
     if (!disableCache) {
       // TODO: the '182' here overwrites the default range as configured in the ActivityGrid. This is bad. Only one of these should determine the default.
       const cachedRange = parseInt(
-        localStorage.getItem(
-          "activity_range_" + window.location.pathname.split("/")[1]
-        ) ?? "182"
+        localStorage.getItem("activity_range_" + storageScope) ?? "182",
       );
       if (cachedRange) rangeSetter(cachedRange);
-      const cachedStep = localStorage.getItem(
-        "activity_step_" + window.location.pathname.split("/")[1]
-      );
+      const cachedStep = localStorage.getItem("activity_step_" + storageScope);
       if (cachedStep) stepSetter(cachedStep);
       const cachedConfiguring = localStorage.getItem(
-        "activity_configuring_" + window.location.pathname.split("/")[1]
+        "activity_configuring_" + storageScope,
       );
       if (cachedStep) setMenuOpen(cachedConfiguring !== "true");
     }

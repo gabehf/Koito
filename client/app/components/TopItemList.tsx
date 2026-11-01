@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import ArtistLinks from "./ArtistLinks";
 import MediaItem, { MediaItemSkeleton } from "./primitives/MediaItem";
 import {

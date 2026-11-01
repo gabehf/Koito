@@ -16,7 +16,8 @@ func (s *Sqlite) ImageHasAssociation(ctx context.Context, image uuid.UUID) (bool
 			SELECT 1 FROM artists WHERE image = ?
 			UNION ALL
 			SELECT 1 FROM releases WHERE image = ?
-		)`, image.String(), image.String()).Scan(&exists)
+ UNION ALL SELECT 1 FROM listening_profiles WHERE avatar_image_id = ?
+		)`, image.String(), image.String(), image.String()).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("ImageHasAssociation: %w", err)
 	}

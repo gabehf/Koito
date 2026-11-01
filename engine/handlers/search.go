@@ -84,6 +84,15 @@ func SearchHandler(store searchStore) http.HandlerFunc {
 			}
 		}
 
+		if artists == nil {
+			artists = make([]*models.Artist, 0)
+		}
+		if albums == nil {
+			albums = make([]*models.Album, 0)
+		}
+		if tracks == nil {
+			tracks = make([]*models.Track, 0)
+		}
 		utils.WriteJSON(w, http.StatusOK, SearchResults{
 			Artists: artists,
 			Albums:  albums,

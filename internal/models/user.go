@@ -25,6 +25,7 @@ type ApiKey struct {
 	Key       string    `json:"key"`
 	Label     string    `json:"label"`
 	UserID    int32     `json:"user_id"`
+	ProfileID int32     `json:"profile_id"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

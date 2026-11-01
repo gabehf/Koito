@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router";
+import { ProfileLink as Link } from "~/components/ProfileLink";
 
 type Artist = {
   id: number;

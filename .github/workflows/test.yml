@@ -2,31 +2,32 @@ name: Test
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    name: Go Test
+    name: Go, frontend and multiuser validation
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version-file: go.mod
-
-    - name: Install libvips
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libvips-dev
-
-    - name: Verify libvips install
-      run: vips --version
-
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
-      uses: robherley/go-test-action@v0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvips-dev pkg-config
+          npm install --global --force corepack@0.34.6
+          corepack enable
+      - run: make client.deps
+      - run: make check
+      - run: make multiuser.check
+      - name: Verify migration and profile isolation with the race detector
+        run: CGO_ENABLED=1 go test -race ./internal/db/sqlite ./engine -run 'Test(Profile|Consolidated|AdminAccount)' -timeout 120s

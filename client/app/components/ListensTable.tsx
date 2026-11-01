@@ -2,7 +2,8 @@
 import ArtistLinks from "./ArtistLinks";
 import Image from "./primitives/Image";
 import { type Listen, type NowPlaying } from "api/api";
-import { Link } from "react-router";
+
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import { timeSince } from "~/utils/utils";
 import { useAppContext } from "~/providers/AppProvider";
 

@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -21,7 +20,6 @@ import (
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/db/sqlite"
 	"github.com/gabehf/koito/internal/images"
-	"github.com/gabehf/koito/internal/importer"
 	"github.com/gabehf/koito/internal/logger"
 	mbz "github.com/gabehf/koito/internal/mbz"
 	"github.com/gabehf/koito/internal/models"
@@ -145,6 +143,12 @@ func Run(
 			l.Fatal().Err(err).Msg("Engine: Failed to save default API key in database")
 		}
 		l.Info().Msgf("Engine: Default user created. Login: %s : %s", cfg.DefaultUsername(), cfg.DefaultPassword())
+	}
+
+	if cfg.LbzRelayEnabled() && cfg.LbzRelayUrl() != "" && cfg.LbzRelayToken() != "" {
+		if err := store.InitializeLegacyRelay(ctx, cfg.LbzRelayUrl(), cfg.LbzRelayToken()); err != nil {
+			l.Warn().Err(err).Msg("Relay disabled for profiles without an explicit association")
+		}
 	}
 
 	if cfg.ForceTZ() != nil {
@@ -273,57 +277,38 @@ func Run(
 }
 
 func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
-	l.Debug().Msg("Importer: Checking for import files...")
-	files, err := os.ReadDir(path.Join(cfg.ConfigDir(), "import"))
+	profiles, err := store.ListListeningProfiles(logger.NewContext(l))
 	if err != nil {
-		l.Err(err).Msg("Importer: Failed to read files from import dir")
-	}
-	if len(files) > 0 {
-		l.Info().Msg("Importer: Files found in import directory. Attempting to import...")
-	} else {
+		l.Error().Err(err).Msg("Importer: cannot list profiles")
 		return
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			l.Error().Interface("recover", r).Msg("Importer: Panic when importing files")
-		}
-	}()
-	for _, file := range files {
-		if file.IsDir() {
+	for _, profile := range profiles {
+		folder := path.Join(cfg.ConfigDir(), "import", fmt.Sprint(profile.ID))
+		info, err := os.Lstat(folder)
+		if os.IsNotExist(err) {
 			continue
 		}
-		if strings.Contains(file.Name(), "Streaming_History_Audio") {
-			l.Info().Msgf("Importer: Import file %s detecting as being Spotify export", file.Name())
-			err := importer.ImportSpotifyFile(logger.NewContext(l), store, mbzc, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
+		if err != nil || !info.IsDir() {
+			l.Warn().Msg("Importer: profile directory missing or symlinked")
+			continue
+		}
+		files, err := os.ReadDir(folder)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			l.Error().Err(err).Msg("Importer: cannot read profile import directory")
+			continue
+		}
+		ctx := db.WithProfile(logger.NewContext(l), profile.ID)
+		for _, file := range files {
+			if file.IsDir() {
+				continue
 			}
-		} else if strings.Contains(file.Name(), "maloja") {
-			l.Info().Msgf("Importer: Import file %s detecting as being Maloja export", file.Name())
-			err := importer.ImportMalojaFile(logger.NewContext(l), store, mbzc, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
+			filename := path.Join(fmt.Sprint(profile.ID), file.Name())
+			if err := importProfileFile(ctx, store, mbzc, filename); err != nil {
+				l.Error().Err(err).Msg("Importer: profile import failed")
 			}
-		} else if strings.Contains(file.Name(), "recenttracks") {
-			l.Info().Msgf("Importer: Import file %s detecting as being ghan.nl LastFM export", file.Name())
-			err := importer.ImportLastFMFile(logger.NewContext(l), store, mbzc, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else if strings.Contains(file.Name(), "listenbrainz") {
-			l.Info().Msgf("Importer: Import file %s detecting as being ListenBrainz export", file.Name())
-			err := importer.ImportListenBrainzExport(logger.NewContext(l), store, mbzc, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else if strings.Contains(file.Name(), "koito") {
-			l.Info().Msgf("Importer: Import file %s detecting as being Koito export", file.Name())
-			err := importer.ImportKoitoFile(logger.NewContext(l), store, file.Name())
-			if err != nil {
-				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
-			}
-		} else {
-			l.Warn().Msgf("Importer: File %s not recognized as a valid import file; make sure it is valid and named correctly", file.Name())
 		}
 	}
 }

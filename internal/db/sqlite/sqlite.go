@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"path"
 	"time"
 
@@ -24,7 +25,8 @@ type Sqlite struct {
 }
 
 func New() (*Sqlite, error) {
-	dsn := path.Join(cfg.ConfigDir(), "koito.db") + "?_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)&_pragma=busy_timeout(5000)"
+	databasePath := path.Join(cfg.ConfigDir(), "koito.db")
+	dsn := databasePath + "?_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)&_pragma=busy_timeout(5000)"
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite.New: open: %w", err)
@@ -35,6 +37,14 @@ func New() (*Sqlite, error) {
 		return nil, fmt.Errorf("sqlite.New: ping: %w", err)
 	}
 
+	backup, err := backupBeforeProfiles(context.Background(), db, databasePath)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("sqlite.New: backup before profiles migration: %w", err)
+	}
+	if backup != "" {
+		log.Printf("SQLite: pre-profiles migration backup: %s", backup)
+	}
 	goose.SetBaseFS(migrations_sqlite.Files)
 	goose.SetDialect("sqlite3")
 	if err := goose.Up(db, "."); err != nil {
@@ -167,7 +177,7 @@ func (s *Sqlite) artistsForRelease(ctx context.Context, releaseID int32) ([]mode
 // Used for export.
 func (s *Sqlite) artistsWithAliasesForTrack(ctx context.Context, trackID int32) ([]models.ArtistWithFullAliases, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT a.id, awn.name, a.musicbrainz_id, a.image, a.image_source
+		SELECT a.id, awn.name, a.musicbrainz_id, a.image, a.image_source, at2.is_primary
 		FROM artist_tracks at2
 		JOIN artists_with_name awn ON awn.id = at2.artist_id
 		JOIN artists a ON a.id = at2.artist_id
@@ -184,19 +194,31 @@ func (s *Sqlite) artistsWithAliasesForTrack(ctx context.Context, trackID int32) 
 	for rows.Next() {
 		var a models.ArtistWithFullAliases
 		var mbzID, image, imageSrc sql.NullString
-		if err := rows.Scan(&a.ID, &a.Name, &mbzID, &image, &imageSrc); err != nil {
+		var primary bool
+		if err := rows.Scan(&a.ID, &a.Name, &mbzID, &image, &imageSrc, &primary); err != nil {
 			return nil, err
 		}
 		a.MbzID = parseNullableUUID(mbzID)
 		a.Image = parseNullableUUID(image)
-		aliases, err := s.getAliasesForEntity(ctx, "artist_aliases", "artist_id", a.ID)
+		a.ImageSource = imageSrc.String
+		a.IsPrimary = primary
+
+		artists = append(artists, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	for i := range artists {
+		aliases, err := s.getAliasesForEntity(ctx, "artist_aliases", "artist_id", artists[i].ID)
 		if err != nil {
 			return nil, err
 		}
-		a.Aliases = aliases
-		artists = append(artists, a)
+		artists[i].Aliases = aliases
 	}
-	return artists, rows.Err()
+	return artists, nil
 }
 
 // getAliasesForEntity fetches all aliases for an entity from the given alias table.

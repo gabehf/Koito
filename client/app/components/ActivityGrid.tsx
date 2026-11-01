@@ -1,10 +1,8 @@
+import { useProfile } from "~/providers/ProfileProvider";
+import type { ProfileApi } from "api/api";
 import { useQuery } from "@tanstack/react-query";
 import Popup from "./Popup";
-import {
-  apiFetch,
-  type ListenActivityItem,
-  type ListenActivityResponse,
-} from "api/api";
+import { type ListenActivityItem, type ListenActivityResponse } from "api/api";
 import CardHeader from "./primitives/CardHeader";
 import useWindowWidth from "~/hooks/useWindowWidth";
 
@@ -20,15 +18,18 @@ interface Props {
   autoAdjust?: boolean;
 }
 
-const getActivity = (args: {
-  step: string;
-  range: number;
-  month: number;
-  year: number;
-  artist_id: number;
-  album_id: number;
-  track_id: number;
-}) => apiFetch<ListenActivityResponse>("/apis/web/v1/listen-activity", args);
+const getActivity = (
+  api: ProfileApi,
+  args: {
+    step: string;
+    range: number;
+    month: number;
+    year: number;
+    artist_id: number;
+    album_id: number;
+    track_id: number;
+  },
+) => api.apiFetch<ListenActivityResponse>("/apis/web/v1/listen-activity", args);
 
 const header = "Activity";
 
@@ -41,6 +42,8 @@ export default function ActivityGrid({
   albumId = 0,
   trackId = 0,
 }: Props) {
+  const { profile, api } = useProfile();
+
   const args = {
     step: "day",
     range: NUM_WEEKS * 7,
@@ -51,8 +54,8 @@ export default function ActivityGrid({
     track_id: trackId,
   };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["listen-activity", args],
-    queryFn: () => getActivity(args),
+    queryKey: ["profile", profile.id, "listen-activity", args],
+    queryFn: () => getActivity(api, args),
   });
 
   const width = useWindowWidth();

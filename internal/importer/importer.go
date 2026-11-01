@@ -15,10 +15,13 @@ func finishImport(ctx context.Context, filename string, numImported int) error {
 	l := logger.FromContext(ctx)
 	_, err := os.Stat(path.Join(cfg.ConfigDir(), "import_complete"))
 	if err != nil {
-		err = os.Mkdir(path.Join(cfg.ConfigDir(), "import_complete"), 0744)
+		err = os.MkdirAll(path.Join(cfg.ConfigDir(), "import_complete"), 0744)
 		if err != nil {
 			l.Err(err).Msg("Failed to create import_complete dir! Import files must be removed from the import directory manually, or else the importer will run on every app start")
 		}
+	}
+	if err := os.MkdirAll(path.Dir(path.Join(cfg.ConfigDir(), "import_complete", filename)), 0744); err != nil {
+		return err
 	}
 	err = os.Rename(path.Join(cfg.ConfigDir(), "import", filename), path.Join(cfg.ConfigDir(), "import_complete", filename))
 	if err != nil {

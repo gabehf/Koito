@@ -1,6 +1,7 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { search, type SearchResponse } from "api/api";
+import { type SearchResponse } from "api/api";
 import SearchResults from "./SearchResults";
 import SubHeader from "../../primitives/SubHeader";
 
@@ -10,8 +11,11 @@ interface Props {
 }
 
 export default function SearchModal({ open, setOpen }: Props) {
+  const { api } = useProfile();
+
   const [query, setQuery] = useState("");
   const [data, setData] = useState<SearchResponse>();
+  const [searchError, setSearchError] = useState("");
   const deferredQuery = useDeferredValue(query);
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -25,10 +29,25 @@ export default function SearchModal({ open, setOpen }: Props) {
   };
 
   useEffect(() => {
-    if (deferredQuery) {
-      search(deferredQuery).then((r) => setData(r));
+    let current = true;
+    setSearchError("");
+    if (!deferredQuery) {
+      setData(undefined);
+      return;
     }
-  }, [deferredQuery]);
+    api
+      .search(deferredQuery)
+      .then((result) => {
+        if (current) setData(result);
+      })
+      .catch((error) => {
+        if (current && error.name !== "AbortError")
+          setSearchError(error.message);
+      });
+    return () => {
+      current = false;
+    };
+  }, [deferredQuery, api]);
 
   useEffect(() => {
     if (open) {
@@ -109,6 +128,11 @@ export default function SearchModal({ open, setOpen }: Props) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
+        {searchError && (
+          <p role="alert" className="error">
+            {searchError}
+          </p>
+        )}
         <SearchResults data={data} onSelect={closeSearchModal} />
       </div>
     </div>,

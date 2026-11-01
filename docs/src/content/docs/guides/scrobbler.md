@@ -1,35 +1,53 @@
 ---
-title: Setting up the Scrobber
-description: How to relay listens submitted to Koito to another ListenBrainz compatible server.
+title: Setting up the Scrobbler
+description: Configure per-profile player API keys and optional ListenBrainz forwarding.
 ---
 
-To use the ListenBrainz API, you need to get your generated API key from the UI. The API key is what you will use as the ListenBrainz token.
+## Create a profile and get its key
 
-First, open the settings in your Koito instance by clicking on the settings icon or pressing `\`.
+Open Settings using the sidebar button or `\`, then open **Administration** and
+sign in as the administrator. Use the credentials configured at installation;
+change the initial password if you used the defaults.
 
-Then, you can navigate to the account tab and log in using the default credentials `admin` and `changeme`, or the credentials you supplied when first running Koito using the `KOITO_DEFAULT_USERNAME` and `KOITO_DEFAULT_PASSWORD` environment variables.
+Select a person in **Manage profile**, or create a profile with a display name,
+URL name and optional photo/icon. Each new profile receives an initial API key.
+The **API keys** section lets the administrator copy, label, create and revoke
+keys for that profile. A phone and music server can use different keys belonging
+to the same person. Revoking a key preserves existing history.
 
-:::caution
-Be sure to change the username and password after logging in for the first time if you used the defaults.
-:::
+Configure the player with the base URL `{your_koito_address}/apis/listenbrainz/1`
+and that person's Koito API key as its ListenBrainz token. The submission endpoint
+is `/apis/listenbrainz/1/submit-listens`; requests use
+`Authorization: Token YOUR_KEY`. The key determines the destination profile.
 
-After logging in, open the settings menu again and find the `API Keys` tab. On this tab, you will find the automatically generated API key.
+Listeners browse public profiles without signing in. The root `/` shows profile
+selection; `/<slug>` opens a particular profile. See [Listening profiles](/guides/profiles)
+for administration and upgrade details.
 
-:::note
-If you are not running Koito on an `https://` connection or `localhost`,  the click-to-copy button will not work. Instead, just click on the key itself to highlight and copy it.
-:::
+## Forward a profile to another server
 
-Then, direct any application you want to scrobble data from to `{your_koito_address}/apis/listenbrainz/1` (or `{your_koito_address}/apis/listenbrainz` for some applications) and provide the API key from the UI as the token.
+Under **Settings → Administration → Manage profile**, open **ListenBrainz forwarding**:
 
-## Set up a relay
+1. Enable forwarding for that profile.
+2. Enter the destination base URL, such as `https://api.listenbrainz.org/1` or
+   `https://another-koito.example/apis/listenbrainz/1`. Do not append `/submit-listens`.
+3. Enter that person's token from the destination server. This is a separate
+   credential from the Koito key supplied to the player; it is visible to administrators.
+4. Use **Test connection** to validate the current fields. The test does not save
+   credentials or submit a listen. Save using **Save forwarding**.
 
-Koito allows you to relay listens submitted via the ListenBrainz-compatible API to another ListenBrainz-compatible server.
-In order to use this feature, all you need to do is set the `KOITO_ENABLE_LBZ_RELAY`, `KOITO_LBZ_RELAY_URL`, and `KOITO_LBZ_RELAY_TOKEN` variables in your environment.
-After setting these variables, be sure to restart your Koito instance to apply the settings.
+The screen shows the saved state and unsaved changes. Each profile forwards only
+its own incoming player submissions. Different people can use the same server
+with different external tokens; reusing one external token sends their listens
+to the same external account. Do not configure a loop between Koito instances.
 
-Once the relay is configured, Koito will automatically forward any requests it recieves on `/apis/listenbrainz/1` to the URL provided in the configuration.
+To stop forwarding, uncheck the option and save. This removes the saved URL/token
+and preserves local history. Enabling again requires entering the credentials.
+Forwarding is asynchronous and has no persistent delivery queue; historical
+imports, edits and deletions are not synchronized to the destination.
 
-:::note
-Be sure to include the full path to the ListenBrainz endpoint of the server you are relaying to in the `KOITO_LBZ_RELAY_URL`.
-For example, to relay to the main ListenBrainz instance, you would set `KOITO_ENABLE_LBZ_RELAY` to `https://api.listenbrainz.org/1`.
-:::
+The legacy `KOITO_ENABLE_LBZ_RELAY`, `KOITO_LBZ_RELAY_URL` and
+`KOITO_LBZ_RELAY_TOKEN` variables only bootstrap a single eligible existing profile
+once. With multiple profiles, configure destinations explicitly in Administration.
+Changing or disabling these variables does not remove a relay already saved in
+the database. See the [configuration reference](/reference/configuration).

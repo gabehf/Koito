@@ -12,7 +12,7 @@ import (
 	"github.com/gabehf/koito/engine/handlers"
 	"github.com/gabehf/koito/engine/middleware"
 	"github.com/gabehf/koito/internal/cfg"
-	"github.com/gabehf/koito/internal/db"
+	dbstore "github.com/gabehf/koito/internal/db"
 	mbz "github.com/gabehf/koito/internal/mbz"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -23,7 +23,7 @@ import (
 func bindRoutes(
 	r *chi.Mux,
 	ready *atomic.Bool,
-	db db.DB,
+	db dbstore.DB,
 	mbz mbz.MusicBrainzCaller,
 ) {
 	if !(len(cfg.AllowedOrigins()) == 0) && !(cfg.AllowedOrigins()[0] == "") {
@@ -38,36 +38,42 @@ func bindRoutes(
 		Get("/image/{image_id}/{filename}", handlers.ImageHandler(db))
 
 	r.Route("/apis/web/v1", func(r chi.Router) {
+		r.Use(middleware.SameOrigin)
 		r.Get("/config", handlers.GetCfgHandler())
 
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.Authenticate(db, middleware.AuthModeLoginGate))
-			r.Get("/artist/{id}", handlers.GetArtistHandler(db))                  // done
-			r.Get("/artist/{id}/aliases", handlers.GetArtistAliasesHandler(db))   // done
-			r.Get("/artist/{id}/interest", handlers.GetArtistInterestHandler(db)) // done
-
-			r.Get("/album/{id}", handlers.GetAlbumHandler(db))                   // done
-			r.Get("/album/{id}/artists", handlers.GetArtistsForAlbumHandler(db)) // done
-			r.Get("/album/{id}/aliases", handlers.GetAlbumAliasesHandler(db))    // done
-			r.Get("/album/{id}/interest", handlers.GetAlbumInterestHandler(db))  // done
-
-			r.Get("/track/{id}", handlers.GetTrackHandler(db))                   // done
-			r.Get("/track/{id}/artists", handlers.GetArtistsForTrackHandler(db)) // done
-			r.Get("/track/{id}/aliases", handlers.GetTrackAliasesHandler(db))    // done
-			r.Get("/track/{id}/interest", handlers.GetTrackInterestHandler(db))  // done
-
-			r.Get("/top/tracks", handlers.GetTopTracksHandler(db))
-			r.Get("/top/albums", handlers.GetTopAlbumsHandler(db))
-			r.Get("/top/artists", handlers.GetTopArtistsHandler(db))
-
-			r.Get("/listens", handlers.GetListensHandler(db))
-			r.Get("/listen-activity", handlers.GetListenActivityHandler(db))
-			r.Get("/first-activity", handlers.FirstActivityHandler(db))
-			r.Get("/now-playing", handlers.NowPlayingHandler(db))
-			r.Get("/stats", handlers.StatsHandler(db))
-			r.Get("/search", handlers.SearchHandler(db))
-			r.Get("/summary", handlers.SummaryHandler(db))
+		r.Get("/profiles", handlers.ListProfilesHandler(db))
+		r.With(middleware.RequireAdmin(db)).Post("/profiles", handlers.CreateProfileHandler(db))
+		r.Route("/profiles/{slug}", func(r chi.Router) {
+			r.Use(middleware.ProfileScope(db))
+			r.Get("/", handlers.GetProfileHandler())
+			bindProfileReads(r, db)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireAdmin(db))
+				r.Patch("/", handlers.UpdateProfileHandler(db))
+				r.Get("/management", handlers.ProfileManagementHandler(db))
+				r.Delete("/", handlers.DeleteProfileHandler(db))
+				r.Put("/avatar", handlers.ProfileAvatarHandler(db))
+				r.Delete("/avatar", handlers.ProfileAvatarHandler(db))
+				r.Get("/export", handlers.ExportHandler(db))
+				r.Post("/import", profileImportHandler(db, mbz))
+				r.Get("/relay", handlers.GetProfileRelayHandler(db))
+				r.Post("/relay/test", handlers.TestProfileRelayHandler())
+				r.Put("/relay", handlers.SetProfileRelayHandler(db))
+				r.Delete("/relay", handlers.SetProfileRelayHandler(db))
+				r.Post("/listens", handlers.SubmitListenWithIDHandler(db))
+				r.Delete("/listens", handlers.DeleteListenHandler(db))
+				r.Get("/user/apikeys", handlers.GetApiKeysHandler(db))
+				r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
+				r.Patch("/user/apikeys/{id}", handlers.UpdateApiKeyLabelHandler(db))
+				r.Delete("/user/apikeys/{id}", handlers.DeleteApiKeyHandler(db))
+			})
 		})
+		// Transitional endpoints only resolve an unambiguous single profile.
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.ProfileScope(db))
+			bindProfileReads(r, db)
+		})
+
 		r.Post("/logout", handlers.LogoutHandler(db))
 		if !cfg.RateLimitDisabled() {
 			r.With(httprate.Limit(
@@ -90,7 +96,7 @@ func bindRoutes(
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Authenticate(db, middleware.AuthModeSessionOrAPIKey))
+			r.Use(middleware.RequireAdmin(db))
 
 			r.Delete("/artist/{id}", handlers.DeleteArtistHandler(db))
 			r.Delete("/artist/{id}/aliases", handlers.DeleteArtistAliasHandler(db))
@@ -119,18 +125,18 @@ func bindRoutes(
 			r.Patch("/track/{id}/aliases/primary", handlers.SetPrimaryTrackAliasHandler(db))
 			r.Patch("/track/{id}/artists/{artist_id}", handlers.SetPrimaryTrackArtistHandler(db))
 
-			r.Post("/listens", handlers.SubmitListenWithIDHandler(db))
-			r.Delete("/listens", handlers.DeleteListenHandler(db))
+			r.With(middleware.ProfileScope(db)).Post("/listens", handlers.SubmitListenWithIDHandler(db))
+			r.With(middleware.ProfileScope(db)).Delete("/listens", handlers.DeleteListenHandler(db))
 
-			r.Get("/user/apikeys", handlers.GetApiKeysHandler(db))
-			r.Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
-			r.Patch("/user/apikeys/{id}", handlers.UpdateApiKeyLabelHandler(db))
-			r.Delete("/user/apikeys/{id}", handlers.DeleteApiKeyHandler(db))
+			r.With(middleware.ProfileScope(db)).Get("/user/apikeys", handlers.GetApiKeysHandler(db))
+			r.With(middleware.ProfileScope(db)).Post("/user/apikeys", handlers.GenerateApiKeyHandler(db))
+			r.With(middleware.ProfileScope(db)).Patch("/user/apikeys/{id}", handlers.UpdateApiKeyLabelHandler(db))
+			r.With(middleware.ProfileScope(db)).Delete("/user/apikeys/{id}", handlers.DeleteApiKeyHandler(db))
 
 			r.Get("/user", handlers.MeHandler())
 			r.Patch("/user", handlers.UpdateUserHandler(db))
 
-			r.Get("/export", handlers.ExportHandler(db))
+			r.With(middleware.ProfileScope(db)).Get("/export", handlers.ExportHandler(db))
 			r.Delete("/data", handlers.PurgeAllDataHandler(db))
 		})
 	})
@@ -141,9 +147,9 @@ func bindRoutes(
 			AllowedHeaders: []string{"Content-Type", "Authorization"},
 		}))
 
-		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
+		r.With(middleware.IngestionKey(db)).
 			Post("/submit-listens", handlers.LbzSubmitListenHandler(db, mbz))
-		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
+		r.With(middleware.IngestionKey(db)).
 			Get("/validate-token", handlers.LbzValidateTokenHandler())
 	})
 
@@ -208,4 +214,33 @@ func publicServer(r chi.Router, path string, root http.FileSystem) {
 		r.URL.Path = strings.TrimPrefix(r.URL.Path, path)
 		fs.ServeHTTP(w, r)
 	})
+}
+
+func bindProfileReads(r chi.Router, db dbstore.DB) {
+
+	r.Get("/artist/{id}", handlers.GetArtistHandler(db))                  // done
+	r.Get("/artist/{id}/aliases", handlers.GetArtistAliasesHandler(db))   // done
+	r.Get("/artist/{id}/interest", handlers.GetArtistInterestHandler(db)) // done
+
+	r.Get("/album/{id}", handlers.GetAlbumHandler(db))                   // done
+	r.Get("/album/{id}/artists", handlers.GetArtistsForAlbumHandler(db)) // done
+	r.Get("/album/{id}/aliases", handlers.GetAlbumAliasesHandler(db))    // done
+	r.Get("/album/{id}/interest", handlers.GetAlbumInterestHandler(db))  // done
+
+	r.Get("/track/{id}", handlers.GetTrackHandler(db))                   // done
+	r.Get("/track/{id}/artists", handlers.GetArtistsForTrackHandler(db)) // done
+	r.Get("/track/{id}/aliases", handlers.GetTrackAliasesHandler(db))    // done
+	r.Get("/track/{id}/interest", handlers.GetTrackInterestHandler(db))  // done
+
+	r.Get("/top/tracks", handlers.GetTopTracksHandler(db))
+	r.Get("/top/albums", handlers.GetTopAlbumsHandler(db))
+	r.Get("/top/artists", handlers.GetTopArtistsHandler(db))
+
+	r.Get("/listens", handlers.GetListensHandler(db))
+	r.Get("/listen-activity", handlers.GetListenActivityHandler(db))
+	r.Get("/first-activity", handlers.FirstActivityHandler(db))
+	r.Get("/now-playing", handlers.NowPlayingHandler(db))
+	r.Get("/stats", handlers.StatsHandler(db))
+	r.Get("/search", handlers.SearchHandler(db))
+	r.Get("/summary", handlers.SummaryHandler(db))
 }

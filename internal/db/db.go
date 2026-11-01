@@ -111,6 +111,7 @@ type ExportStore interface {
 }
 
 type DB interface {
+	ProfileStore
 	ArtistStore
 	AlbumStore
 	TrackStore
@@ -121,4 +122,23 @@ type DB interface {
 	Ping(ctx context.Context) error
 	Close(ctx context.Context)
 	PurgeAllData(ctx context.Context) error
+}
+
+// ProfileStore keeps public listening identities independent of admin accounts.
+type ProfileStore interface {
+	CreateListeningProfile(ctx context.Context, name, slug, icon, token string) (*models.ListeningProfile, error)
+	SetProfileAvatar(ctx context.Context, id int32, image, icon *string) error
+	ProfileListenCount(ctx context.Context, id int32) (int64, error)
+	DeleteListeningProfile(ctx context.Context, id int32, name string, count int64) error
+	ListListeningProfiles(ctx context.Context) ([]models.ListeningProfile, error)
+	GetListeningProfile(ctx context.Context, slug string) (*models.ListeningProfile, error)
+	GetListeningProfileByID(ctx context.Context, id int32) (*models.ListeningProfile, error)
+	GetProfileByAPIKey(ctx context.Context, key string) (*models.ListeningProfile, error)
+	UpdateListeningProfile(ctx context.Context, id int32, displayName, slug string) error
+	GetApiKeysByProfileID(ctx context.Context, id int32) ([]models.ApiKey, error)
+	DeleteProfileApiKey(ctx context.Context, id, profileID int32) error
+	UpdateProfileApiKeyLabel(ctx context.Context, id, profileID int32, label string) error
+	GetProfileRelay(ctx context.Context, id int32) (string, string, error)
+	InitializeLegacyRelay(ctx context.Context, url, token string) error
+	SetProfileRelay(ctx context.Context, id int32, url, token string) error
 }

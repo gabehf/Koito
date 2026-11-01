@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Popup from "../Popup";
-import { Link } from "react-router";
+
+import { ProfileLink as Link } from "~/components/ProfileLink";
 
 interface Props {
   name: string;
@@ -49,6 +50,7 @@ export default function SidebarItem({
       <Popup position="right" space={space ?? 20} inner={popupInner}>
         {to ? (
           <Link
+            aria-label={name}
             target={externalLink ? "_blank" : ""}
             className={classes}
             to={to}
@@ -56,9 +58,14 @@ export default function SidebarItem({
             {children}
           </Link>
         ) : (
-          <a className={classes} onClick={() => onClick()}>
+          <button
+            type="button"
+            aria-label={name}
+            className={classes}
+            onClick={() => onClick()}
+          >
             {children}
-          </a>
+          </button>
         )}
       </Popup>
       {modal}

@@ -44,7 +44,7 @@ type KoitoArtist struct {
 	Aliases   []models.Alias `json:"aliases"`
 }
 
-func ExportData(ctx context.Context, user *models.User, store db.ExportStore, out io.Writer) error {
+func ExportData(ctx context.Context, profile *models.ListeningProfile, store db.ExportStore, out io.Writer) error {
 	lastTime := time.Unix(0, 0)
 	lastTrackId := int32(0)
 	pageSize := int32(1000)
@@ -60,8 +60,12 @@ func ExportData(ctx context.Context, user *models.User, store db.ExportStore, ou
 	// }
 	// defer f.Close()
 
+	encodedName, err := json.Marshal(profile.DisplayName)
+	if err != nil {
+		return err
+	}
 	// Write the opening of the JSON manually
-	_, err := fmt.Fprintf(out, "{\n  \"version\": \"1\",\n  \"exported_at\": \"%s\",\n  \"user\": \"%s\",\n  \"listens\": [\n", exportedAt.UTC().Format(time.RFC3339), user.Username)
+	_, err = fmt.Fprintf(out, "{\n  \"version\": \"1\",\n  \"exported_at\": \"%s\",\n  \"user\": %s,\n  \"listens\": [\n", exportedAt.UTC().Format(time.RFC3339), encodedName)
 	if err != nil {
 		return fmt.Errorf("ExportData: %w", err)
 	}
@@ -69,7 +73,7 @@ func ExportData(ctx context.Context, user *models.User, store db.ExportStore, ou
 	first := true
 	for {
 		rows, err := store.GetExportPage(ctx, db.GetExportPageOpts{
-			UserID:     user.ID,
+			ProfileID:  profile.ID,
 			ListenedAt: lastTime,
 			TrackID:    lastTrackId,
 			Limit:      pageSize,
@@ -100,12 +104,8 @@ func ExportData(ctx context.Context, user *models.User, store db.ExportStore, ou
 			}
 			_, _ = out.Write(raw)
 
-			if r.TrackID > lastTrackId {
-				lastTrackId = r.TrackID
-			}
-			if r.ListenedAt.After(lastTime) {
-				lastTime = r.ListenedAt
-			}
+			lastTrackId = r.TrackID
+			lastTime = r.ListenedAt
 		}
 	}
 

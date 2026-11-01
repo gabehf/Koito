@@ -1,14 +1,18 @@
+import { useProfile } from "~/providers/ProfileProvider";
+import type { ProfileApi } from "api/api";
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch, type Stats } from "api/api";
+import { type Stats } from "api/api";
 import CardHeader from "./primitives/CardHeader";
 
-const getStats = (period: string) =>
-  apiFetch<Stats>("/apis/web/v1/stats", { period });
+const getStats = (api: ProfileApi, period: string) =>
+  api.apiFetch<Stats>("/apis/web/v1/stats", { period });
 
 export default function AllTimeStats() {
+  const { profile, api } = useProfile();
+
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["stats", "all_time"],
-    queryFn: () => getStats("all_time"),
+    queryKey: ["profile", profile.id, "stats", "all_time"],
+    queryFn: () => getStats(api, "all_time"),
   });
 
   const header = "All time stats";

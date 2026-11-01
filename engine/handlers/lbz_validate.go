@@ -23,7 +23,7 @@ func LbzValidateTokenHandler() http.HandlerFunc {
 
 		l.Debug().Msg("LbzValidateTokenHandler: Validating user token")
 
-		u := middleware.GetUserFromContext(ctx)
+		u := middleware.ProfileFromContext(ctx)
 		var response LbzValidateResponse
 		if u == nil {
 			l.Debug().Msg("LbzValidateTokenHandler: Invalid token, user not found in context")
@@ -32,11 +32,11 @@ func LbzValidateTokenHandler() http.HandlerFunc {
 			w.WriteHeader(http.StatusUnauthorized)
 			utils.WriteJSON(w, http.StatusOK, response)
 		} else {
-			l.Debug().Msgf("LbzValidateTokenHandler: Token valid for user '%s'", u.Username)
+			l.Debug().Msgf("LbzValidateTokenHandler: Token valid for user '%s'", u.Slug)
 			response.Code = http.StatusOK
 			response.Message = "Token valid."
 			response.Valid = true
-			response.UserName = u.Username
+			response.UserName = u.Slug
 			utils.WriteJSON(w, http.StatusOK, response)
 		}
 	}

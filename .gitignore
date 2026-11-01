@@ -1,2 +1,12 @@
 test_config_dir
 .env
+
+/koito
+.local/
+.vscode/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+__pycache__/
+node_modules

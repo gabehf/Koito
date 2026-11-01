@@ -1,18 +1,20 @@
+import { createProfileApi } from "api/api";
 import TopItemList from "~/components/TopItemList";
 import ChartLayout from "./ChartLayout";
 import { useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { type Track, type PaginatedResponse, type Ranked } from "api/api";
 
-export async function clientLoader({ request }: LoaderFunctionArgs) {
+export async function clientLoader({ request, params }: LoaderFunctionArgs) {
+  const api = createProfileApi(params.slug!, () => request.signal);
   const url = new URL(request.url);
   const page = url.searchParams.get("page") || "0";
   url.searchParams.set("page", page);
 
-  const res = await fetch(
+  const res = await api.fetch(
     `/apis/web/v1/top/tracks?${url.searchParams.toString()}`,
   );
   if (!res.ok) {
-    throw new Response("Failed to load top tracks", { status: 500 });
+    throw new Response("Failed to load top tracks", { status: res.status });
   }
 
   const top_tracks: PaginatedResponse<Track> = await res.json();

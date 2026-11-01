@@ -19,6 +19,11 @@ import (
 )
 
 func ImportKoitoFile(ctx context.Context, store importStore, filename string) error {
+	if db.ProfileID(ctx) <= 0 {
+		return fmt.Errorf("explicit import profile required")
+	}
+	profileID := db.ProfileID(ctx)
+	ctx = db.WithoutProfile(ctx)
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning Koito import on file: %s", filename)
 	data := new(export.KoitoExport)
@@ -36,6 +41,18 @@ func ImportKoitoFile(ctx context.Context, store importStore, filename string) er
 		return fmt.Errorf("ImportKoitoFile: unupported version: %s", data.Version)
 	}
 
+	// Validate all required identities before writing anything. Uploaded exports
+	// are untrusted and an empty artist list must not panic at artistIds[0].
+	for _, item := range data.Listens {
+		if len(item.Artists) == 0 || getPrimaryAliasFromAliasSlice(item.Track.Aliases) == "" || getPrimaryAliasFromAliasSlice(item.Album.Aliases) == "" {
+			return fmt.Errorf("invalid Koito export: artists, album and track required")
+		}
+		for _, artist := range item.Artists {
+			if getPrimaryAliasFromAliasSlice(artist.Aliases) == "" {
+				return fmt.Errorf("invalid Koito export: artist name required")
+			}
+		}
+	}
 	l.Info().Msgf("Beginning data import for user: %s", data.User)
 
 	count := 0
@@ -155,10 +172,10 @@ func ImportKoitoFile(ctx context.Context, store importStore, filename string) er
 
 		// save listen
 		err = store.SaveListen(ctx, db.SaveListenOpts{
-			TrackID: track.ID,
-			Time:    data.Listens[i].ListenedAt,
-			Client:  data.Listens[i].Client,
-			UserID:  1,
+			TrackID:   track.ID,
+			Time:      data.Listens[i].ListenedAt,
+			Client:    data.Listens[i].Client,
+			ProfileID: profileID,
 		})
 		if err != nil {
 			return fmt.Errorf("ImportKoitoFile: %w", err)

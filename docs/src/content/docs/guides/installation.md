@@ -54,3 +54,11 @@ When the build is finished, you can run the executable at the root of the direct
 ```
 
 Then, navigate your browser to `localhost:4110` to enter your Koito instance.
+
+## Listening profiles and upgrades
+
+For builds with multiuser support, `/` opens public profile selection and
+**Settings → Administration** manages profiles and their API keys. Before upgrading
+an existing SQLite installation, stop Koito and back up the data directory.
+Schema 2 migrates transactionally to schema 3; rollback requires restoring the
+backup. See [Listening profiles](/guides/profiles) for the full upgrade procedure.

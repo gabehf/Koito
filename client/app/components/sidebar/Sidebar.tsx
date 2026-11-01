@@ -1,3 +1,5 @@
+import ProfileSelector from "./ProfileSelector";
+import { useOptionalProfile } from "~/providers/ProfileProvider";
 import { ExternalLink, History, Home, Info } from "lucide-react";
 import SidebarSearch from "./SidebarSearch";
 import SidebarItem from "./SidebarItem";
@@ -5,6 +7,7 @@ import SidebarSettings from "./SidebarSettings";
 
 export default function Sidebar() {
   const iconSize = 18;
+  const profile = useOptionalProfile()?.profile;
 
   return (
     <div
@@ -33,26 +36,29 @@ export default function Sidebar() {
         "
     >
       <div className="flex gap-4 sm:flex-col">
-        <SidebarSearch size={iconSize} />
+        <ProfileSelector />
+        {profile && <SidebarSearch size={iconSize} />}
         <div className="hidden sm:flex"></div>
         <SidebarItem
           space={10}
-          to="/"
+          to={profile ? `/${profile.slug}` : "/"}
           name="Home"
           onClick={() => {}}
           modal={<></>}
         >
           <Home size={iconSize} />
         </SidebarItem>
-        <SidebarItem
-          space={10}
-          to="/rewind"
-          name="Rewind"
-          onClick={() => {}}
-          modal={<></>}
-        >
-          <History size={iconSize} />
-        </SidebarItem>
+        {profile && (
+          <SidebarItem
+            space={10}
+            to={`/${profile?.slug}/rewind`}
+            name="Rewind"
+            onClick={() => {}}
+            modal={<></>}
+          >
+            <History size={iconSize} />
+          </SidebarItem>
+        )}
       </div>
       <div className="flex gap-4 sm:flex-col">
         <SidebarItem

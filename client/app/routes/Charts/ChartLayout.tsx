@@ -1,4 +1,6 @@
-import { useFetcher, useLocation, useNavigate } from "react-router";
+import { profilePath } from "../../../api/profile-paths";
+import { useFirstActivity } from "~/providers/ProfileProvider";
+import { useFetcher, useLocation, useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 import { average } from "color.js";
 import { type PaginatedResponse } from "api/api";
@@ -23,13 +25,14 @@ export default function ChartLayout<T>({
   endpoint,
   render,
 }: ChartLayoutProps<T>) {
+  const params = useParams();
   const pgTitle = `${title} - Koito`;
 
   const fetcher = useFetcher();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { firstActivity } = useAppContext();
+  const firstActivity = useFirstActivity();
 
   const currentParams = new URLSearchParams(location.search);
   const currentPage = parseInt(currentParams.get("page") || "1", 10);
@@ -68,7 +71,7 @@ export default function ChartLayout<T>({
       }
     }
 
-    const url = `/${endpoint}?${nextParams.toString()}`;
+    const url = `${profilePath(params.slug!, `/${endpoint}`)}?${nextParams.toString()}`;
     navigate(url, { replace: false });
   };
 
@@ -117,13 +120,15 @@ export default function ChartLayout<T>({
   };
 
   useEffect(() => {
-    fetcher.load(`/${endpoint}?${currentParams.toString()}`);
+    fetcher.load(
+      `${profilePath(params.slug!, `/${endpoint}`)}?${currentParams.toString()}`,
+    );
   }, [location.search]);
 
   const setPage = (nextPage: number) => {
     const nextParams = new URLSearchParams(location.search);
     nextParams.set("page", String(nextPage));
-    const url = `/${endpoint}?${nextParams.toString()}`;
+    const url = `${profilePath(params.slug!, `/${endpoint}`)}?${nextParams.toString()}`;
     fetcher.load(url);
     navigate(url, { replace: false });
   };
@@ -133,8 +138,7 @@ export default function ChartLayout<T>({
 
   const now = new Date();
 
-  const yearLowerLimit =
-    firstActivity?.getFullYear() || now.setFullYear(now.getFullYear() - 10);
+  const yearLowerLimit = firstActivity?.getFullYear() ?? now.getFullYear() - 10;
 
   const yearOptions = Array.from(
     {
@@ -267,12 +271,18 @@ export default function ChartLayout<T>({
         </div>
         <p className="mt-2 text-sm text-color-fg-secondary">{getDateRange()}</p>
         <div className="mt-10 sm:mt-20 flex mx-auto justify-between">
-          {render({
-            data,
-            page: currentPage,
-            onNext: handleNextPage,
-            onPrev: handlePrevPage,
-          })}
+          {data.items.length === 0 && (
+            <p role="status" className="text-(--color-fg-secondary)">
+              Nothing to show for this profile and period.
+            </p>
+          )}
+          {data.items.length > 0 &&
+            render({
+              data,
+              page: currentPage,
+              onNext: handleNextPage,
+              onPrev: handlePrevPage,
+            })}
         </div>
       </div>
     </div>

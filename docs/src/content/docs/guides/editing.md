@@ -3,6 +3,8 @@ title: Editing Data
 description: How to edit artist, album, and track information in your Koito instance.
 ---
 
+Catalog metadata, images and merges are shared across profiles. Editing them requires an administrator session; a player API key cannot authorize edits. Profile history operations belong to the selected profile in Administration.
+
 In order to start editing information on your Koito instance, you need to be logged in. See the [Setting up the Scrobber](/guides/scrobbler) guide if you need to log in for the first time.
 
 Once logged in, navigate to the page of the item you want to edit. For this example, we will use the fantastic Korean dream pop group OurR's track [Bloom](https://www.youtube.com/watch?v=USHrBJRmF-o).

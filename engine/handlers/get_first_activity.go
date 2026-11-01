@@ -18,6 +18,7 @@ func FirstActivityHandler(store db.ListenStore) http.HandlerFunc {
 		if err != nil {
 			l.Debug().Err(err).Msg("Failed to get first listen unix")
 			utils.WriteError(w, "failed to get first listen activity", 500)
+			return
 		}
 
 		utils.WriteJSON(w, 200, struct {

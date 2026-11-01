@@ -1,3 +1,7 @@
+import { profilePath } from "../../api/profile-paths";
+import { useParams } from "react-router";
+import { useFirstActivity } from "~/providers/ProfileProvider";
+import { createProfileApi } from "api/api";
 import Rewind from "~/components/rewind/Rewind";
 import { type RewindStats } from "api/api";
 import { useState } from "react";
@@ -40,12 +44,16 @@ const parseParams = (
   return { year: month <= currentMonth ? currentYear : currentYear - 1, month };
 };
 
-export async function clientLoader({ request }: LoaderFunctionArgs) {
+export async function clientLoader({ request, params }: LoaderFunctionArgs) {
+  const api = createProfileApi(params.slug!, () => request.signal);
   const url = new URL(request.url);
   const { year, month } = parseParams(url.searchParams);
 
-  const res = await fetch(`/apis/web/v1/summary?year=${year}&month=${month}`);
-  if (!res.ok) throw new Response("Failed to load summary", { status: 500 });
+  const res = await api.fetch(
+    `/apis/web/v1/summary?year=${year}&month=${month}`,
+  );
+  if (!res.ok)
+    throw new Response("Failed to load summary", { status: res.status });
 
   const stats: RewindStats = await res.json();
   stats.title = `Your ${month && month > 0 ? months[month - 1] : ""} ${year} Rewind`;
@@ -53,10 +61,11 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
 }
 
 export default function RewindPage() {
+  const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { stats } = useLoaderData<{ stats: RewindStats }>();
-  const { firstActivity } = useAppContext();
+  const firstActivity = useFirstActivity();
 
   const { year: loadedYear, month: loadedMonth } = parseParams(
     new URLSearchParams(location.search),
@@ -74,7 +83,10 @@ export default function RewindPage() {
     for (const [key, val] of Object.entries(updates)) {
       val !== null ? nextParams.set(key, val) : nextParams.delete(key);
     }
-    navigate(`/rewind?${nextParams.toString()}`, { replace: false });
+    navigate(
+      `${profilePath(params.slug!, "/rewind")}?${nextParams.toString()}`,
+      { replace: false },
+    );
   };
 
   const navigateMonth = (newMonth: number) => {

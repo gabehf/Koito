@@ -10,7 +10,6 @@ import (
 
 	"github.com/gabehf/koito/engine/middleware"
 	"github.com/gabehf/koito/internal/catalog"
-	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/mbz"
@@ -98,18 +97,14 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 			return
 		}
 
-		if cfg.LbzRelayEnabled() {
-			go doLbzRelay(requestBytes, l)
-		}
-
 		if err := json.NewDecoder(bytes.NewBuffer(requestBytes)).Decode(&req); err != nil {
 			l.Err(err).Msg("LbzSubmitListenHandler: Failed to decode request")
 			utils.WriteError(w, "failed to decode request", http.StatusBadRequest)
 			return
 		}
 
-		u := middleware.GetUserFromContext(r.Context())
-		if u == nil {
+		profile := middleware.ProfileFromContext(r.Context())
+		if profile == nil {
 			l.Debug().Msg("LbzSubmitListenHandler: Unauthorized request (user context is nil)")
 			utils.WriteError(w, "unauthorized", http.StatusUnauthorized)
 			return
@@ -221,13 +216,13 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 				ArtistMbidMappings: artistMbidMap,
 				Duration:           duration,
 				Time:               listenedAt,
-				UserID:             u.ID,
+				ProfileID:          profile.ID,
 				Client:             client,
 				IsNowPlaying:       req.ListenType == ListenTypePlayingNow,
 				SkipSaveListen:     req.ListenType == ListenTypePlayingNow,
 			}
 
-			_, err, shared := sfGroup.Do(buildCaolescingKey(payload), func() (interface{}, error) {
+			_, err, shared := sfGroup.Do(fmt.Sprintf("%d:%s:%d:%s", profile.ID, req.ListenType, listenedAt.Unix(), buildCaolescingKey(payload)), func() (interface{}, error) {
 				return 0, catalog.SubmitListen(r.Context(), store, opts)
 			})
 			if shared {
@@ -242,6 +237,14 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 			}
 		}
 
+		{
+			if relayStore, ok := store.(db.ProfileStore); ok {
+				relayURL, relayToken, err := relayStore.GetProfileRelay(r.Context(), profile.ID)
+				if err == nil && relayURL != "" && relayToken != "" {
+					go doLbzRelay(requestBytes, l, relayURL, relayToken)
+				}
+			}
+		}
 		l.Debug().Msg("LbzSubmitListenHandler: Successfully processed listens")
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
@@ -249,7 +252,7 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 	}
 }
 
-func doLbzRelay(requestBytes []byte, l *zerolog.Logger) {
+func doLbzRelay(requestBytes []byte, l *zerolog.Logger, relayURL, relayToken string) {
 	defer func() {
 		if r := recover(); r != nil {
 			l.Error().Interface("recover", r).Msg("doLbzRelay: Panic occurred")
@@ -261,12 +264,12 @@ func doLbzRelay(requestBytes []byte, l *zerolog.Logger) {
 		maxBackoff       = 40 * time.Second
 	)
 	l.Debug().Msg("doLbzRelay: Building ListenBrainz relay request")
-	req, err := http.NewRequest("POST", cfg.LbzRelayUrl()+"/submit-listens", bytes.NewBuffer(requestBytes))
+	req, err := http.NewRequest("POST", relayURL+"/submit-listens", bytes.NewBuffer(requestBytes))
 	if err != nil {
 		l.Err(err).Msg("doLbzRelay: Failed to build ListenBrainz relay request")
 		return
 	}
-	req.Header.Add("Authorization", "Token "+cfg.LbzRelayToken())
+	req.Header.Add("Authorization", "Token "+relayToken)
 	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{
