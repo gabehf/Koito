@@ -20,13 +20,18 @@ func (s *Sqlite) SaveListen(ctx context.Context, opts db.SaveListenOpts) error {
 	if opts.Time.IsZero() {
 		opts.Time = time.Now()
 	}
+	profileID, err := s.resolveWriteProfile(ctx, opts.ProfileID, opts.UserID)
+	if err != nil {
+		return fmt.Errorf("SaveListen: %w", err)
+	}
 	client := ""
 	if opts.Client != "" {
 		client = opts.Client
 	}
-	_, err := s.db.ExecContext(ctx,
-		`INSERT OR IGNORE INTO listens (track_id, listened_at, user_id, client) VALUES (?,?,?,?)`,
-		opts.TrackID, opts.Time.Unix(), opts.UserID, client,
+	_, err = s.db.ExecContext(ctx,
+		`INSERT INTO listens (track_id, listened_at, user_id, profile_id, client) VALUES (?,?,?,?,?)
+         ON CONFLICT (profile_id, track_id, listened_at) DO NOTHING`,
+		opts.TrackID, opts.Time.Unix(), nullableLegacyUserID(opts.UserID), profileID, client,
 	)
 	return err
 }
@@ -36,8 +41,8 @@ func (s *Sqlite) DeleteListen(ctx context.Context, trackId int32, listenedAt tim
 		return errors.New("DeleteListen: required parameter 'trackId' missing")
 	}
 	_, err := s.db.ExecContext(ctx,
-		`DELETE FROM listens WHERE track_id = ? AND listened_at = ?`,
-		trackId, listenedAt.Unix(),
+		`DELETE FROM listens WHERE track_id = ? AND listened_at = ? AND profile_id = ?`,
+		trackId, listenedAt.Unix(), db.ProfileID(ctx),
 	)
 	return err
 }
@@ -64,21 +69,21 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 	var count int64
 	switch {
 	case opts.TrackID > 0:
-		s.db.QueryRowContext(ctx,
+		s.queryRowContext(ctx,
 			`SELECT COUNT(*) FROM listens WHERE listened_at BETWEEN ? AND ? AND track_id = ?`,
 			t1.Unix(), t2.Unix(), opts.TrackID).Scan(&count)
 	case opts.AlbumID > 0:
-		s.db.QueryRowContext(ctx, `
+		s.queryRowContext(ctx, `
 			SELECT COUNT(*) FROM listens l JOIN tracks t ON l.track_id = t.id
 			WHERE l.listened_at BETWEEN ? AND ? AND t.release_id = ?`,
 			t1.Unix(), t2.Unix(), opts.AlbumID).Scan(&count)
 	case opts.ArtistID > 0:
-		s.db.QueryRowContext(ctx, `
+		s.queryRowContext(ctx, `
 			SELECT COUNT(*) FROM listens l JOIN artist_tracks at2 ON l.track_id = at2.track_id
 			WHERE l.listened_at BETWEEN ? AND ? AND at2.artist_id = ?`,
 			t1.Unix(), t2.Unix(), opts.ArtistID).Scan(&count)
 	default:
-		s.db.QueryRowContext(ctx,
+		s.queryRowContext(ctx,
 			`SELECT COUNT(*) FROM listens WHERE listened_at BETWEEN ? AND ?`,
 			t1.Unix(), t2.Unix()).Scan(&count)
 	}
@@ -89,7 +94,7 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 	var err error
 	switch {
 	case opts.TrackID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT l.listened_at, l.track_id, t.title
 			FROM listens l
 			JOIN tracks_with_title t ON l.track_id = t.id
@@ -98,7 +103,7 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 			t1.Unix(), t2.Unix(), opts.TrackID, opts.Limit, offset,
 		)
 	case opts.AlbumID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT l.listened_at, l.track_id, t.title
 			FROM listens l
 			JOIN tracks_with_title t ON l.track_id = t.id
@@ -107,7 +112,7 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 			t1.Unix(), t2.Unix(), opts.AlbumID, opts.Limit, offset,
 		)
 	case opts.ArtistID > 0:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT l.listened_at, l.track_id, t.title
 			FROM listens l
 			JOIN tracks_with_title t ON l.track_id = t.id
@@ -117,7 +122,7 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 			t1.Unix(), t2.Unix(), opts.ArtistID, opts.Limit, offset,
 		)
 	default:
-		rows, err = s.db.QueryContext(ctx, `
+		rows, err = s.queryContext(ctx, `
 			SELECT l.listened_at, l.track_id, t.title
 			FROM listens l
 			JOIN tracks_with_title t ON l.track_id = t.id
@@ -178,7 +183,7 @@ func (s *Sqlite) GetListensPaginated(ctx context.Context, opts db.GetItemsOpts) 
 }
 
 func (s *Sqlite) imageForTrack(ctx context.Context, trackId int32) (*uuid.UUID, error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.queryRowContext(ctx, `
 		SELECT r.image
 		FROM releases r
 		JOIN tracks t ON r.id = t.release_id
@@ -197,7 +202,7 @@ func (s *Sqlite) imageForTrack(ctx context.Context, trackId int32) (*uuid.UUID, 
 }
 
 func (s *Sqlite) GetFirstListenUnix(ctx context.Context) (int64, error) {
-	row := s.db.QueryRow(`
+	row := s.queryRowContext(ctx, `
 		SELECT listened_at FROM listens ORDER BY listened_at ASC LIMIT 1;`)
 	var unix int64
 	err := row.Scan(&unix)

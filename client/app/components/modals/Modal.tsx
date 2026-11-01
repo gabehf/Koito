@@ -7,12 +7,14 @@ export function Modal({
   children,
   maxW,
   h,
+  label,
 }: {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
   maxW?: number;
   h?: number;
+  label?: string;
 }) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [shouldRender, setShouldRender] = useState(isOpen);
@@ -32,6 +34,17 @@ export function Modal({
     }
   }, [isOpen, shouldRender]);
 
+  useEffect(() => {
+    if (!isOpen || !shouldRender) return;
+    const previous = document.activeElement as HTMLElement | null;
+    modalRef.current
+      ?.querySelector<HTMLElement>("button, [href], input, select, textarea")
+      ?.focus();
+    return () => {
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [isOpen, shouldRender]);
+
   // Handle keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,7 +55,7 @@ export function Modal({
       } else if (e.key === "Tab") {
         if (modalRef.current) {
           const focusableEls = modalRef.current.querySelectorAll<HTMLElement>(
-            'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+            'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
           );
           const firstEl = focusableEls[0];
           const lastEl = focusableEls[focusableEls.length - 1];
@@ -88,6 +101,9 @@ export function Modal({
     >
       <div
         ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={label ?? "Dialog"}
         className={`border bg-secondary rounded-(--border-radius) p-6 w-full relative max-h-4/5 overflow-y-auto transition-all duration-100 ${
           isClosing ? "animate-fade-out-scale" : "animate-fade-in-scale"
         }`}
@@ -95,6 +111,7 @@ export function Modal({
       >
         {children}
         <button
+          aria-label="Close dialog"
           onClick={onClose}
           className="absolute text-xl top-1 right-2 sm:top-3 sm:right-4 text-(--color-fg-tertiary) hover:text-(--color-fg) hover:cursor-pointer"
         >
@@ -102,6 +119,6 @@ export function Modal({
         </button>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

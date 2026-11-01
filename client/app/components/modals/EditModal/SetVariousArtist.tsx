@@ -1,5 +1,6 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useQuery } from "@tanstack/react-query";
-import { getAlbum } from "api/api";
+
 import { useEffect, useState } from "react";
 import SubHeader from "~/components/primitives/SubHeader";
 
@@ -8,13 +9,15 @@ interface Props {
 }
 
 export default function SetVariousArtists({ id }: Props) {
+  const { profile, api } = useProfile();
+
   const [err, setErr] = useState("");
   const [va, setVA] = useState(false);
   const [success, setSuccess] = useState("");
 
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["get-album", id],
-    queryFn: () => getAlbum(id),
+    queryKey: ["profile", profile.id, "get-album", id],
+    queryFn: () => api.getAlbum(id),
   });
 
   useEffect(() => {
@@ -33,19 +36,21 @@ export default function SetVariousArtists({ id }: Props) {
   const updateVA = (val: boolean) => {
     setErr("");
     setSuccess("");
-    fetch(`/apis/web/v1/album/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ is_various_artists: val }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then((r) => {
-      if (r.ok) {
-        setSuccess("Successfully updated album");
-      } else {
-        r.json().then((r) => setErr(r.error));
-      }
-    });
+    api
+      .fetch(`/apis/web/v1/album/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_various_artists: val }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then((r) => {
+        if (r.ok) {
+          setSuccess("Successfully updated album");
+        } else {
+          r.json().then((r) => setErr(r.error));
+        }
+      });
   };
 
   return (

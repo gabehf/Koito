@@ -37,8 +37,9 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // The theme startup script sets HTML colors before React hydrates.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -85,21 +86,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <>
-      <AppProvider>
-        <ThemeProvider>
-          <QueryClientProvider client={queryClient}>
-            <div className="flex-col flex sm:flex-row">
-              <Sidebar />
-              <div className="flex flex-col items-center mx-auto w-full ml-0 sm:ml-[58px]">
-                <Outlet />
-                <Footer />
-              </div>
-            </div>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </AppProvider>
-    </>
+    <AppProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <Outlet />
+        </QueryClientProvider>
+      </ThemeProvider>
+    </AppProvider>
   );
 }
 
@@ -135,7 +128,7 @@ export function ErrorBoundary() {
           <div className="w-full flex flex-col">
             <main className="pt-16 p-4 w-4/5 min-w-[350px] mx-auto flex-grow">
               <div className="md:flex gap-4">
-                <img className="w-[200px] rounded mb-3" src="../yuu.jpg" />
+                <img className="w-[200px] rounded mb-3" src="/yuu.jpg" />
                 <div>
                   <h1>{message}</h1>
                   <p>{details}</p>

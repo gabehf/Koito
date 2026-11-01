@@ -17,7 +17,7 @@ func ExportHandler(store db.ExportStore) http.HandlerFunc {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
 		l.Debug().Msg("ExportHandler: Received request for export file")
-		u := middleware.GetUserFromContext(ctx)
+		u := middleware.ProfileFromContext(ctx)
 		if u == nil {
 			l.Debug().Msg("ExportHandler: Unauthorized access")
 			utils.WriteError(w, "unauthorized", http.StatusUnauthorized)

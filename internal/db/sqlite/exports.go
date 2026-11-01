@@ -10,19 +10,22 @@ import (
 )
 
 func (s *Sqlite) GetExportPage(ctx context.Context, opts db.GetExportPageOpts) ([]*db.ExportItem, error) {
+	if opts.ProfileID <= 0 {
+		return nil, fmt.Errorf("profile required for export")
+	}
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT l.listened_at, l.user_id, l.client,
+		SELECT l.listened_at, COALESCE(l.user_id,0), l.client,
 		       t.id AS track_id, t.musicbrainz_id AS track_mbid, t.duration,
 		       t.release_id,
 		       r.musicbrainz_id AS release_mbid, r.image, r.image_source, r.various_artists
 		FROM listens l
 		JOIN tracks t ON l.track_id = t.id
 		JOIN releases r ON t.release_id = r.id
-		WHERE l.user_id = ?
+		WHERE l.profile_id = ?
 		  AND (l.listened_at > ? OR (l.listened_at = ? AND l.track_id > ?))
 		ORDER BY l.listened_at, l.track_id
 		LIMIT ?`,
-		opts.UserID,
+		opts.ProfileID,
 		opts.ListenedAt.Unix(), opts.ListenedAt.Unix(), opts.TrackID,
 		opts.Limit,
 	)
@@ -58,6 +61,16 @@ func (s *Sqlite) GetExportPage(ctx context.Context, opts db.GetExportPageOpts) (
 		item.ReleaseImageSource = releaseImageSrc.String
 		item.VariousArtists = variousArtists == 1
 
+		items = append(items, &item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	for _, item := range items {
+
 		trackAliases, err := s.getAliasesForEntity(ctx, "track_aliases", "track_id", item.TrackID)
 		if err != nil {
 			return nil, fmt.Errorf("GetExportPage: track aliases: %w", err)
@@ -76,11 +89,7 @@ func (s *Sqlite) GetExportPage(ctx context.Context, opts db.GetExportPageOpts) (
 		}
 		item.Artists = artists
 
-		items = append(items, &item)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+
 	return items, nil
 }
-

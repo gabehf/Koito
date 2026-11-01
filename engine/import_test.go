@@ -2,6 +2,7 @@ package engine_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -23,7 +24,11 @@ func TestImportMaloja(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "maloja_import_test.json")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "maloja_import_test.json")
 
 	input, err := os.ReadFile(src)
@@ -44,7 +49,11 @@ func TestImportSpotify(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "Streaming_History_Audio_spotify_import_test.json")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "Streaming_History_Audio_spotify_import_test.json")
 
 	input, err := os.ReadFile(src)
@@ -70,7 +79,11 @@ func TestImportLastFM(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "recenttracks-shoko2-1749776100.json")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "recenttracks-shoko2-1749776100.json")
 
 	input, err := os.ReadFile(src)
@@ -111,7 +124,11 @@ func TestImportLastFM_MbzDisabled(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "recenttracks-shoko2-1749776100.json")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "recenttracks-shoko2-1749776100.json")
 
 	input, err := os.ReadFile(src)
@@ -141,7 +158,11 @@ func TestImportListenBrainz(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "listenbrainz_shoko1_1749780844.zip")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "listenbrainz_shoko1_1749780844.zip")
 
 	input, err := os.ReadFile(src)
@@ -198,7 +219,11 @@ func TestImportListenBrainz_MbzDisabled(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "listenbrainz_shoko1_1749780844.zip")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "listenbrainz_shoko1_1749780844.zip")
 
 	input, err := os.ReadFile(src)
@@ -232,7 +257,11 @@ func TestImportListenBrainz_MBIDMapping(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "listenbrainz_shoko1_123456789.zip")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "listenbrainz_shoko1_123456789.zip")
 
 	input, err := os.ReadFile(src)
@@ -256,7 +285,11 @@ func TestImportKoito(t *testing.T) {
 	store := newTestDB()
 
 	src := path.Join("..", "test_assets", "koito_export_test.json")
-	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	profiles, err := store.ListListeningProfiles(context.Background())
+	require.NoError(t, err)
+	require.Len(t, profiles, 1)
+	destDir := filepath.Join(cfg.ConfigDir(), "import", fmt.Sprint(profiles[0].ID))
+	require.NoError(t, os.MkdirAll(destDir, 0744))
 	dest := filepath.Join(destDir, "koito_export_test.json")
 
 	ctx := context.Background()

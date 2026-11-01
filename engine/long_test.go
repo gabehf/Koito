@@ -410,7 +410,7 @@ func TestValidateToken(t *testing.T) {
 	expected.Code = 200
 	expected.Message = "Token valid."
 	expected.Valid = true
-	expected.UserName = "test"
+	expected.UserName = "default"
 	assert.True(t, assert.ObjectsAreEqual(expected, actual))
 
 	req, err = http.NewRequest("GET", host()+"/apis/listenbrainz/1/validate-token", nil)
@@ -467,7 +467,7 @@ func TestLoginGate(t *testing.T) {
 	req.Header.Add("Authorization", "Token "+apikey)
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	assert.Equal(t, 204, resp.StatusCode)
+	assert.Equal(t, 401, resp.StatusCode)
 
 	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist/3", nil)
 	require.NoError(t, err)
@@ -486,7 +486,7 @@ func TestLoginGate(t *testing.T) {
 	// req.Header.Add("Authorization", "Token "+apikey)
 	resp, err = http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	assert.Equal(t, 401, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 
 	req, err = http.NewRequest("GET", host()+"/apis/web/v1/artist/3", nil)
 	require.NoError(t, err)
@@ -694,7 +694,7 @@ func TestAuth(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 201, resp.StatusCode)
 	var response struct {
-		Key string `json:"key"}`
+		Key string `json:"key"`
 	}
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&response))
 	require.NotEmpty(t, response.Key)
@@ -711,7 +711,7 @@ func TestAuth(t *testing.T) {
 	expected.Code = 200
 	expected.Message = "Token valid."
 	expected.Valid = true
-	expected.UserName = "test"
+	expected.UserName = "default"
 	assert.True(t, assert.ObjectsAreEqual(expected, actual))
 
 	// changes api key label

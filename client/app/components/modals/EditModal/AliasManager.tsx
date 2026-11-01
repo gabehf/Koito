@@ -1,11 +1,6 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useQuery } from "@tanstack/react-query";
-import {
-  createAlias,
-  deleteAlias,
-  getAliases,
-  setPrimaryAlias,
-  type Alias,
-} from "api/api";
+import { createAlias, deleteAlias, setPrimaryAlias, type Alias } from "api/api";
 import { AsyncButton } from "../../AsyncButton";
 import { useEffect, useState } from "react";
 import { Trash } from "lucide-react";
@@ -17,6 +12,8 @@ interface Props {
 }
 
 export default function AliasManager({ type, id }: Props) {
+  const { profile, api } = useProfile();
+
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setError] = useState<string>();
@@ -24,6 +21,8 @@ export default function AliasManager({ type, id }: Props) {
 
   const { isPending, isError, data, error } = useQuery({
     queryKey: [
+      "profile",
+      profile.id,
       "aliases",
       {
         type: type,
@@ -31,8 +30,8 @@ export default function AliasManager({ type, id }: Props) {
       },
     ],
     queryFn: ({ queryKey }) => {
-      const params = queryKey[1] as { type: string; id: number };
-      return getAliases(params.type, params.id);
+      const params = queryKey[3] as { type: string; id: number };
+      return api.getAliases(params.type, params.id);
     },
   });
 

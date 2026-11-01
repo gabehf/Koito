@@ -11,26 +11,40 @@ export default function Account() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { user, setUsername: setCtxUsername } = useAppContext();
+  const {
+    user,
+    setUsername: setCtxUsername,
+    refreshAdminSession,
+  } = useAppContext();
 
   const logoutHandler = () => {
     setLoading(true);
     logout()
-      .then((r) => {
+      .then(async (r) => {
         if (r.ok) {
-          window.location.reload();
+          await refreshAdminSession();
         } else {
           r.json().then((r) => setError(r.error));
         }
       })
-      .catch((err) => setError(err));
-    setLoading(false);
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Request failed"),
+      )
+      .finally(() => setLoading(false));
   };
   const updateHandler = () => {
     setError("");
     setSuccess("");
-    if (password != "" && confirmPw === "") {
-      setError("confirm your new password before submitting");
+    if (!username && !password) {
+      setError("provide a username or a new password");
+      return;
+    }
+    if (password && password !== confirmPw) {
+      setError("password confirmation does not match");
+      return;
+    }
+    if (password && Array.from(password).length < 8) {
+      setError("password must be at least 8 characters long");
       return;
     }
     setError("");
@@ -50,8 +64,10 @@ export default function Account() {
           r.json().then((r) => setError(r.error));
         }
       })
-      .catch((err) => setError(err));
-    setLoading(false);
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Request failed"),
+      )
+      .finally(() => setLoading(false));
   };
 
   return (

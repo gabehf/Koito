@@ -24,6 +24,7 @@ type GetArtistOpts struct {
 }
 
 type GetTrackOpts struct {
+	AllowUnplayed bool // Used only for this profile's playing-now metadata.
 	ID            int32
 	MusicBrainzID uuid.UUID
 	Title         string
@@ -59,9 +60,10 @@ type SaveArtistOpts struct {
 }
 
 type UpdateApiKeyLabelOpts struct {
-	UserID int32
-	ID     int32
-	Label  string
+	ProfileID int32
+	UserID    int32
+	ID        int32
+	Label     string
 }
 
 type SaveUserOpts struct {
@@ -71,16 +73,18 @@ type SaveUserOpts struct {
 }
 
 type SaveApiKeyOpts struct {
-	Key    string
-	UserID int32
-	Label  string
+	Key       string
+	UserID    int32
+	ProfileID int32
+	Label     string
 }
 
 type SaveListenOpts struct {
-	TrackID int32
-	Time    time.Time
-	UserID  int32
-	Client  string
+	TrackID   int32
+	Time      time.Time
+	UserID    int32
+	ProfileID int32
+	Client    string
 }
 
 type UpdateTrackOpts struct {
@@ -155,6 +159,7 @@ type TimeListenedOpts struct {
 }
 
 type GetExportPageOpts struct {
+	ProfileID  int32
 	UserID     int32
 	ListenedAt time.Time
 	TrackID    int32

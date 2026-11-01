@@ -1,7 +1,8 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useState } from "react";
 import { Modal } from "./Modal";
 import { AsyncButton } from "../AsyncButton";
-import { submitListen } from "api/api";
+
 import { useNavigate } from "react-router";
 import SubHeader from "../primitives/SubHeader";
 
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export default function AddListenModal({ open, setOpen, trackid }: Props) {
+  const { api } = useProfile();
+
   const [ts, setTS] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,7 +26,7 @@ export default function AddListenModal({ open, setOpen, trackid }: Props) {
 
   const submit = () => {
     setLoading(true);
-    submitListen(trackid.toString(), ts).then((r) => {
+    api.submitListen(trackid.toString(), ts).then((r) => {
       if (r.ok) {
         setLoading(false);
         navigate(0);
@@ -37,7 +40,7 @@ export default function AddListenModal({ open, setOpen, trackid }: Props) {
   const formatForDatetimeLocal = (d: Date) => {
     const pad = (n: number) => n.toString().padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-      d.getDate()
+      d.getDate(),
     )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 

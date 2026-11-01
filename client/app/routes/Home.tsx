@@ -4,7 +4,7 @@ import LastPlayed from "~/components/LastPlayed";
 import ActivityGrid from "~/components/ActivityGrid";
 import TopArtistsCard from "~/components/TopArtistsCard";
 import AllTimeStats from "~/components/AllTimeStats";
-import { useState } from "react";
+import { useSearchParams } from "react-router";
 import PeriodSelector from "~/components/PeriodSelector";
 import { useAppContext } from "~/providers/AppProvider";
 import TopAlbumsCard from "~/components/TopAlbumsCard";
@@ -15,7 +15,19 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const [period, setPeriod] = useState("week");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedPeriod = searchParams.get("period");
+  const period = ["day", "week", "month", "year", "all_time"].includes(
+    selectedPeriod ?? "",
+  )
+    ? selectedPeriod!
+    : "week";
+  const setPeriod = (value: string) =>
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      next.set("period", value);
+      return next;
+    });
 
   const { homeItems } = useAppContext();
 
@@ -29,7 +41,11 @@ export default function Home() {
           <AllTimeStats />
           <ActivityGrid configurable />
         </div>
-        <PeriodSelector setter={setPeriod} current={period} />
+        <PeriodSelector
+          setter={setPeriod}
+          current={period}
+          disableCache={searchParams.has("period")}
+        />
         <div className="container justify-center flex flex-wrap gap-10">
           {/*<PinnedItemGrid />*/}
           <TopArtistsCard period={period} />

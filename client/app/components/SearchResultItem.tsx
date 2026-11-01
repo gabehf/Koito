@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import Image from "./primitives/Image";
 
 interface Props {

@@ -1,17 +1,20 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useState } from "react";
 import { AsyncButton } from "../AsyncButton";
-import { getExport } from "api/api";
+
 import SubHeader from "../primitives/SubHeader";
 
 export default function ExportModal() {
+  const { api } = useProfile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleExport = () => {
     setLoading(true);
-    fetch(`/apis/web/v1/export`, {
-      method: "GET",
-    })
+    api
+      .fetch(`/apis/web/v1/export`, {
+        method: "GET",
+      })
       .then((res) => {
         if (res.ok) {
           res.blob().then((blob) => {

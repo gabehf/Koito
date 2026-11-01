@@ -1,13 +1,10 @@
+import { useProfile } from "~/providers/ProfileProvider";
+import type { ProfileApi } from "api/api";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  apiFetch,
-  deleteListen,
-  type Listen,
-  type NowPlaying,
-  type PaginatedResponse,
-} from "api/api";
-import { Link } from "react-router";
+import { type Listen, type NowPlaying, type PaginatedResponse } from "api/api";
+
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import CardHeader from "./primitives/CardHeader";
 import ListensTable from "./ListensTable";
 
@@ -21,20 +18,26 @@ interface Props {
   showSeeMore?: boolean;
 }
 
-const getLastListens = (args: {
-  limit: number;
-  period: string;
-  artist_id?: number;
-  album_id?: number;
-  track_id?: number;
-  page: number;
-}) => apiFetch<PaginatedResponse<Listen>>("/apis/web/v1/listens", args);
+const getLastListens = (
+  api: ProfileApi,
+  args: {
+    limit: number;
+    period: string;
+    artist_id?: number;
+    album_id?: number;
+    track_id?: number;
+    page: number;
+  },
+) => api.apiFetch<PaginatedResponse<Listen>>("/apis/web/v1/listens", args);
 
-const getNowPlaying = () => apiFetch<NowPlaying>("/apis/web/v1/now-playing");
+const getNowPlaying = (api: ProfileApi) =>
+  api.apiFetch<NowPlaying>("/apis/web/v1/now-playing");
 
 const sizeClasses = "w-full max-w-[750px] lg:max-w-[1200px]";
 
 export default function LastPlays(props: Props) {
+  const { profile, api } = useProfile();
+
   const args = {
     limit: props.limit,
     period: "all_time",
@@ -44,12 +47,12 @@ export default function LastPlays(props: Props) {
     page: 0,
   };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["last-listens", args],
-    queryFn: () => getLastListens(args),
+    queryKey: ["profile", profile.id, "last-listens", args],
+    queryFn: () => getLastListens(api, args),
   });
   const { data: npData } = useQuery({
-    queryKey: ["now-playing"],
-    queryFn: () => getNowPlaying(),
+    queryKey: ["profile", profile.id, "now-playing"],
+    queryFn: () => getNowPlaying(api),
   });
 
   const header = "Last played";
@@ -59,7 +62,7 @@ export default function LastPlays(props: Props) {
   const handleDelete = async (listen: Listen) => {
     if (!data) return;
     try {
-      const res = await deleteListen(listen);
+      const res = await api.deleteListen(listen);
       if (res.ok || (res.status >= 200 && res.status < 300)) {
         setItems((prev) =>
           (prev ?? data.items).filter((i) => i.time !== listen.time),
@@ -108,8 +111,7 @@ export default function LastPlays(props: Props) {
   return (
     <div className={`text-[13px] sm:text-[15px] ${sizeClasses}`}>
       <CardHeader to={`/listens?period=all_time${params}`}>{header}</CardHeader>
-      {listens.length < 1 && "Nothing to show"}
-      {listens.length < 1 ? (
+      {listens.length < 1 && !showNP() ? (
         "Nothing to show"
       ) : (
         <ListensTable

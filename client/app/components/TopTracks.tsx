@@ -1,11 +1,8 @@
+import { useProfile } from "~/providers/ProfileProvider";
+import type { ProfileApi } from "api/api";
 import { useQuery } from "@tanstack/react-query";
-import {
-  apiFetch,
-  type PaginatedResponse,
-  type Ranked,
-  type Track,
-} from "api/api";
-import { Link } from "react-router";
+import { type PaginatedResponse, type Ranked, type Track } from "api/api";
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import TopItemList, { TopItemListSkeleton } from "./TopItemList";
 import CardHeader from "./primitives/CardHeader";
 
@@ -18,16 +15,23 @@ interface Props {
   albumId?: Number;
 }
 
-const getTopTracks = (args: {
-  limit: number;
-  period: string;
-  artist_id?: number;
-  album_id?: number;
-  page: number;
-}) =>
-  apiFetch<PaginatedResponse<Ranked<Track>>>("/apis/web/v1/top/tracks", args);
+const getTopTracks = (
+  api: ProfileApi,
+  args: {
+    limit: number;
+    period: string;
+    artist_id?: number;
+    album_id?: number;
+    page: number;
+  },
+) =>
+  api.apiFetch<PaginatedResponse<Ranked<Track>>>(
+    "/apis/web/v1/top/tracks",
+    args,
+  );
 
 const TopTracks = (props: Props) => {
+  const { profile, api } = useProfile();
   const args = {
     limit: props.limit,
     period: props.period,
@@ -36,8 +40,8 @@ const TopTracks = (props: Props) => {
     page: 0,
   };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top/tracks", args],
-    queryFn: () => getTopTracks(args),
+    queryKey: ["profile", profile.id, "top/tracks", args],
+    queryFn: () => getTopTracks(api, args),
   });
 
   const header = "Top tracks";

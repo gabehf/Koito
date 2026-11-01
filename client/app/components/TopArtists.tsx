@@ -1,11 +1,9 @@
+import { useProfile } from "~/providers/ProfileProvider";
+import type { ProfileApi } from "api/api";
 import { useQuery } from "@tanstack/react-query";
-import {
-  apiFetch,
-  type PaginatedResponse,
-  type Ranked,
-  type Artist,
-} from "api/api";
-import { Link } from "react-router";
+import { type PaginatedResponse, type Ranked, type Artist } from "api/api";
+
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import TopItemList from "./TopItemList";
 
 interface Props {
@@ -16,14 +14,22 @@ interface Props {
   albumId?: Number;
 }
 
-const getTopArtists = (args: { limit: number; period: string; page: number }) =>
-  apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top/artists", args);
+const getTopArtists = (
+  api: ProfileApi,
+  args: { limit: number; period: string; page: number },
+) =>
+  api.apiFetch<PaginatedResponse<Ranked<Artist>>>(
+    "/apis/web/v1/top/artists",
+    args,
+  );
 
 export default function TopArtists(props: Props) {
+  const { profile, api } = useProfile();
+
   const args = { limit: props.limit, period: props.period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top/artists", args],
-    queryFn: () => getTopArtists(args),
+    queryKey: ["profile", profile.id, "top/artists", args],
+    queryFn: () => getTopArtists(api, args),
   });
 
   const header = "Top artists";

@@ -18,7 +18,7 @@ import (
 func (s *Sqlite) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Album, error) {
 	if opts.MusicBrainzID != uuid.Nil {
 		var id int32
-		err := s.db.QueryRowContext(ctx,
+		err := s.queryRowContext(ctx,
 			`SELECT id FROM releases WHERE musicbrainz_id = ? LIMIT 1`, opts.MusicBrainzID.String()).Scan(&id)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("GetAlbum: by MbzID: %w", db.ErrNotFound)
@@ -29,7 +29,7 @@ func (s *Sqlite) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Al
 		opts.ID = id
 	} else if opts.ArtistID != 0 && opts.Title != "" {
 		var id int32
-		err := s.db.QueryRowContext(ctx, `
+		err := s.queryRowContext(ctx, `
 			SELECT r.id FROM releases_with_title r
 			JOIN artist_releases ar ON r.id = ar.release_id
 			WHERE r.title = ? AND ar.artist_id = ? LIMIT 1`,
@@ -56,10 +56,14 @@ func (s *Sqlite) GetAlbum(ctx context.Context, opts db.GetAlbumOpts) (*models.Al
 }
 
 func (s *Sqlite) getAlbumByID(ctx context.Context, id int32) (*models.Album, error) {
+	if err := s.requireRelated(ctx, "album", id); err != nil {
+		return nil, err
+	}
+
 	var ret models.Album
 	var mbzID, image, imageSrc sql.NullString
 	var variousArtists int
-	err := s.db.QueryRowContext(ctx, `
+	err := s.queryRowContext(ctx, `
 		SELECT id, musicbrainz_id, image, image_source, various_artists, title
 		FROM releases_with_title WHERE id = ? LIMIT 1`, id).
 		Scan(&ret.ID, &mbzID, &image, &imageSrc, &variousArtists, &ret.Title)
@@ -80,20 +84,20 @@ func (s *Sqlite) getAlbumByID(ctx context.Context, id int32) (*models.Album, err
 	ret.Artists = artists
 
 	var listenCount int64
-	s.db.QueryRowContext(ctx, `
+	s.queryRowContext(ctx, `
 		SELECT COUNT(*) FROM listens l JOIN tracks t ON l.track_id = t.id WHERE t.release_id = ?`,
 		id).Scan(&listenCount)
 	ret.ListenCount = listenCount
 
 	var timeListened int64
-	s.db.QueryRowContext(ctx, `
+	s.queryRowContext(ctx, `
 		SELECT COALESCE(SUM(t.duration), 0)
 		FROM listens l JOIN tracks t ON l.track_id = t.id WHERE t.release_id = ?`,
 		id).Scan(&timeListened)
 	ret.TimeListened = timeListened
 
 	var firstListenUnix int64
-	err = s.db.QueryRowContext(ctx, `
+	err = s.queryRowContext(ctx, `
 		SELECT l.listened_at FROM listens l JOIN tracks t ON l.track_id = t.id
 		WHERE t.release_id = ? ORDER BY l.listened_at ASC LIMIT 1`, id).Scan(&firstListenUnix)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -102,7 +106,7 @@ func (s *Sqlite) getAlbumByID(ctx context.Context, id int32) (*models.Album, err
 	ret.FirstListen = firstListenUnix
 
 	var rank int64
-	s.db.QueryRowContext(ctx, `
+	s.queryRowContext(ctx, `
 		SELECT rank FROM (
 			SELECT t.release_id,
 			       RANK() OVER (ORDER BY COUNT(*) DESC) AS rank
@@ -137,7 +141,7 @@ func (s *Sqlite) releaseByArtistAndTitles(ctx context.Context, artistID int32, t
 	args[len(titles)] = artistID
 
 	var id int32
-	err := s.db.QueryRowContext(ctx, query, args...).Scan(&id)
+	err := s.queryRowContext(ctx, query, args...).Scan(&id)
 	return id, err
 }
 
@@ -315,7 +319,11 @@ func (s *Sqlite) DeleteAlbumAlias(ctx context.Context, id int32, alias string) e
 }
 
 func (s *Sqlite) GetAllAlbumAliases(ctx context.Context, id int32) ([]models.Alias, error) {
-	rows, err := s.db.QueryContext(ctx,
+	if err := s.requireRelated(ctx, "album", id); err != nil {
+		return nil, err
+	}
+
+	rows, err := s.queryContext(ctx,
 		`SELECT alias, source, is_primary FROM release_aliases WHERE release_id = ?`, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetAllAlbumAliases: %w", err)
@@ -433,7 +441,7 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 			JOIN releases_with_title rwt ON rwt.id = r.release_id
 			ORDER BY r.rank, r.release_id`
 
-		rows, err = s.db.QueryContext(ctx, query, opts.ArtistID, t1.Unix(), t2.Unix(), opts.Limit, offset)
+		rows, err = s.queryContext(ctx, query, opts.ArtistID, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	} else {
 		query := `
 			WITH AlbumCounts AS (
@@ -456,7 +464,7 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 			JOIN releases_with_title rwt ON rwt.id = r.release_id
 			ORDER BY r.rank, r.release_id`
 
-		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
+		rows, err = s.queryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	}
 
 	if err != nil {
@@ -482,19 +490,22 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 		a.Image = catalog.BuildImageList(parseNullableUUID(image))
 		a.VariousArtists = variousArtists == 1
 
-		// Fetch artists for the release (Note: This is still an N+1 query.
-		// If performance allows in the future, consider batching this or using JSON_GROUP_ARRAY in SQL).
-		a.Artists, err = s.artistsForRelease(ctx, a.ID)
-		if err != nil {
-			return nil, err
-		}
-
 		item.Item = &a
 		albums = append(albums, item)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	for i := range albums {
+		albums[i].Item.Artists, err = s.artistsForRelease(ctx, albums[i].Item.ID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &db.PaginatedResponse[db.RankedItem[*models.Album]]{
@@ -507,7 +518,7 @@ func (s *Sqlite) GetTopAlbumsPaginated(ctx context.Context, opts db.GetItemsOpts
 }
 
 func (s *Sqlite) AlbumsWithoutImages(ctx context.Context, from int32) ([]*models.Album, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.queryContext(ctx, `
 		SELECT id, musicbrainz_id, image, image_source, various_artists, title
 		FROM releases_with_title
 		WHERE image IS NULL AND id > ?
@@ -599,7 +610,7 @@ func (s *Sqlite) MergeAlbums(ctx context.Context, fromId, toId int32, replaceIma
 func (s *Sqlite) CountAlbums(ctx context.Context, timeframe db.Timeframe) (int64, error) {
 	t1, t2 := db.TimeframeToTimeRange(timeframe)
 	var count int64
-	err := s.db.QueryRowContext(ctx, `
+	err := s.queryRowContext(ctx, `
 		SELECT COUNT(DISTINCT t.release_id)
 		FROM listens l JOIN tracks t ON l.track_id = t.id
 		WHERE l.listened_at BETWEEN ? AND ?`,
@@ -610,7 +621,7 @@ func (s *Sqlite) CountAlbums(ctx context.Context, timeframe db.Timeframe) (int64
 func (s *Sqlite) CountNewAlbums(ctx context.Context, timeframe db.Timeframe) (int64, error) {
 	t1, t2 := db.TimeframeToTimeRange(timeframe)
 	var count int64
-	err := s.db.QueryRowContext(ctx, `
+	err := s.queryRowContext(ctx, `
 		SELECT COUNT(*) FROM (
 			SELECT t.release_id FROM listens l JOIN tracks t ON l.track_id = t.id
 			GROUP BY t.release_id

@@ -18,7 +18,7 @@ import (
 func (s *Sqlite) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Track, error) {
 	if opts.MusicBrainzID != uuid.Nil {
 		var id int32
-		err := s.db.QueryRowContext(ctx,
+		err := s.queryRowContext(ctx,
 			`SELECT id FROM tracks WHERE musicbrainz_id = ? LIMIT 1`, opts.MusicBrainzID.String()).Scan(&id)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("GetTrack: by MbzID: %w", db.ErrNotFound)
@@ -38,13 +38,19 @@ func (s *Sqlite) GetTrack(ctx context.Context, opts db.GetTrackOpts) (*models.Tr
 		opts.ID = id
 	}
 
-	return s.getTrackByID(ctx, opts.ID)
+	return s.getTrackByID(ctx, opts.ID, opts.AllowUnplayed)
 }
 
-func (s *Sqlite) getTrackByID(ctx context.Context, id int32) (*models.Track, error) {
+func (s *Sqlite) getTrackByID(ctx context.Context, id int32, allowUnplayed bool) (*models.Track, error) {
+	if !allowUnplayed {
+		if err := s.requireRelated(ctx, "track", id); err != nil {
+			return nil, err
+		}
+	}
+
 	var track models.Track
 	var mbzID, image sql.NullString
-	err := s.db.QueryRowContext(ctx, `
+	err := s.queryRowContext(ctx, `
 		SELECT t.id, t.musicbrainz_id, t.duration, t.release_id, t.title, r.image
 		FROM tracks_with_title t
 		JOIN releases r ON t.release_id = r.id
@@ -66,17 +72,17 @@ func (s *Sqlite) getTrackByID(ctx context.Context, id int32) (*models.Track, err
 	track.Artists = artists
 
 	var listenCount int64
-	s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM listens WHERE track_id = ?`, id).Scan(&listenCount)
+	s.queryRowContext(ctx, `SELECT COUNT(*) FROM listens WHERE track_id = ?`, id).Scan(&listenCount)
 	track.ListenCount = listenCount
 
 	var timeListened int64
-	s.db.QueryRowContext(ctx, `
+	s.queryRowContext(ctx, `
 		SELECT COALESCE(SUM(t.duration), 0) FROM listens l JOIN tracks t ON l.track_id = t.id WHERE t.id = ?`,
 		id).Scan(&timeListened)
 	track.TimeListened = timeListened
 
 	var firstListenUnix int64
-	err = s.db.QueryRowContext(ctx,
+	err = s.queryRowContext(ctx,
 		`SELECT listened_at FROM listens WHERE track_id = ? ORDER BY listened_at ASC LIMIT 1`, id).
 		Scan(&firstListenUnix)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -85,7 +91,7 @@ func (s *Sqlite) getTrackByID(ctx context.Context, id int32) (*models.Track, err
 	track.FirstListen = firstListenUnix
 
 	var rank int64
-	s.db.QueryRowContext(ctx, `
+	s.queryRowContext(ctx, `
 		SELECT rank FROM (
 			SELECT track_id, RANK() OVER (ORDER BY COUNT(*) DESC) AS rank
 			FROM listens GROUP BY track_id
@@ -118,7 +124,7 @@ func (s *Sqlite) trackByTrackInfo(ctx context.Context, title string, releaseID i
 	args[2+len(artistIDs)] = len(artistIDs)
 
 	var id int32
-	return id, s.db.QueryRowContext(ctx, query, args...).Scan(&id)
+	return id, s.queryRowContext(ctx, query, args...).Scan(&id)
 }
 
 func (s *Sqlite) SaveTrack(ctx context.Context, opts db.SaveTrackOpts) (*models.Track, error) {
@@ -328,7 +334,11 @@ func (s *Sqlite) DeleteTrackAlias(ctx context.Context, id int32, alias string) e
 }
 
 func (s *Sqlite) GetAllTrackAliases(ctx context.Context, id int32) ([]models.Alias, error) {
-	rows, err := s.db.QueryContext(ctx,
+	if err := s.requireRelated(ctx, "track", id); err != nil {
+		return nil, err
+	}
+
+	rows, err := s.queryContext(ctx,
 		`SELECT alias, source, is_primary FROM track_aliases WHERE track_id = ?`, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetAllTrackAliases: %w", err)
@@ -398,7 +408,7 @@ func (s *Sqlite) SetPrimaryTrackAlias(ctx context.Context, id int32, alias strin
 }
 
 func (s *Sqlite) GetTracksWithNoDurationButHaveMbzID(ctx context.Context, from int32) ([]*models.Track, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.queryContext(ctx, `
 		SELECT id, musicbrainz_id, duration, release_id, title
 		FROM tracks_with_title
 		WHERE duration = 0 AND musicbrainz_id IS NOT NULL AND id > ?
@@ -455,7 +465,7 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 			JOIN releases rls ON twt.release_id = rls.id
 			ORDER BY r.rank, r.track_id`
 
-		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.AlbumID, opts.Limit, offset)
+		rows, err = s.queryContext(ctx, query, t1.Unix(), t2.Unix(), opts.AlbumID, opts.Limit, offset)
 
 	case opts.ArtistID > 0:
 		query := `
@@ -480,7 +490,7 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 			JOIN releases rls ON twt.release_id = rls.id
 			ORDER BY r.rank, r.track_id`
 
-		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.ArtistID, opts.Limit, offset)
+		rows, err = s.queryContext(ctx, query, t1.Unix(), t2.Unix(), opts.ArtistID, opts.Limit, offset)
 
 	default:
 		query := `
@@ -504,7 +514,7 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 			JOIN releases rls ON twt.release_id = rls.id
 			ORDER BY r.rank, r.track_id`
 
-		rows, err = s.db.QueryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
+		rows, err = s.queryContext(ctx, query, t1.Unix(), t2.Unix(), opts.Limit, offset)
 	}
 
 	if err != nil {
@@ -530,18 +540,22 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 		t.MbzID = parseNullableUUID(mbzID)
 		t.Image = catalog.BuildImageList(parseNullableUUID(image))
 
-		// N+1 Query (acceptable if volume is low, otherwise consider batching)
-		t.Artists, err = s.artistsForTrack(ctx, t.ID)
-		if err != nil {
-			return nil, err
-		}
-
 		item.Item = &t
 		tracks = append(tracks, item)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	for i := range tracks {
+		tracks[i].Item.Artists, err = s.artistsForTrack(ctx, tracks[i].Item.ID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &db.PaginatedResponse[db.RankedItem[*models.Track]]{
@@ -554,6 +568,9 @@ func (s *Sqlite) GetTopTracksPaginated(ctx context.Context, opts db.GetItemsOpts
 }
 
 func (s *Sqlite) MergeTracks(ctx context.Context, fromId, toId int32) error {
+	if fromId <= 0 || toId <= 0 || fromId == toId {
+		return fmt.Errorf("different valid track IDs required")
+	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("MergeTracks: BeginTx: %w", err)
@@ -569,6 +586,12 @@ func (s *Sqlite) MergeTracks(ctx context.Context, fromId, toId int32) error {
 	if _, err := tx.ExecContext(ctx,
 		`UPDATE OR IGNORE listens SET track_id = ? WHERE track_id = ?`, toId, fromId); err != nil {
 		return fmt.Errorf("MergeTracks: redirect listens: %w", err)
+	}
+
+	// Remaining conflicts are duplicates only inside the same profile.
+	if _, err := tx.ExecContext(ctx, `DELETE FROM listens WHERE track_id=? AND EXISTS
+   (SELECT 1 FROM listens target WHERE target.track_id=? AND target.profile_id=listens.profile_id AND target.listened_at=listens.listened_at)`, fromId, toId); err != nil {
+		return err
 	}
 
 	if fromRelease != toRelease {
@@ -603,7 +626,7 @@ func (s *Sqlite) MergeTracks(ctx context.Context, fromId, toId int32) error {
 func (s *Sqlite) CountTracks(ctx context.Context, timeframe db.Timeframe) (int64, error) {
 	t1, t2 := db.TimeframeToTimeRange(timeframe)
 	var count int64
-	err := s.db.QueryRowContext(ctx,
+	err := s.queryRowContext(ctx,
 		`SELECT COUNT(DISTINCT track_id) FROM listens WHERE listened_at BETWEEN ? AND ?`,
 		t1.Unix(), t2.Unix()).Scan(&count)
 	return count, err
@@ -612,7 +635,7 @@ func (s *Sqlite) CountTracks(ctx context.Context, timeframe db.Timeframe) (int64
 func (s *Sqlite) CountNewTracks(ctx context.Context, timeframe db.Timeframe) (int64, error) {
 	t1, t2 := db.TimeframeToTimeRange(timeframe)
 	var count int64
-	err := s.db.QueryRowContext(ctx, `
+	err := s.queryRowContext(ctx, `
 		SELECT COUNT(*) FROM (
 			SELECT track_id FROM listens
 			GROUP BY track_id
@@ -623,14 +646,15 @@ func (s *Sqlite) CountNewTracks(ctx context.Context, timeframe db.Timeframe) (in
 }
 
 func (s *Sqlite) SearchTracks(ctx context.Context, q string) ([]*models.Track, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.queryContext(ctx, `
 		SELECT DISTINCT t.id, t.title, t.musicbrainz_id, t.release_id, r.image
 		FROM track_aliases ta
 		JOIN tracks_with_title t ON ta.track_id = t.id
 		JOIN releases r ON t.release_id = r.id
-		WHERE ta.alias LIKE ? OR ta.alias LIKE ?
+		WHERE (ta.alias LIKE ? OR ta.alias LIKE ?)
+        AND (? = 0 OR EXISTS (SELECT 1 FROM listens l WHERE l.track_id=t.id))
 		LIMIT 50`,
-		q+"%", "%"+q+"%",
+		q+"%", "%"+q+"%", db.ProfileID(ctx),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("SearchTracks: %w", err)

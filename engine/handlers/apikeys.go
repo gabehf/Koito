@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gabehf/koito/engine/middleware"
@@ -9,7 +10,10 @@ import (
 	"github.com/gabehf/koito/internal/utils"
 )
 
-func GenerateApiKeyHandler(store db.UserStore) http.HandlerFunc {
+func GenerateApiKeyHandler(store interface {
+	db.UserStore
+	db.ProfileStore
+}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -38,9 +42,9 @@ func GenerateApiKeyHandler(store db.UserStore) http.HandlerFunc {
 		}
 
 		key, err := store.SaveApiKey(ctx, db.SaveApiKeyOpts{
-			UserID: user.ID,
-			Key:    apiKey,
-			Label:  body.Label,
+			ProfileID: db.ProfileID(ctx),
+			Key:       apiKey,
+			Label:     body.Label,
 		})
 		if err != nil {
 			l.Error().Err(err).Msg("GenerateApiKeyHandler: Failed to save API key")
@@ -53,7 +57,10 @@ func GenerateApiKeyHandler(store db.UserStore) http.HandlerFunc {
 	}
 }
 
-func DeleteApiKeyHandler(store db.UserStore) http.HandlerFunc {
+func DeleteApiKeyHandler(store interface {
+	db.UserStore
+	db.ProfileStore
+}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -72,7 +79,11 @@ func DeleteApiKeyHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		if err := store.DeleteApiKey(ctx, apiKeyID); err != nil {
+		if err := store.DeleteProfileApiKey(ctx, apiKeyID, db.ProfileID(ctx)); err != nil {
+			if errors.Is(err, db.ErrNotFound) {
+				utils.WriteError(w, "key not found in profile", 404)
+				return
+			}
 			l.Error().Err(err).Msg("DeleteApiKeyHandler: Failed to delete API key")
 			utils.WriteError(w, "failed to delete api key", http.StatusInternalServerError)
 			return
@@ -83,7 +94,10 @@ func DeleteApiKeyHandler(store db.UserStore) http.HandlerFunc {
 	}
 }
 
-func GetApiKeysHandler(store db.UserStore) http.HandlerFunc {
+func GetApiKeysHandler(store interface {
+	db.UserStore
+	db.ProfileStore
+}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -95,7 +109,7 @@ func GetApiKeysHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		apiKeys, err := store.GetApiKeysByUserID(ctx, user.ID)
+		apiKeys, err := store.GetApiKeysByProfileID(ctx, db.ProfileID(ctx))
 		if err != nil {
 			l.Error().Err(err).Msg("GetApiKeysHandler: Failed to retrieve API keys")
 			utils.WriteError(w, "failed to retrieve api keys", http.StatusInternalServerError)
@@ -107,7 +121,10 @@ func GetApiKeysHandler(store db.UserStore) http.HandlerFunc {
 	}
 }
 
-func UpdateApiKeyLabelHandler(store db.UserStore) http.HandlerFunc {
+func UpdateApiKeyLabelHandler(store interface {
+	db.UserStore
+	db.ProfileStore
+}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		l := logger.FromContext(ctx)
@@ -135,11 +152,11 @@ func UpdateApiKeyLabelHandler(store db.UserStore) http.HandlerFunc {
 			return
 		}
 
-		if err := store.UpdateApiKeyLabel(ctx, db.UpdateApiKeyLabelOpts{
-			UserID: user.ID,
-			ID:     apiKeyID,
-			Label:  body.Label,
-		}); err != nil {
+		if err := store.UpdateProfileApiKeyLabel(ctx, apiKeyID, db.ProfileID(ctx), body.Label); err != nil {
+			if errors.Is(err, db.ErrNotFound) {
+				utils.WriteError(w, "key not found in profile", 404)
+				return
+			}
 			l.Error().Err(err).Msg("UpdateApiKeyLabelHandler: Failed to update API key label")
 			utils.WriteError(w, "failed to update api key label", http.StatusInternalServerError)
 			return

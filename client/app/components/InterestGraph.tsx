@@ -1,5 +1,7 @@
+import { useProfile } from "~/providers/ProfileProvider";
+import type { ProfileApi } from "api/api";
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch, type InterestBucket } from "api/api";
+import { type InterestBucket } from "api/api";
 import { useTheme } from "~/hooks/useTheme";
 import { Area, AreaChart } from "recharts";
 import CardHeader from "./primitives/CardHeader";
@@ -10,21 +12,26 @@ interface Props {
   id: number;
 }
 
-const getInterest = (args: { buckets: number; type: string; id: number }) =>
-  apiFetch<InterestBucket[]>(
+const getInterest = (
+  api: ProfileApi,
+  args: { buckets: number; type: string; id: number },
+) =>
+  api.apiFetch<InterestBucket[]>(
     `/apis/web/v1/${args.type.toLowerCase()}/${args.id}/interest`,
     args,
   );
 
 export default function InterestGraph({ buckets = 16, type, id }: Props) {
+  const { profile, api } = useProfile();
+
   const args = {
     buckets,
     type: type,
     id: id,
   };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["interest", args],
-    queryFn: () => getInterest(args),
+    queryKey: ["profile", profile.id, "interest", args],
+    queryFn: () => getInterest(api, args),
   });
 
   const { theme } = useTheme();

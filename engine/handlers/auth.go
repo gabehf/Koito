@@ -7,6 +7,7 @@ import (
 	"github.com/gabehf/koito/engine/middleware"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
+	"github.com/gabehf/koito/internal/models"
 	"github.com/gabehf/koito/internal/utils"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -36,7 +37,7 @@ func LoginHandler(store db.UserStore) http.HandlerFunc {
 			utils.WriteError(w, "authentication failed", http.StatusInternalServerError)
 			return
 		}
-		if user == nil {
+		if user == nil || user.Role != models.UserRoleAdmin {
 			l.Debug().Msg("LoginHandler: User not found")
 			utils.WriteError(w, "invalid credentials", http.StatusUnauthorized)
 			return
@@ -66,7 +67,8 @@ func LoginHandler(store db.UserStore) http.HandlerFunc {
 			Expires:  expiresAt,
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   false,
+			Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
+			SameSite: http.SameSiteStrictMode,
 		})
 
 		l.Debug().Msgf("LoginHandler: User %d authenticated", user.ID)

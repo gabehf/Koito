@@ -1,29 +1,35 @@
-import {
-  apiFetch,
-  type PaginatedResponse,
-  type Ranked,
-  type Artist,
-} from "api/api";
+import { useProfile } from "~/providers/ProfileProvider";
+import type { ProfileApi } from "api/api";
+import { type PaginatedResponse, type Ranked, type Artist } from "api/api";
 import { useQuery } from "@tanstack/react-query";
 import CardHeader from "./primitives/CardHeader";
 import MediaItem from "./primitives/MediaItem";
-import { Link } from "react-router";
+
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import { TopCardSkeleton } from "./skeletons/TopCardSkeleton";
 
 interface Props {
   period: string;
 }
 
-const getTopArtists = (args: { limit: number; period: string; page: number }) =>
-  apiFetch<PaginatedResponse<Ranked<Artist>>>("/apis/web/v1/top/artists", args);
+const getTopArtists = (
+  api: ProfileApi,
+  args: { limit: number; period: string; page: number },
+) =>
+  api.apiFetch<PaginatedResponse<Ranked<Artist>>>(
+    "/apis/web/v1/top/artists",
+    args,
+  );
 
 export default function TopArtistsCard({ period }: Props) {
+  const { profile, api } = useProfile();
+
   const numItems = 5;
 
   const args = { limit: numItems, period: period, page: 0 };
   const { isPending, isError, data, error } = useQuery({
-    queryKey: ["top/artists", args],
-    queryFn: () => getTopArtists(args),
+    queryKey: ["profile", profile.id, "top/artists", args],
+    queryFn: () => getTopArtists(api, args),
   });
 
   const header = "Top artists";

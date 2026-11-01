@@ -10,6 +10,7 @@ import (
 
 	"github.com/gabehf/koito/internal/catalog"
 	"github.com/gabehf/koito/internal/cfg"
+	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	mbz "github.com/gabehf/koito/internal/mbz"
 )
@@ -24,6 +25,9 @@ type SpotifyExportItem struct {
 }
 
 func ImportSpotifyFile(ctx context.Context, store importStore, mbzc mbz.MusicBrainzCaller, filename string) error {
+	if db.ProfileID(ctx) <= 0 {
+		return fmt.Errorf("explicit import profile required")
+	}
 	l := logger.FromContext(ctx)
 	l.Info().Msgf("Beginning spotify import on file: %s", filename)
 	file, err := os.Open(path.Join(cfg.ConfigDir(), "import", filename))
@@ -65,7 +69,7 @@ func ImportSpotifyFile(ctx context.Context, store importStore, mbzc mbz.MusicBra
 			Duration:       dur / 1000,
 			Time:           item.Timestamp,
 			Client:         "spotify",
-			UserID:         1,
+			ProfileID:      db.ProfileID(ctx),
 			SkipCacheImage: !cfg.FetchImagesDuringImport(),
 		}
 		err = catalog.SubmitListen(ctx, store, opts)

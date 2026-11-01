@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import Image from "./Image";
-import { Link } from "react-router";
+
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import type { ImageList } from "api/api";
 
 interface Props {

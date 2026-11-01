@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
-import { replaceImage, search, type SearchResponse } from "api/api";
+import { replaceImage, type SearchResponse } from "api/api";
 import SearchResults from "./SearchModal/SearchResults";
 import { AsyncButton } from "../AsyncButton";
 import SubHeader from "../primitives/SubHeader";
@@ -80,7 +80,7 @@ export default function ImageReplaceModal({
               disabled={loading}
               onClick={() =>
                 doImageReplace(
-                  `https://coverartarchive.org/release/${musicbrainzId}/front`
+                  `https://coverartarchive.org/release/${musicbrainzId}/front`,
                 )
               }
             >

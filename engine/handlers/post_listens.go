@@ -47,10 +47,10 @@ func SubmitListenWithIDHandler(store db.ListenStore) http.HandlerFunc {
 		}
 
 		if err = store.SaveListen(ctx, db.SaveListenOpts{
-			TrackID: body.TrackID,
-			Time:    time.Unix(body.Unix, 0),
-			UserID:  u.ID,
-			Client:  client,
+			TrackID:   body.TrackID,
+			Time:      time.Unix(body.Unix, 0),
+			ProfileID: db.ProfileID(ctx),
+			Client:    client,
 		}); err != nil {
 			l.Err(err).Msg("SubmitListenWithIDHandler: Failed to submit listen")
 			utils.WriteError(w, "failed to submit listen", http.StatusInternalServerError)

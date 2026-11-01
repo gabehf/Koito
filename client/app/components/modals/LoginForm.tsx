@@ -1,30 +1,34 @@
 import { login } from "api/api";
-import { useEffect, useState } from "react";
-import { AsyncButton } from "../AsyncButton";
+import { useState } from "react";
+import { useAppContext } from "~/providers/AppProvider";
 import SubHeader from "../primitives/SubHeader";
 
 export default function LoginForm() {
+  const { refreshAdminSession } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
 
-  const loginHandler = () => {
-    if (username && password) {
-      setLoading(true);
-      login(username, password, remember)
-        .then((r) => {
-          if (r.status >= 200 && r.status < 300) {
-            window.location.reload();
-          } else {
-            r.json().then((r) => setError(r.error));
-          }
-        })
-        .catch((err) => setError(err));
-      setLoading(false);
-    } else if (username || password) {
+  const loginHandler = async () => {
+    if (!username || !password) {
       setError("username and password are required");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await login(username, password, remember);
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Login failed");
+      }
+      await refreshAdminSession();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,7 +43,10 @@ export default function LoginForm() {
         <form
           action="#"
           className="flex flex-col items-center gap-4 w-3/4"
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void loginHandler();
+          }}
         >
           <input
             name="koito-username"
@@ -62,11 +69,15 @@ export default function LoginForm() {
               id="koito-remember"
               onChange={() => setRemember(!remember)}
             />
-            <label htmlFor="kotio-remember">Remember me</label>
+            <label htmlFor="koito-remember">Remember me</label>
           </div>
-          <AsyncButton loading={loading} onClick={loginHandler}>
-            Login
-          </AsyncButton>
+          <button
+            type="submit"
+            className="large-button disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? "Logging in…" : "Login"}
+          </button>
         </form>
         <p className="error">{error}</p>
       </div>

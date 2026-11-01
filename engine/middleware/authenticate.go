@@ -4,86 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
-
-	"github.com/gabehf/koito/internal/cfg"
 	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/logger"
 	"github.com/gabehf/koito/internal/models"
-	"github.com/gabehf/koito/internal/utils"
 	"github.com/google/uuid"
+	"net/http"
+	"time"
 )
 
 type MiddlwareContextKey string
 
-const (
-	UserContextKey   MiddlwareContextKey = "user"
-	apikeyContextKey MiddlwareContextKey = "apikeyID"
-)
-
-type AuthMode int
-
-const (
-	AuthModeSessionCookie AuthMode = iota
-	AuthModeAPIKey
-	AuthModeSessionOrAPIKey
-	AuthModeLoginGate
-)
-
-func Authenticate(store db.UserStore, mode AuthMode) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			l := logger.FromContext(ctx)
-
-			var user *models.User
-			var err error
-
-			switch mode {
-			case AuthModeSessionCookie:
-				user, err = validateSession(ctx, store, r)
-
-			case AuthModeAPIKey:
-				user, err = validateAPIKey(ctx, store, r)
-
-			case AuthModeSessionOrAPIKey:
-				user, err = validateSession(ctx, store, r)
-				if err != nil || user == nil {
-					user, err = validateAPIKey(ctx, store, r)
-				}
-
-			case AuthModeLoginGate:
-				if cfg.LoginGate() {
-					user, err = validateSession(ctx, store, r)
-					if err != nil || user == nil {
-						user, err = validateAPIKey(ctx, store, r)
-					}
-				} else {
-					next.ServeHTTP(w, r)
-					return
-				}
-			}
-
-			if err != nil {
-				l.Err(err).Msg("authentication failed")
-				utils.WriteError(w, "unauthorized", http.StatusUnauthorized)
-				return
-			}
-
-			if user == nil {
-				utils.WriteError(w, "unauthorized", http.StatusUnauthorized)
-				return
-			}
-
-			ctx = context.WithValue(ctx, UserContextKey, user)
-			r = r.WithContext(ctx)
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
+const UserContextKey MiddlwareContextKey = "user"
 
 func validateSession(ctx context.Context, store db.UserStore, r *http.Request) (*models.User, error) {
 	l := logger.FromContext(r.Context())
@@ -123,40 +54,6 @@ func validateSession(ctx context.Context, store db.UserStore, r *http.Request) (
 	store.RefreshSession(r.Context(), sid, time.Now().Add(30*24*time.Hour))
 
 	l.Debug().Msgf("ValidateSession: Refreshed session for user '%s'", u.Username)
-
-	return u, nil
-}
-
-func validateAPIKey(ctx context.Context, store db.UserStore, r *http.Request) (*models.User, error) {
-	l := logger.FromContext(ctx)
-
-	l.Debug().Msg("ValidateApiKey: Checking if user is already authenticated")
-
-	authH := r.Header.Get("Authorization")
-	if authH == "" {
-		return nil, nil // no header present, not an error
-	}
-
-	var token string
-	if strings.HasPrefix(strings.ToLower(authH), "token ") {
-		token = strings.TrimSpace(authH[6:]) // strip "Token "
-	} else {
-		l.Error().Msg("ValidateApiKey: Authorization header must be formatted 'Token {token}'")
-		return nil, errors.New("authorization header is invalid")
-	}
-
-	u, err := store.GetUserByApiKey(ctx, token)
-	if err != nil {
-		l.Err(err).Msg("ValidateApiKey: Failed to get user from database using api key")
-		return nil, errors.New("internal server error")
-	}
-	if u == nil {
-		l.Debug().Msg("ValidateApiKey: API key does not exist")
-		return nil, errors.New("authorization token is invalid")
-	}
-
-	ctx = context.WithValue(r.Context(), UserContextKey, u)
-	r = r.WithContext(ctx)
 
 	return u, nil
 }

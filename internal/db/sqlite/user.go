@@ -161,10 +161,14 @@ func (s *Sqlite) UpdateUser(ctx context.Context, opts db.UpdateUserOpts) error {
 }
 
 func (s *Sqlite) SaveApiKey(ctx context.Context, opts db.SaveApiKeyOpts) (*models.ApiKey, error) {
+	profileID, err := s.resolveWriteProfile(ctx, opts.ProfileID, opts.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("SaveApiKey: %w", err)
+	}
 	now := time.Now().Unix()
 	res, err := s.db.ExecContext(ctx,
-		`INSERT INTO api_keys (key, user_id, created_at, label) VALUES (?,?,?,?)`,
-		opts.Key, opts.UserID, now, opts.Label,
+		`INSERT INTO api_keys (key, user_id, profile_id, created_at, label) VALUES (?,?,?,?,?)`,
+		opts.Key, nullableLegacyUserID(opts.UserID), profileID, now, opts.Label,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("SaveApiKey: %w", err)
@@ -174,6 +178,7 @@ func (s *Sqlite) SaveApiKey(ctx context.Context, opts db.SaveApiKeyOpts) (*model
 		ID:        int32(id64),
 		Key:       opts.Key,
 		UserID:    opts.UserID,
+		ProfileID: profileID,
 		Label:     opts.Label,
 		CreatedAt: time.Unix(now, 0).UTC(),
 	}, nil
@@ -181,7 +186,7 @@ func (s *Sqlite) SaveApiKey(ctx context.Context, opts db.SaveApiKeyOpts) (*model
 
 func (s *Sqlite) GetApiKeysByUserID(ctx context.Context, id int32) ([]models.ApiKey, error) {
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, key, user_id, label, created_at FROM api_keys WHERE user_id = ?`, id)
+		`SELECT id, key, user_id, profile_id, label, created_at FROM api_keys WHERE user_id = ?`, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetApiKeysByUserID: %w", err)
 	}
@@ -190,7 +195,7 @@ func (s *Sqlite) GetApiKeysByUserID(ctx context.Context, id int32) ([]models.Api
 	for rows.Next() {
 		var k models.ApiKey
 		var createdAt int64
-		if err := rows.Scan(&k.ID, &k.Key, &k.UserID, &k.Label, &createdAt); err != nil {
+		if err := rows.Scan(&k.ID, &k.Key, &k.UserID, &k.ProfileID, &k.Label, &createdAt); err != nil {
 			return nil, err
 		}
 		k.CreatedAt = time.Unix(createdAt, 0).UTC()

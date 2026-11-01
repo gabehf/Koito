@@ -1,3 +1,4 @@
+import { useOptionalProfile } from "~/providers/ProfileProvider";
 import { useEffect } from "react";
 
 interface Props {
@@ -11,6 +12,13 @@ export default function PeriodSelector({
   current,
   disableCache = false,
 }: Props) {
+  const profile = useOptionalProfile()?.profile;
+  const storageScope = `${profile?.id ?? "global"}:${
+    window.location.pathname
+      .split("/")
+      .slice(profile ? 2 : 1)
+      .join("/") || "home"
+  }`;
   const periods = ["day", "week", "month", "year", "all_time"];
 
   const periodDisplay = (str: string) => {
@@ -18,25 +26,20 @@ export default function PeriodSelector({
       w
         .split("")
         .map((char, index) => (index === 0 ? char.toUpperCase() : char))
-        .join("")
+        .join(""),
     )[0];
   };
 
   const setPeriod = (val: string) => {
     setter(val);
     if (!disableCache) {
-      localStorage.setItem(
-        "period_selection_" + window.location.pathname.split("/")[1],
-        val
-      );
+      localStorage.setItem("period_selection_" + storageScope, val);
     }
   };
 
   useEffect(() => {
     if (!disableCache) {
-      const cached = localStorage.getItem(
-        "period_selection_" + window.location.pathname.split("/")[1]
-      );
+      const cached = localStorage.getItem("period_selection_" + storageScope);
       if (cached) {
         setter(cached);
       }

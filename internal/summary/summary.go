@@ -33,7 +33,10 @@ type summaryStore interface {
 }
 
 func GenerateSummary(ctx context.Context, store summaryStore, userId int32, timeframe db.Timeframe, title string) (summary *Summary, err error) {
-	// l := logger.FromContext(ctx)
+	if userId <= 0 {
+		return nil, fmt.Errorf("profile required")
+	}
+	ctx = db.WithProfile(ctx, userId)
 
 	summary = new(Summary)
 

@@ -7,7 +7,8 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",
@@ -35,6 +36,7 @@
     "@types/node": "^25.6.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/semver": "^7.8.0",
     "@vanilla-extract/vite-plugin": "^5.2.2",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",

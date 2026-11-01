@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/gabehf/koito/internal/catalog"
+	"github.com/gabehf/koito/internal/db"
 	"github.com/gabehf/koito/internal/models"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
@@ -38,14 +39,15 @@ func sliceTopN[T any](candidates []T, scoreOf func(T) float64, n int) []T {
 }
 
 func (s *Sqlite) SearchArtists(ctx context.Context, q string) ([]*models.Artist, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.queryContext(ctx, `
 		SELECT DISTINCT a.id, awn.name, a.musicbrainz_id, a.image
 		FROM artist_aliases aa
 		JOIN artists_with_name awn ON aa.artist_id = awn.id
 		JOIN artists a ON a.id = awn.id
-		WHERE aa.alias LIKE ? OR aa.alias LIKE ?
+		WHERE (aa.alias LIKE ? OR aa.alias LIKE ?)
+        AND (? = 0 OR EXISTS (SELECT 1 FROM listens l WHERE EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.track_id=l.track_id AND at2.artist_id=a.id)))
 		LIMIT 50`,
-		q+"%", "%"+q+"%",
+		q+"%", "%"+q+"%", db.ProfileID(ctx),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("SearchArtists: %w", err)
@@ -86,13 +88,14 @@ func (s *Sqlite) SearchArtists(ctx context.Context, q string) ([]*models.Artist,
 }
 
 func (s *Sqlite) SearchAlbums(ctx context.Context, q string) ([]*models.Album, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.queryContext(ctx, `
 		SELECT DISTINCT r.id, r.title, r.musicbrainz_id, r.image, r.various_artists
 		FROM release_aliases ra
 		JOIN releases_with_title r ON ra.release_id = r.id
-		WHERE ra.alias LIKE ? OR ra.alias LIKE ?
+		WHERE (ra.alias LIKE ? OR ra.alias LIKE ?)
+        AND (? = 0 OR EXISTS (SELECT 1 FROM listens l WHERE EXISTS (SELECT 1 FROM tracks t WHERE t.id=l.track_id AND t.release_id=r.id)))
 		LIMIT 50`,
-		q+"%", "%"+q+"%",
+		q+"%", "%"+q+"%", db.ProfileID(ctx),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("SearchAlbums: %w", err)

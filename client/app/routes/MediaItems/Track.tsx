@@ -1,4 +1,6 @@
-import { Link, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { createProfileApi } from "api/api";
+import { useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { ProfileLink as Link } from "~/components/ProfileLink";
 import { mergeTracks, type Album, type Artist, type Track } from "api/api";
 import LastPlayed from "~/components/LastPlayed";
 import MediaLayout from "./MediaLayout";
@@ -6,13 +8,14 @@ import ActivityGrid from "~/components/ActivityGrid";
 import { timeListenedString } from "~/utils/utils";
 import InterestGraph from "~/components/InterestGraph";
 
-export async function clientLoader({ params }: LoaderFunctionArgs) {
-  let res = await fetch(`/apis/web/v1/track/${params.id}`);
+export async function clientLoader({ params, request }: LoaderFunctionArgs) {
+  const api = createProfileApi(params.slug!, () => request.signal);
+  let res = await api.fetch(`/apis/web/v1/track/${params.id}`);
   if (!res.ok) {
     throw new Response("Failed to load track", { status: res.status });
   }
   const track: Track = await res.json();
-  res = await fetch(`/apis/web/v1/album/${track.album_id}`);
+  res = await api.fetch(`/apis/web/v1/album/${track.album_id}`);
   if (!res.ok) {
     throw new Response("Failed to load album for track", {
       status: res.status,

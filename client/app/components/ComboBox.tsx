@@ -1,5 +1,6 @@
+import { useProfile } from "~/providers/ProfileProvider";
 import { useDeferredValue, useEffect, useState } from "react";
-import { search, type SearchResponse } from "api/api";
+import { type SearchResponse } from "api/api";
 import { useCombobox } from "downshift";
 
 interface Props {
@@ -8,18 +9,34 @@ interface Props {
 }
 
 export default function ComboBox({ onSelection, filterFunction }: Props) {
+  const { api } = useProfile();
+
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
+    let current = true;
     if (deferredQuery) {
-      search(deferredQuery).then((r) => {
-        const filtered = filterFunction(r);
-        setData([...filtered.artists, ...filtered.albums, ...filtered.tracks]);
-      });
+      api
+        .search(deferredQuery)
+        .then((r) => {
+          if (!current) return;
+          const filtered = filterFunction(r);
+          setData([
+            ...filtered.artists,
+            ...filtered.albums,
+            ...filtered.tracks,
+          ]);
+        })
+        .catch(() => {
+          if (current) setData([]);
+        });
     }
-  }, [deferredQuery]);
+    return () => {
+      current = false;
+    };
+  }, [deferredQuery, api]);
 
   const { isOpen, getMenuProps, getInputProps, getItemProps, selectedItem } =
     useCombobox({

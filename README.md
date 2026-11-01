@@ -28,6 +28,10 @@ It supports relaying to other compatible scrobblers, so you can try it safely wi
 - 🔌 Easy relay to your existing setup
 - 📂 Import support for Maloja, ListenBrainz, LastFM, and Spotify
 
+## Listening profiles
+
+Share one instance using public listening profiles, per-profile player keys and a single administrator. See the [profile and upgrade guide](docs/src/content/docs/guides/profiles.md) and [player/relay setup](docs/src/content/docs/guides/scrobbler.md). Back up your SQLite database before upgrading.
+
 ## Demo
 
 You can view my public instance with my listening data at https://koito.mnrva.dev
