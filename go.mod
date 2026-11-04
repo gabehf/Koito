@@ -17,7 +17,7 @@ require (
 require (
 	github.com/go-chi/httprate v0.15.0
 	github.com/lithammer/fuzzysearch v1.1.8
-	github.com/xuri/excelize/v2 v2.11.1
+	github.com/xuri/excelize/v2 v2.10.1
 	golang.org/x/crypto v0.58.0
 	golang.org/x/image v0.44.0
 	modernc.org/sqlite v1.49.1
