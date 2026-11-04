@@ -252,6 +252,31 @@ func TestImportListenBrainz_MBIDMapping(t *testing.T) {
 	assert.Equal(t, "Zombie", track.Title)
 }
 
+func TestImportDeezer(t *testing.T) {
+	store := newTestDB()
+
+	src := path.Join("..", "test_assets", "deezer_import_test.xlsx")
+	destDir := filepath.Join(cfg.ConfigDir(), "import")
+	dest := filepath.Join(destDir, "deezer_import_test.xlsx")
+
+	input, err := os.ReadFile(src)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(dest, input, os.ModePerm))
+
+	engine.RunImporter(logger.Get(), store, &mbz.MbzErrorCaller{})
+
+	// Verify the test artist was created
+	artist, err := store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Olivia Rodrigo"})
+	require.NoError(t, err)
+	assert.Equal(t, "Olivia Rodrigo", artist.Name)
+
+	// Verify at least 2 listens were imported (Vampire and Good 4 U)
+	// (Deezer test "Deezer Test" has 0 duration but should still be imported)
+	count, err := store.CountListens(context.Background(), db.Timeframe{Period: db.PeriodAllTime})
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, count, int64(2))
+}
+
 func TestImportKoito(t *testing.T) {
 	store := newTestDB()
 

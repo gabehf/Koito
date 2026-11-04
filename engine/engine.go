@@ -322,6 +322,12 @@ func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
 			if err != nil {
 				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
+		} else if strings.Contains(file.Name(), "deezer") {
+			l.Info().Msgf("Importer: Import file %s detecting as being Deezer export", file.Name())
+			err := importer.ImportDeezerFile(logger.NewContext(l), store, mbzc, file.Name())
+			if err != nil {
+				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
+			}
 		} else {
 			l.Warn().Msgf("Importer: File %s not recognized as a valid import file; make sure it is valid and named correctly", file.Name())
 		}
