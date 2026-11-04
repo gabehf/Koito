@@ -26,7 +26,7 @@ It supports relaying to other compatible scrobblers, so you can try it safely wi
 - 🖌️ Sleek UI
 - 🔁 Compatible with anything that scrobbles to ListenBrainz
 - 🔌 Easy relay to your existing setup
-- 📂 Import support for Maloja, ListenBrainz, LastFM, and Spotify
+- 📂 Import support for Maloja, ListenBrainz, LastFM, Spotify and Deezer
 
 ## Demo
 
