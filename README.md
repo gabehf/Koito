@@ -26,7 +26,7 @@ It supports relaying to other compatible scrobblers, so you can try it safely wi
 - 🖌️ Sleek UI
 - 🔁 Compatible with anything that scrobbles to ListenBrainz
 - 🔌 Easy relay to your existing setup
-- 📂 Import support for Maloja, ListenBrainz, LastFM, and Spotify
+- 📂 Import support for Apple Music, Maloja, ListenBrainz, LastFM, and Spotify
 
 ## Demo
 
@@ -59,6 +59,17 @@ services:
 See the [data importing guide](https://koito.io/guides/importing/) in the docs.
 
 Before importing, it is recommended you set up any image sources you want to have enabled. You can view the configuration options for image sources in the full list of configuration options.
+
+### Apple Music Import
+
+Apple Music import requires two files from your Apple Media Services export:
+
+1. **Apple Music Play Activity.csv** — Your per-play listening history with timestamps
+2. **Apple Music Library Tracks.json** — Your library metadata for artist/album lookup
+
+These files can be obtained from your Apple Data Request (export.appleid.apple.com). Download the full export, unzip it, and extract the relevant files from the `Apple Music Activity/` directory.
+
+Place both files in the Koito `import/` directory (mounted at `/etc/koito/import` in Docker). The importer will automatically detect them and use the library JSON to resolve artist and album names for the play activity data.
 
 ## Full list of configuration options
 
