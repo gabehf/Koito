@@ -72,6 +72,10 @@ func (m *MbzMockCaller) GetArtistPrimaryAliases(ctx context.Context, id uuid.UUI
 
 func (m *MbzMockCaller) Shutdown() {}
 
+func (m *MbzMockCaller) SearchRecording(ctx context.Context, title string, artist string) (string, error) {
+	return "", nil
+}
+
 type MbzErrorCaller struct{}
 
 func (m *MbzErrorCaller) GetReleaseGroup(ctx context.Context, id uuid.UUID) (*MusicBrainzReleaseGroup, error) {
@@ -95,3 +99,7 @@ func (m *MbzErrorCaller) GetArtistPrimaryAliases(ctx context.Context, id uuid.UU
 }
 
 func (m *MbzErrorCaller) Shutdown() {}
+
+func (m *MbzErrorCaller) SearchRecording(ctx context.Context, title string, artist string) (string, error) {
+	return "", nil
+}
