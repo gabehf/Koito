@@ -26,7 +26,7 @@ It supports relaying to other compatible scrobblers, so you can try it safely wi
 - 🖌️ Sleek UI
 - 🔁 Compatible with anything that scrobbles to ListenBrainz
 - 🔌 Easy relay to your existing setup
-- 📂 Import support for Maloja, ListenBrainz, LastFM, and Spotify
+- 📂 Import support for Maloja, ListenBrainz, LastFM, Spotify and Deezer
 
 ## Demo
 
@@ -59,6 +59,25 @@ services:
 See the [data importing guide](https://koito.io/guides/importing/) in the docs.
 
 Before importing, it is recommended you set up any image sources you want to have enabled. You can view the configuration options for image sources in the full list of configuration options.
+
+### Deezer import
+
+To import your Deezer listening history:
+
+1. Go to [Deezer settings](https://www.deezer.com/settings/download)
+2. Click **Download my data** and wait for the export email
+3. Unzip the archive and find the file `deezer-data_<your-id>.xlsx`
+4. Open the xlsx and select sheet **`10_listeningHistory`** (this contains your actual listens)
+5. Copy the file into Koito's `import/` directory:
+
+```bash
+# Using Docker/Podman
+podman cp deezer-data_<your-id>.xlsx koito:/app/data/import/
+# or
+docker cp deezer-data_<your-id>.xlsx koito:/app/data/import/
+```
+
+The file name must contain `deezer` (the importer auto-detects Deezer files by filename). The import runs automatically on the next Koito startup — it scans the `import/` directory for files it recognizes.
 
 ## Full list of configuration options
 
