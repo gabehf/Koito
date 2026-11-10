@@ -31,6 +31,7 @@ type MusicBrainzCaller interface {
 	GetTrack(ctx context.Context, id uuid.UUID) (*MusicBrainzTrack, error)
 	GetReleaseGroup(ctx context.Context, id uuid.UUID) (*MusicBrainzReleaseGroup, error)
 	GetRelease(ctx context.Context, id uuid.UUID) (*MusicBrainzRelease, error)
+	SearchRecording(ctx context.Context, title string, artist string) (string, error)
 	Shutdown()
 }
 

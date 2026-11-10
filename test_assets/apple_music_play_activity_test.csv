@@ -1,0 +1,5 @@
+"Song Name","Event Timestamp","Event Type","Play Duration Milliseconds","End Reason Type","Container Artist Name","Container Album Name"
+"Let Me Down Slowly","2024-10-20T18:31:29.435Z","PLAY_END","72000","NATURAL_END_OF_TRACK","","Narrated for You"
+"For You (feat. Sia)","2024-10-21T12:00:00Z","PLAY_END","205000","NATURAL_END_OF_TRACK","Silk Sonic","An Evening with Silk Sonic"
+"Bad Habits","2024-10-22T08:15:00Z","PLAY_START","150000","NATURAL_END_OF_TRACK","Ed Sheeran","="
+"Another Track","2024-10-23T14:30:00Z","PLAY_END","180000","NATURAL_END_OF_TRACK","The Raconteurs","Broken Boy Soldiers"

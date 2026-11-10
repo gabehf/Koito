@@ -252,6 +252,75 @@ func TestImportListenBrainz_MBIDMapping(t *testing.T) {
 	assert.Equal(t, "Zombie", track.Title)
 }
 
+func TestImportAppleMusic(t *testing.T) {
+	store := newTestDB()
+
+	destDir := filepath.Join(cfg.ConfigDir(), "import")
+
+	// Load both CSV and Library Tracks JSON
+	csvSrc := path.Join("..", "test_assets", "apple_music_play_activity_test.csv")
+	csvDest := filepath.Join(destDir, "apple_music_play_activity_test.csv")
+	input, err := os.ReadFile(csvSrc)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(csvDest, input, os.ModePerm))
+
+	libSrc := path.Join("..", "test_assets", "apple_music_library_tracks_test.json")
+	libDest := filepath.Join(destDir, "Apple Music Library Tracks.json")
+	input, err = os.ReadFile(libSrc)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(libDest, input, os.ModePerm))
+
+	// Mock MBZ caller for fallback
+	mbzcMock := &mbz.MbzMockCaller{
+		Artists: map[uuid.UUID]*mbz.MusicBrainzArtist{
+			uuid.MustParse("4b00640f-3be6-43f8-9b34-ff81bd89320a"): {
+				Name: "Silk Sonic",
+				Aliases: []mbz.MusicBrainzArtistAlias{
+					{Name: "Silk Sonic", Primary: true},
+				},
+			},
+		},
+	}
+
+	// Create a wrapper that does string-based artist lookup
+	searchRecorder := &searchRecordingMock{
+		MbzMockCaller: mbzcMock,
+		searchResults: map[string]string{
+			"Let Me Down Slowly": "Max Frost",
+			"Another Track":      "The Raconteurs",
+		},
+	}
+
+	engine.RunImporter(logger.Get(), store, searchRecorder)
+
+	// Verify artists were created (all should come from library lookup, not MusicBrainz)
+	_, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Max Frost"})
+	require.NoError(t, err)
+
+	_, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "Silk Sonic"})
+	require.NoError(t, err)
+
+	_, err = store.GetArtist(context.Background(), db.GetArtistOpts{Name: "The Raconteurs"})
+	require.NoError(t, err)
+
+	// Verify client is set
+	ctn, err := store.Count("SELECT COUNT(*) FROM listens WHERE client = 'applemusic';")
+	require.NoError(t, err)
+	assert.Greater(t, ctn, 0)
+}
+
+type searchRecordingMock struct {
+	*mbz.MbzMockCaller
+	searchResults map[string]string
+}
+
+func (m *searchRecordingMock) SearchRecording(ctx context.Context, title string, artist string) (string, error) {
+	if result, ok := m.searchResults[title]; ok {
+		return result, nil
+	}
+	return "", nil
+}
+
 func TestImportKoito(t *testing.T) {
 	store := newTestDB()
 

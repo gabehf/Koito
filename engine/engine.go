@@ -322,6 +322,15 @@ func RunImporter(l *zerolog.Logger, store db.DB, mbzc mbz.MusicBrainzCaller) {
 			if err != nil {
 				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
 			}
+		} else if strings.Contains(file.Name(), "Apple Music Play Activity") {
+			l.Info().Msgf("Importer: Import file %s detecting as being Apple Music export", file.Name())
+			err := importer.ImportAppleMusicPlayActivityFile(logger.NewContext(l), store, mbzc, file.Name())
+			if err != nil {
+				l.Err(err).Msgf("Importer: Failed to import file: %s", file.Name())
+			}
+		} else if strings.Contains(strings.ToLower(file.Name()), "library tracks") {
+			l.Info().Msgf("Skipping library tracks file (used for artist lookup only, not a standalone import): %s", file.Name())
+			continue
 		} else {
 			l.Warn().Msgf("Importer: File %s not recognized as a valid import file; make sure it is valid and named correctly", file.Name())
 		}
