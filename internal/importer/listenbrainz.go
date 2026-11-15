@@ -126,6 +126,13 @@ func ImportListenBrainzFile(ctx context.Context, store importStore, mbzc mbz.Mus
 			duration = payload.TrackMeta.AdditionalInfo.DurationMs / 1000
 		}
 
+		var durationPlayed int32
+		if payload.TrackMeta.AdditionalInfo.DurationPlayed != 0 {
+			durationPlayed = payload.TrackMeta.AdditionalInfo.DurationPlayed
+		} else if payload.TrackMeta.AdditionalInfo.DurationPlayedMs != 0 {
+			durationPlayed = payload.TrackMeta.AdditionalInfo.DurationPlayedMs / 1000
+		}
+
 		var artistMbidMap []catalog.ArtistMbidMap
 		for _, a := range payload.TrackMeta.MBIDMapping.Artists {
 			if a.ArtistMBID == "" || a.ArtistName == "" {
@@ -150,6 +157,7 @@ func ImportListenBrainzFile(ctx context.Context, store importStore, mbzc mbz.Mus
 			ReleaseGroupMbzID:  rgMbzID,
 			ArtistMbidMappings: artistMbidMap,
 			Duration:           duration,
+			DurationPlayed:     durationPlayed,
 			Time:               ts,
 			UserID:             1,
 			Client:             client,

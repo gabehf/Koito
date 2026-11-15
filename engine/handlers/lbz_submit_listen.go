@@ -67,6 +67,8 @@ type LbzAdditionalInfo struct {
 	RecordingMBID           string   `json:"recording_mbid,omitempty"`
 	DurationMs              int32    `json:"duration_ms,omitempty"`
 	Duration                int32    `json:"duration,omitempty"`
+	DurationPlayedMs        int32    `json:"duration_played_ms,omitempty"`
+	DurationPlayed          int32    `json:"duration_played,omitempty"`
 	Tags                    []string `json:"tags,omitempty"`
 	AlbumArtist             string   `json:"albumartist,omitempty"`
 }
@@ -191,6 +193,13 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 				duration = payload.TrackMeta.AdditionalInfo.DurationMs / 1000
 			}
 
+			var durationPlayed int32
+			if payload.TrackMeta.AdditionalInfo.DurationPlayed != 0 {
+				durationPlayed = payload.TrackMeta.AdditionalInfo.DurationPlayed
+			} else if payload.TrackMeta.AdditionalInfo.DurationPlayedMs != 0 {
+				durationPlayed = payload.TrackMeta.AdditionalInfo.DurationPlayedMs / 1000
+			}
+
 			var listenedAt = time.Now()
 			if payload.ListenedAt != 0 {
 				listenedAt = time.Unix(payload.ListenedAt, 0)
@@ -220,6 +229,7 @@ func LbzSubmitListenHandler(store submitListenHandlerStore, mbzc mbz.MusicBrainz
 				ReleaseGroupMbzID:  rgMbzID,
 				ArtistMbidMappings: artistMbidMap,
 				Duration:           duration,
+				DurationPlayed:     durationPlayed,
 				Time:               listenedAt,
 				UserID:             u.ID,
 				Client:             client,

@@ -63,6 +63,7 @@ func ImportSpotifyFile(ctx context.Context, store importStore, mbzc mbz.MusicBra
 			TrackTitle:     item.TrackName,
 			ReleaseTitle:   item.AlbumName,
 			Duration:       dur / 1000,
+			DurationPlayed: dur / 1000,
 			Time:           item.Timestamp,
 			Client:         "spotify",
 			UserID:         1,

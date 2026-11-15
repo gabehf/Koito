@@ -53,6 +53,7 @@ type SubmitListenOpts struct {
 	TrackTitle         string
 	RecordingMbzID     uuid.UUID
 	Duration           int32 // in seconds
+	DurationPlayed     int32 // time actually played in seconds. 0 = Unknow following the current convention of the project.
 	ReleaseTitle       string
 	ReleaseMbzID       uuid.UUID
 	ReleaseGroupMbzID  uuid.UUID
@@ -190,10 +191,11 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 	l.Info().Msgf("Received listen: '%s' by %s, from release '%s'", track.Title, buildArtistStr(artists), rg.Title)
 
 	return store.SaveListen(ctx, db.SaveListenOpts{
-		TrackID: track.ID,
-		Time:    opts.Time,
-		UserID:  opts.UserID,
-		Client:  opts.Client,
+		TrackID:        track.ID,
+		Time:           opts.Time,
+		DurationPlayed: opts.DurationPlayed,
+		UserID:         opts.UserID,
+		Client:         opts.Client,
 	})
 }
 

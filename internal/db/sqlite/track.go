@@ -71,7 +71,7 @@ func (s *Sqlite) getTrackByID(ctx context.Context, id int32) (*models.Track, err
 
 	var timeListened int64
 	s.db.QueryRowContext(ctx, `
-		SELECT COALESCE(SUM(t.duration), 0) FROM listens l JOIN tracks t ON l.track_id = t.id WHERE t.id = ?`,
+		SELECT COALESCE(SUM(COALESCE(l.duration_played, t.duration)), 0) FROM listens l JOIN tracks t ON l.track_id = t.id WHERE t.id = ?`,
 		id).Scan(&timeListened)
 	track.TimeListened = timeListened
 

@@ -20,11 +20,12 @@ type KoitoExport struct {
 	Listens    []KoitoListen `json:"listens"`
 }
 type KoitoListen struct {
-	ListenedAt time.Time     `json:"listened_at"`
-	Client     string        `json:"client"`
-	Track      KoitoTrack    `json:"track"`
-	Album      KoitoAlbum    `json:"album"`
-	Artists    []KoitoArtist `json:"artists"`
+	ListenedAt     time.Time     `json:"listened_at"`
+	DurationPlayed *int32        `json:"duration_played,omitempty"`
+	Client         string        `json:"client"`
+	Track          KoitoTrack    `json:"track"`
+	Album          KoitoAlbum    `json:"album"`
+	Artists        []KoitoArtist `json:"artists"`
 }
 type KoitoTrack struct {
 	MBID     *uuid.UUID     `json:"mbid"`
@@ -125,7 +126,8 @@ func convertToExportFormat(item *db.ExportItem) *KoitoListen {
 		client = *item.Client
 	}
 	ret := &KoitoListen{
-		ListenedAt: item.ListenedAt.UTC(),
+		ListenedAt:     item.ListenedAt.UTC(),
+		DurationPlayed: item.DurationPlayed,
 		Track: KoitoTrack{
 			MBID:     item.TrackMbid,
 			Duration: int(item.TrackDuration),
