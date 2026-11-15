@@ -20,13 +20,17 @@ func (s *Sqlite) SaveListen(ctx context.Context, opts db.SaveListenOpts) error {
 	if opts.Time.IsZero() {
 		opts.Time = time.Now()
 	}
+	var durationPlayed any
+	if opts.DurationPlayed > 0 {
+		durationPlayed = opts.DurationPlayed
+	}
 	client := ""
 	if opts.Client != "" {
 		client = opts.Client
 	}
 	_, err := s.db.ExecContext(ctx,
-		`INSERT OR IGNORE INTO listens (track_id, listened_at, user_id, client) VALUES (?,?,?,?)`,
-		opts.TrackID, opts.Time.Unix(), opts.UserID, client,
+		`INSERT OR IGNORE INTO listens (track_id, listened_at, duration_played, user_id, client) VALUES (?,?,?,?,?)`,
+		opts.TrackID, opts.Time.Unix(), durationPlayed, opts.UserID, client,
 	)
 	return err
 }

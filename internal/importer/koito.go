@@ -153,12 +153,18 @@ func ImportKoitoFile(ctx context.Context, store importStore, filename string) er
 			return fmt.Errorf("ImportKoitoFile: %w", err)
 		}
 
+		var durationPlayed int32 // starts as 0 = unknown
+		if data.Listens[i].DurationPlayed != nil {
+			durationPlayed = *data.Listens[i].DurationPlayed
+		}
+
 		// save listen
 		err = store.SaveListen(ctx, db.SaveListenOpts{
-			TrackID: track.ID,
-			Time:    data.Listens[i].ListenedAt,
-			Client:  data.Listens[i].Client,
-			UserID:  1,
+			TrackID:        track.ID,
+			Time:           data.Listens[i].ListenedAt,
+			DurationPlayed: durationPlayed,
+			Client:         data.Listens[i].Client,
+			UserID:         1,
 		})
 		if err != nil {
 			return fmt.Errorf("ImportKoitoFile: %w", err)

@@ -77,10 +77,11 @@ type SaveApiKeyOpts struct {
 }
 
 type SaveListenOpts struct {
-	TrackID int32
-	Time    time.Time
-	UserID  int32
-	Client  string
+	TrackID        int32
+	Time           time.Time
+	DurationPlayed int32
+	UserID         int32
+	Client         string
 }
 
 type UpdateTrackOpts struct {

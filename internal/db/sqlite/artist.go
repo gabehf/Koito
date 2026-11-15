@@ -71,7 +71,7 @@ func (s *Sqlite) GetArtist(ctx context.Context, opts db.GetArtistOpts) (*models.
 
 	var timeListened int64
 	s.db.QueryRowContext(ctx, `
-		SELECT COALESCE(SUM(t.duration), 0)
+		SELECT COALESCE(SUM(COALESCE(l.duration_played, t.duration)), 0)
 		FROM listens l JOIN tracks t ON l.track_id = t.id
 		JOIN artist_tracks at2 ON t.id = at2.track_id
 		WHERE at2.artist_id = ?`,

@@ -35,6 +35,7 @@ type RankedItem[T any] struct {
 
 type ExportItem struct {
 	ListenedAt         time.Time
+	DurationPlayed     *int32
 	UserID             int32
 	Client             *string
 	TrackID            int32

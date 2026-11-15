@@ -1128,3 +1128,100 @@ func TestNowPlaying(t *testing.T) {
 	require.True(t, result.CurrentlyPlaying)
 	require.Equal(t, "花の塔", result.Track.Title)
 }
+
+func TestDurationPlayed(t *testing.T) {
+	truncateTestData(t)
+	login(t)
+	getApiKey(t, session)
+
+	// Insert three listens from the same song, with different listent_at testing the duration and duration played requirements:
+	//  1. with "duration": 200 (song lenght) and "duration_played": 120
+	//  2. only "duration_played_ms": 90500
+	//  3. without duration_played
+	bodies := []string{
+		fmt.Sprintf(`{
+        "listen_type": "single",
+        "payload": [
+            {
+                "listened_at": %d,
+                "track_metadata": {
+                    "additional_info": {
+                        "duration_ms": 200000,
+                        "duration_played": 120
+                    },
+                    "artist_name": "Cory Wong",
+                    "release_name": "Lost in the Wonder",
+                    "track_name": "Afterglow"
+                }
+            }
+        ]
+    }`, time.Now().Add(-2*time.Hour).Unix()), // 2 hours ago
+		fmt.Sprintf(`{
+        "listen_type": "single",
+        "payload": [
+            {
+                "listened_at": %d,
+                "track_metadata": {
+                    "additional_info": {
+                        "duration_played_ms": 90500
+                    },
+                    "artist_name": "Cory Wong",
+                    "release_name": "Lost in the Wonder",
+                    "track_name": "Afterglow"
+                }
+            }
+        ]
+    }`, time.Now().Unix()),
+		fmt.Sprintf(`{
+        "listen_type": "single",
+        "payload": [
+            {
+                "listened_at": %d,
+                "track_metadata": {
+                    "additional_info": {
+                        "duration": 200
+                    },
+                    "artist_name": "Cory Wong",
+                    "release_name": "Lost in the Wonder",
+                    "track_name": "Afterglow"
+                }
+            }
+        ]
+    }`, time.Now().Add(-1*time.Hour).Unix())}
+	for _, body := range bodies {
+		req, err := http.NewRequest("POST", host()+"/apis/listenbrainz/1/submit-listens", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header.Add("Authorization", fmt.Sprintf("Token %s", apikey))
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		respBytes, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		assert.Equal(t, `{"status": "ok"}`, string(respBytes))
+	}
+
+	// Check with store.Count there's only 1 listen with duration_played = 120.
+	// Thus duration_played is corretly added together with duration.
+	count, err := store.Count(`SELECT COUNT(*) FROM listens WHERE duration_played = $1`, 120)
+	require.NoError(t, err)
+	assert.Equal(t, 1, count, "listen with duration_played = 120")
+
+	// Check with store.Count there's only 1 listen with duration_played = 90 (checking the calculation from duration_played_ms).
+	// Thus whether duration_played is added without duration
+	count, err = store.Count(`SELECT COUNT(*) FROM listens WHERE duration_played = $1`, 90)
+	require.NoError(t, err)
+	assert.Equal(t, 1, count, "listen with duration_played = 90")
+
+	// Check with store.Count there's only 1 listen with duration_played IS NULL (unknown, not 0!)
+	// Check whether duration_played is null when it is not supplied
+	count, err = store.Count(`SELECT COUNT(*) FROM listens WHERE duration_played IS NULL`)
+	require.NoError(t, err)
+	assert.Equal(t, 1, count, "…")
+
+	// Time listened uses duration_played when known, otherwise the track duration:
+	// 120 + 90 + 200 = 410 seconds. (Check the track due to caching of stats endpoint.)
+	resp, err := http.DefaultClient.Get(host() + "/apis/web/v1/track/1")
+	require.NoError(t, err)
+	var track models.Track
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&track))
+	assert.EqualValues(t, 410, track.TimeListened, "time listened should use duration_played, falling back to track duration")
+}

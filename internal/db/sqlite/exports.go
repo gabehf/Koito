@@ -12,9 +12,9 @@ import (
 func (s *Sqlite) GetExportPage(ctx context.Context, opts db.GetExportPageOpts) ([]*db.ExportItem, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT l.listened_at, l.user_id, l.client,
-		       t.id AS track_id, t.musicbrainz_id AS track_mbid, t.duration,
-		       t.release_id,
-		       r.musicbrainz_id AS release_mbid, r.image, r.image_source, r.various_artists
+		    t.id AS track_id, t.musicbrainz_id AS track_mbid, t.duration, l.duration_played,
+		    t.release_id,
+		    r.musicbrainz_id AS release_mbid, r.image, r.image_source, r.various_artists
 		FROM listens l
 		JOIN tracks t ON l.track_id = t.id
 		JOIN releases r ON t.release_id = r.id
@@ -35,13 +35,14 @@ func (s *Sqlite) GetExportPage(ctx context.Context, opts db.GetExportPageOpts) (
 	for rows.Next() {
 		var item db.ExportItem
 		var listenedAt int64
+		var durationPlayed sql.NullInt32
 		var client sql.NullString
 		var trackMbid, releaseMbid, releaseImage, releaseImageSrc sql.NullString
 		var variousArtists int
 
 		if err := rows.Scan(
 			&listenedAt, &item.UserID, &client,
-			&item.TrackID, &trackMbid, &item.TrackDuration,
+			&item.TrackID, &trackMbid, &item.TrackDuration, &durationPlayed,
 			&item.ReleaseID,
 			&releaseMbid, &releaseImage, &releaseImageSrc, &variousArtists,
 		); err != nil {
@@ -51,6 +52,9 @@ func (s *Sqlite) GetExportPage(ctx context.Context, opts db.GetExportPageOpts) (
 		item.ListenedAt = time.Unix(listenedAt, 0).UTC()
 		if client.Valid && client.String != "" {
 			item.Client = &client.String
+		}
+		if durationPlayed.Valid && durationPlayed.Int32 != 0 {
+			item.DurationPlayed = &durationPlayed.Int32
 		}
 		item.TrackMbid = parseNullableUUID(trackMbid)
 		item.ReleaseMbid = parseNullableUUID(releaseMbid)
@@ -83,4 +87,3 @@ func (s *Sqlite) GetExportPage(ctx context.Context, opts db.GetExportPageOpts) (
 	}
 	return items, nil
 }
-
