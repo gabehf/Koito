@@ -12,6 +12,7 @@ import (
 
 type NowPlayingResponse struct {
 	CurrentlyPlaying bool         `json:"currently_playing"`
+	StartedAt        int64        `json:"started_at"`
 	Track            models.Track `json:"track"`
 }
 
@@ -23,18 +24,18 @@ func NowPlayingHandler(store db.TrackStore) http.HandlerFunc {
 		l.Debug().Msg("NowPlayingHandler: Got request")
 
 		// Hardcoded user id as 1. Not great but it works until (if) multi-user is supported.
-		if trackIdI, ok := memkv.Store.Get("1"); !ok {
+		if nowPlayingDataI, ok := memkv.Store.Get("1"); !ok {
 			utils.WriteJSON(w, http.StatusOK, NowPlayingResponse{CurrentlyPlaying: false})
-		} else if trackId, ok := trackIdI.(int32); !ok {
-			l.Debug().Msg("NowPlayingHandler: Failed type assertion for trackIdI")
+		} else if nowPlayingData, ok := nowPlayingDataI.(models.NowPlayingData); !ok {
+			l.Debug().Msg("NowPlayingHandler: Failed type assertion for nowPlayingDataI")
 			utils.WriteError(w, "internal server error", http.StatusInternalServerError)
 		} else {
-			track, err := store.GetTrack(ctx, db.GetTrackOpts{ID: trackId})
+			track, err := store.GetTrack(ctx, db.GetTrackOpts{ID: nowPlayingData.TrackID})
 			if err != nil {
 				l.Error().Err(err).Msg("NowPlayingHandler: Failed to get track from database")
 				utils.WriteError(w, "failed to fetch currently playing track from database", http.StatusInternalServerError)
 			} else {
-				utils.WriteJSON(w, http.StatusOK, NowPlayingResponse{CurrentlyPlaying: true, Track: *track})
+				utils.WriteJSON(w, http.StatusOK, NowPlayingResponse{CurrentlyPlaying: true, StartedAt: nowPlayingData.StartTime.Unix(), Track: *track})
 			}
 		}
 	}
