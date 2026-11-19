@@ -1088,6 +1088,7 @@ func TestNowPlaying(t *testing.T) {
 		"listen_type": "playing_now",
 		"payload": [
 			{
+				"listened_at": 123,
 				"track_metadata": {
 					"additional_info": {
 						"artist_mbids": [
@@ -1127,4 +1128,5 @@ func TestNowPlaying(t *testing.T) {
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&result))
 	require.True(t, result.CurrentlyPlaying)
 	require.Equal(t, "花の塔", result.Track.Title)
+	require.Equal(t, int64(123), result.StartedAt)
 }

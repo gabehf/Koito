@@ -439,6 +439,7 @@ type Config = {
 };
 type NowPlaying = {
   currently_playing: boolean;
+  started_at: number;
   track: Track;
 };
 type RewindStats = {

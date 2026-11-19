@@ -176,10 +176,14 @@ func SubmitListen(ctx context.Context, store submitListenStore, opts SubmitListe
 	}
 
 	if opts.IsNowPlaying {
+		var nowPlayingData = models.NowPlayingData{
+			TrackID:   track.ID,
+			StartTime: opts.Time,
+		}
 		if track.Duration == 0 {
-			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID)
+			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), nowPlayingData)
 		} else {
-			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), track.ID, time.Duration(track.Duration)*time.Second)
+			memkv.Store.Set(strconv.Itoa(int(opts.UserID)), nowPlayingData, time.Duration(track.Duration)*time.Second)
 		}
 	}
 
