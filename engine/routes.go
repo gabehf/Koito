@@ -145,6 +145,23 @@ func bindRoutes(
 			Post("/submit-listens", handlers.LbzSubmitListenHandler(db, mbz))
 		r.With(middleware.Authenticate(db, middleware.AuthModeAPIKey)).
 			Get("/validate-token", handlers.LbzValidateTokenHandler())
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Authenticate(db, middleware.AuthModeAPIKey))
+
+			r.Get("/user/{user_name}/listens", handlers.LbzGetListensHandler(db))
+			r.Get("/user/{user_name}/playing-now", handlers.LbzPlayingNowHandler(db))
+			r.Get("/user/{user_name}/listen-count", handlers.LbzListenCountHandler(db))
+			r.Get("/user/{user_name}/following", handlers.LbzFollowingHandler())
+
+			r.Get("/stats/user/{user_name}/artists", handlers.LbzStatsArtistsHandler(db))
+			r.Get("/stats/user/{user_name}/releases", handlers.LbzStatsReleasesHandler(db))
+			r.Get("/stats/user/{user_name}/recordings", handlers.LbzStatsRecordingsHandler(db))
+			r.Get("/stats/user/{user_name}/listening-activity", handlers.LbzListeningActivityHandler(db))
+
+			r.Get("/feedback/user/{user_name}/get-feedback", handlers.LbzGetFeedbackHandler(db))
+			r.Post("/feedback/recording-feedback", handlers.LbzRecordingFeedbackHandler(db))
+		})
 	})
 
 	// serve react client

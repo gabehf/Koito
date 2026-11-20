@@ -55,3 +55,45 @@ type InterestBucket struct {
 	BucketEnd   time.Time `json:"bucket_end"`
 	ListenCount int64     `json:"listen_count"`
 }
+
+// TrackDetail is the metadata of a track, its release and its artists, as needed
+// to render a track in an external API.
+type TrackDetail struct {
+	TrackID      int32
+	TrackTitle   string
+	TrackMbid    *uuid.UUID
+	Duration     int32
+	ReleaseTitle string
+	ReleaseMbid  *uuid.UUID
+	ArtistNames  []string
+	ArtistMbids  []uuid.UUID
+}
+
+// ListenDetail is a listen with the full detail of the listened track.
+type ListenDetail struct {
+	ListenedAt time.Time
+	Client     string
+	Track      TrackDetail
+}
+
+// ListenRangeOpts selects listens strictly between From and To (unix seconds).
+// A zero From or To leaves that side unbounded. Results are newest first.
+type ListenRangeOpts struct {
+	From  int64
+	To    int64
+	Limit int
+}
+
+// TrackFeedback is a love (1) or hate (-1) a user gave to a track.
+type TrackFeedback struct {
+	CreatedAt time.Time
+	Score     int
+	Track     TrackDetail
+}
+
+// SaveTrackFeedbackOpts sets a user's feedback on a track. Score 0 removes it.
+type SaveTrackFeedbackOpts struct {
+	UserID  int32
+	TrackID int32
+	Score   int
+}
