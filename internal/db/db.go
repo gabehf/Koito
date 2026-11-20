@@ -65,6 +65,7 @@ type TrackStore interface {
 	CountTracks(ctx context.Context, timeframe Timeframe) (int64, error)
 	CountNewTracks(ctx context.Context, timeframe Timeframe) (int64, error)
 	AddArtistsToAlbum(ctx context.Context, opts AddArtistsToAlbumOpts) error
+	GetTrackDetail(ctx context.Context, id int32) (*TrackDetail, error)
 }
 
 type ListenStore interface {
@@ -81,6 +82,13 @@ type ListenStore interface {
 	GetActiveDays(ctx context.Context, tz *time.Location) (int, error)
 	GetListenStreak(ctx context.Context, opts ListenActivityOpts) (int, error)
 	GetLongestListenStreak(ctx context.Context, opts ListenActivityOpts) (int, error)
+	GetListensInRange(ctx context.Context, opts ListenRangeOpts) ([]ListenDetail, error)
+	GetLatestListenUnix(ctx context.Context) (int64, error)
+}
+
+type FeedbackStore interface {
+	SaveTrackFeedback(ctx context.Context, opts SaveTrackFeedbackOpts) error
+	GetTrackFeedback(ctx context.Context, userId int32, limit, offset int) ([]TrackFeedback, int64, error)
 }
 
 type UserStore interface {
@@ -115,6 +123,7 @@ type DB interface {
 	AlbumStore
 	TrackStore
 	ListenStore
+	FeedbackStore
 	UserStore
 	ImageStore
 	ExportStore
